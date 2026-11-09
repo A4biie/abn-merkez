@@ -47,6 +47,24 @@ jobs:
           $f = 'src-tauri/tauri.conf.json'
           (Get-Content $f -Raw).Replace('__GITHUB_REPO__', '${{ github.repository }}') | Set-Content $f -Encoding utf8NoBOM -NoNewline
 
+      # Rust hatalarını önce ayrı derleyip satır satır not (annotation) olarak yazar: depo sayfasında
+      # giriş yapmadan görülür. Geçerse asıl derleme önbellekten hızlı ilerler.
+      - name: Rust kontrolü
+        shell: bash
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          npm run build:desktop > /dev/null
+          set +e
+          cargo check --release --manifest-path src-tauri/Cargo.toml --message-format=short 2> cargo.log
+          code=$?
+          if [ $code -ne 0 ]; then
+            grep -E "error" cargo.log | head -40 | while IFS= read -r line; do echo "::error::$line"; done
+            tail -40 cargo.log
+          fi
+          exit $code
+
       - name: Sürüm notlarını CHANGELOG'dan al
         id: notes
         shell: bash

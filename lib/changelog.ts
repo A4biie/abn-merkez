@@ -135,7 +135,7 @@ export const RELEASES: Release[] = [
 /** ABN Launcher (masaüstü) sürümleri. */
 export const LAUNCHER_RELEASES: Release[] = [
   {
-    "version": "1.0.1",
+    "version": "1.0.2",
     "date": "9 Kasım 2026",
     "sections": [
       {
