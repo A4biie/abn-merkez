@@ -167,7 +167,7 @@ export const RELEASES: Release[] = [
 export const LAUNCHER_RELEASES: Release[] = [
   {
     "version": "1.2.0",
-    "date": "",
+    "date": "9 Kasım 2026",
     "sections": [
       {
         "title": "Yeni",
