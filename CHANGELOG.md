@@ -4,6 +4,17 @@ ABN Merkez'in sürümleri. Yeni özellik getiren sürüm 0.x.0, sadece düzeltme
 Uygulama yeni bir sürüme ilk açıldığında "Neler yeni" panelinde o sürümün maddeleri gösterilir
 (`npm run changelog` bu dosyadan `lib/changelog.ts`'i üretir).
 
+## Launcher 1.1.0
+
+### Yeni
+
+- Masaüstü bildirimleri: özel tasarım, yanıtlama, 7 bildirim sesi.
+- Kartlar temanın renkleri ve ışığıyla geliyor; üzerine gelince süre duruyor, Yanıtla / Okundu / Sessize al (1 saat, 8 saat, bu sohbeti) çıkıyor. Karttan yazıp Enter'la yanıt gönderebilirsin; sağa sürükleyince kapanır.
+- Türler: mesaj, @anma (şeritli, ayrı ses), kalp (kapsül), görev ve isteğe cevap, duyuru (kapatana kadar kalır), oylama sonucu.
+- Aynı anda en fazla 3 kart; fazlası "+N bildirim daha". Aynı sohbetten 10 sn içinde gelen mesajlar tek kartta toplanır.
+- Ayarlar > Bildirimler: konum, süre (4/6/10 sn), önizleme, ses seçimi ("Dinle" ile), ses seviyesi, türlere göre aç/kapa ve "Deneme bildirimi gönder".
+- Sessiz saatlerde kart ve ses gelmez.
+
 ## Launcher 1.0.5 · 9 Kasım 2026
 
 ### Yeni

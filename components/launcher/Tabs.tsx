@@ -6,6 +6,7 @@ import Animated from 'react-native-reanimated';
 
 import { EmptyState } from '@/components/EmptyState';
 import { LogoLoader } from '@/components/LogoLoader';
+import { NotifySettings } from '@/components/notify/NotifySettings';
 import { ThemeList } from '@/components/ThemePicker';
 import { Button, IconButton, Pill } from '@/components/ui/Controls';
 import { Bone, ErrorState } from '@/components/ui/Feedback';
@@ -511,6 +512,8 @@ export function SettingsTab() {
           />
         </View>
       </View>
+
+      <NotifySettings />
 
       <View style={{ gap: 12 }}>
         <Txt size={17} weight={800}>

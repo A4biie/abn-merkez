@@ -20,6 +20,8 @@ export type Notice = {
   messageId?: string;
   /** Görsel mesajda küçük resim yolu (chat-files kovası). */
   imagePath?: string | null;
+  /** Kartın üst satırındaki kanal: "· #genel", "· Direkt mesaj". */
+  channel?: string;
   /** notifications satırı (okundu yapmak için). */
   notificationId?: string;
   /** Aynı sohbetten kısa sürede gelen mesaj sayısı (kart güncellenir). */

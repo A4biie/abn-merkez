@@ -10,7 +10,34 @@ import { invoke, isDesktop, listenDesktop } from '@/lib/desktop';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/lib/types';
 
+import { getPrefs, isRoomMuted, type NotifyTypeKey } from './prefs';
+import { inQuietHours } from './quiet';
 import { pushNotice, type NoticeKind } from './store';
+
+/** Bu tür şu an kart olarak gösterilsin mi? (ayarlar, sessiz mod, sessiz saatler) */
+function allowed(kind: NoticeKind, profile: Profile): boolean {
+  const p = getPrefs();
+  if (!p.enabled || quiet || inQuietHours(profile, new Date())) return false;
+  const key: NotifyTypeKey | null =
+    kind === 'mesaj' ? 'mesaj' : kind === 'anma' ? 'anma' : kind === 'kalp' ? 'kalp'
+    : kind === 'gorev' || kind === 'istek' ? 'gorev' : kind === 'duyuru' ? 'duyuru' : kind === 'oylama' ? 'oylama' : null;
+  return key ? p.types[key] : true;
+}
+
+/** Oda adı önbelleği: "· #genel" ya da "· Direkt mesaj". */
+const rooms = new Map<string, Promise<string>>();
+function channelOf(roomId: string): Promise<string> {
+  let r = rooms.get(roomId);
+  if (!r) {
+    r = Promise.resolve(
+      supabase.from('chat_rooms').select('kind,title').eq('id', roomId).maybeSingle(),
+    ).then(({ data }) =>
+      !data ? '' : data.kind === 'ozel' ? '· Direkt mesaj' : '· #' + (data.title || (data.kind === 'genel' ? 'genel' : 'sohbet')),
+    ).catch(() => '');
+    rooms.set(roomId, r);
+  }
+  return r;
+}
 
 const KIND: Record<string, NoticeKind> = {
   yorum: 'diger',
@@ -76,13 +103,16 @@ export function startFeed(profile: Profile): () => void {
         created_at: string;
       };
       if (!m.author_id || m.author_id === me) return;
-      if (quiet || inRoom(m.room_id)) return;
+      if (inRoom(m.room_id) || isRoomMuted(m.room_id)) return;
+      const kind: NoticeKind = m.body && mention.test(m.body) ? 'anma' : 'mesaj';
+      if (!allowed(kind, profile)) return;
       const text =
         m.body ||
         (m.attachment_kind === 'ses' ? 'Sesli mesaj' : m.attachment_kind === 'gorsel' ? 'Görsel' : '');
-      pushNotice({
+      channelOf(m.room_id).then((channel) => pushNotice({
         id: m.id,
-        kind: m.body && mention.test(m.body) ? 'anma' : 'mesaj',
+        kind,
+        channel,
         actorId: m.author_id,
         text,
         link: `/sohbet/${m.room_id}?mesaj=${m.id}`,
@@ -90,7 +120,7 @@ export function startFeed(profile: Profile): () => void {
         roomId: m.room_id,
         messageId: m.id,
         imagePath: m.attachment_kind === 'gorsel' ? m.attachment_path : null,
-      });
+      }));
     })
     .on(
       'postgres_changes',
@@ -106,10 +136,11 @@ export function startFeed(profile: Profile): () => void {
           created_at: string;
         };
         if (n.kind === 'anma') return; // mesaj kartı zaten "anma" olarak açıldı
-        if (quiet) return;
+        const kind = KIND[n.kind] ?? 'diger';
+        if (!allowed(kind, profile)) return;
         pushNotice({
           id: n.id,
-          kind: KIND[n.kind] ?? 'diger',
+          kind,
           actorId: n.actor_id,
           text: n.text,
           link: n.link,
