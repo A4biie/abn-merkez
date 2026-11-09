@@ -331,7 +331,7 @@ pub fn game_cancel(app: AppHandle, id: String, install_dir: String) -> Result<()
 }
 
 #[tauri::command]
-pub fn game_uninstall(id: String, install_dir: String) -> Result<(), String> {
+pub async fn game_uninstall(id: String, install_dir: String) -> Result<(), String> {
     safe_id(&id)?;
     let base = Path::new(&install_dir);
     let mut reg = read_registry(base);

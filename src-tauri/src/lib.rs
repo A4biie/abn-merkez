@@ -95,8 +95,10 @@ fn open_merkez_window(app: &AppHandle, path: Option<String>) -> tauri::Result<()
     Ok(())
 }
 
+/// Async olmak zorunda: Windows'ta senkron komut içinde pencere oluşturmak ana iş parçacığını kilitler
+/// (pencere bembeyaz kalır, hiçbir buton çalışmaz). Launcher 1.0.0'daki hata buydu.
 #[tauri::command]
-fn open_merkez(app: AppHandle, path: Option<String>) -> Result<(), String> {
+async fn open_merkez(app: AppHandle, path: Option<String>) -> Result<(), String> {
     open_merkez_window(&app, path).map_err(|e| e.to_string())
 }
 

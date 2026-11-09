@@ -135,6 +135,18 @@ export const RELEASES: Release[] = [
 /** ABN Launcher (masaüstü) sürümleri. */
 export const LAUNCHER_RELEASES: Release[] = [
   {
+    "version": "1.0.1",
+    "date": "9 Kasım 2026",
+    "sections": [
+      {
+        "title": "Düzeltmeler",
+        "items": [
+          "\"Merkez'i aç\" ya da \"Giriş yap\" deyince Merkez penceresi bembeyaz kalıyor ve kapanmıyordu; düzeltildi."
+        ]
+      }
+    ]
+  },
+  {
     "version": "1.0.0",
     "date": "9 Kasım 2026",
     "sections": [
