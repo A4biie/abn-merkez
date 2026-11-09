@@ -4,6 +4,20 @@ export type Release = { version: string; date: string; sections: { title: string
 
 export const RELEASES: Release[] = [
   {
+    "version": "0.9.0",
+    "date": "9 Kasım 2026",
+    "sections": [
+      {
+        "title": "Yeni",
+        "items": [
+          "Panoda fotoğraf, video ve not kartları köşelerinden büyütülüp küçültülebiliyor. Fotoğraf ve videoda oran korunuyor (Shift ile serbest); boyutlandırırken ölçü görünüyor.",
+          "Ctrl ya da Shift ile tıklayarak birden fazla kart seçip birlikte taşıyabilirsin.",
+          "Seçili kartlar Delete / Backspace ya da sağ tık > Sil ile siliniyor; 5 sn içinde \"Geri al\" ya da Ctrl+Z ile geri gelir."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.8.0",
     "date": "10 Kasım 2026",
     "sections": [

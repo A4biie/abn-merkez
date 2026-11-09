@@ -7,7 +7,8 @@ import type { CapKind, Rect } from './geometry';
 
 // UI iş parçacığında tutulan, her karede okunan durum. React sadece parmak kalkınca güncellenir.
 
-export type LiveRect = Rect & { id: string; zone: number };
+/** rs: boyutlandırma (0 yok, 1 oranı koruyarak: fotoğraf/video, 2 serbest: not). */
+export type LiveRect = Rect & { id: string; zone: number; rs: number };
 export type LiveLink = {
   id: string;
   from: string;
@@ -23,9 +24,11 @@ export type Live = {
   rects: SharedValue<LiveRect[]>;
   links: SharedValue<LiveLink[]>;
   /** Sürüklenen kart */
-  drag: { id: SharedValue<string>; x: SharedValue<number>; y: SharedValue<number> };
+  drag: { id: SharedValue<string>; x: SharedValue<number>; y: SharedValue<number>; ox: SharedValue<number>; oy: SharedValue<number> };
+  /** Birlikte taşınan diğer seçili kartlar (çoklu seçim). */
+  group: SharedValue<string[]>;
   /** Boyutlandırılan bölge */
-  rz: SharedValue<{ id: string; w: number; h: number }>;
+  rz: SharedValue<{ id: string; x: number; y: number; w: number; h: number }>;
   /** Eğilen bağlantı */
   bend: SharedValue<{ id: string; x: number; y: number }>;
   /** Çizilmekte olan bağlantı: başlangıç kartı, parmağın dünya konumu, üstünde durulan kart */

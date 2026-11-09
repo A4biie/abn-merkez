@@ -16,7 +16,7 @@ import { useToast } from '@/components/ui/Toast';
 import { Txt } from '@/components/ui/Txt';
 import {
   createBoard,
-  deleteItem,
+  deleteItemWithFile,
   deleteLink,
   fetchBoardItems,
   fetchBoardLinks,
@@ -114,6 +114,7 @@ function BoardEditor({ board, all }: { board: BoardWithItems; all: BoardWithItem
   const compact = !wide;
   const motion = useMotion();
   const say = useToast();
+  const { colors } = useTheme();
   const team = useTeam();
   const cam = useCamera(compact);
   const api = useRef<CanvasApi | null>(null);
@@ -125,6 +126,15 @@ function BoardEditor({ board, all }: { board: BoardWithItems; all: BoardWithItem
   const [attempt, setAttempt] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [selectedLink, setSelectedLink] = useState<string | null>(null);
+  // Ctrl/Shift + tıklamayla seçilen kartlar (2+ olunca birlikte taşınır).
+  const [multi, setMulti] = useState<string[]>([]);
+  const modRef = useRef(false);
+  // Silinen kartlar 0.2 sn küçülüp solar; 5 sn "Geri al" süresi var.
+  const [fading, setFading] = useState<string[]>([]);
+  const [undo, setUndo] = useState<{ items: BoardItem[]; links: BoardLink[] } | null>(null);
+  const undoRef = useRef<{ items: BoardItem[]; links: BoardLink[] } | null>(null);
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [linkFrom, setLinkFrom] = useState<string | null>(null);
@@ -234,6 +244,7 @@ function BoardEditor({ board, all }: { board: BoardWithItems; all: BoardWithItem
     setSelectedLink(null);
     setEditing(null);
     setConfirmDelete(false);
+    setMulti([]);
   }, []);
 
   const createLink = useCallback(
@@ -279,11 +290,21 @@ function BoardEditor({ board, all }: { board: BoardWithItems; all: BoardWithItem
         return;
       }
       setSelectedLink(null);
+      if (modRef.current) {
+        // Ctrl/Shift + tıklama: seçime ekle ya da çıkar.
+        const cur = multi.length ? multi : selected ? [selected] : [];
+        const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+        setMulti(next);
+        setSelected(next[next.length - 1] ?? null);
+        setEditing(null);
+        return;
+      }
+      setMulti([]);
       setSelected(id);
       if (wasSelected && !soft && canEdit) setEditing(id);
       else if (editing !== id) setEditing(null);
     },
-    [connecting, linkFrom, createLink, canEdit, editing],
+    [connecting, linkFrom, createLink, canEdit, editing, multi, selected],
   );
 
   const onTapLink = useCallback((id: string) => {
@@ -300,6 +321,7 @@ function BoardEditor({ board, all }: { board: BoardWithItems; all: BoardWithItem
   }, [clearSelection]);
 
   const onDragStart = useCallback((id: string) => {
+    setMulti((m) => (m.includes(id) ? m : []));
     setSelected(id);
     setSelectedLink(null);
     setEditing(null);
@@ -318,9 +340,10 @@ function BoardEditor({ board, all }: { board: BoardWithItems; all: BoardWithItem
   );
 
   const onResize = useCallback(
-    (id: string, w: number, h: number) => {
-      patchItem(id, { w, h });
-      updateItem(id, { w, h }).catch(fail);
+    (id: string, x: number, y: number, w: number, h: number) => {
+      const patch = { x, y, w, h: h || null };
+      patchItem(id, patch);
+      updateItem(id, patch).catch(fail);
     },
     [patchItem, fail],
   );
@@ -461,26 +484,100 @@ function BoardEditor({ board, all }: { board: BoardWithItems; all: BoardWithItem
     updateItem(selected, { color: t }).catch(fail);
   }
 
-  async function removeSelected() {
-    if (!selected) return;
-    if (!confirmDelete) {
-      setConfirmDelete(true);
-      return;
-    }
-    const id = selected;
-    const beforeItems = items;
-    const beforeLinks = links;
-    setItems((prev) => prev?.filter((it) => it.id !== id) ?? prev);
-    setLinks((prev) => prev.filter((l) => l.from_item !== id && l.to_item !== id));
+  // ── Silme: Delete / Backspace, sağ tık "Sil", araç çubuğu. Onay yok; 5 sn içinde geri alınabilir. ──
+  const commitUndo = useCallback(() => {
+    clearTimeout(undoTimer.current);
+    const u = undoRef.current;
+    undoRef.current = null;
+    setUndo(null);
+    if (u)
+      Promise.all(u.items.map((it) => deleteItemWithFile(it)))
+        .then(() => invalidate('boards'))
+        .catch(fail);
+  }, [fail]);
+
+  function deleteCards() {
+    const ids = multi.length ? multi : selected ? [selected] : [];
+    if (!ids.length || !canEdit) return;
+    const all = itemsRef.current ?? [];
+    const mine = all.filter((it) => ids.includes(it.id) && (it.created_by === undefined || it.created_by === team.meId || team.isAdmin));
+    if (mine.length < ids.length) say('Bu kartı sadece ekleyen silebilir');
+    if (!mine.length) return;
+    commitUndo(); // önceki silme kesinleşir
+    const gone = mine.map((it) => it.id);
+    const goneLinks = links.filter((l) => gone.includes(l.from_item) || gone.includes(l.to_item));
+    setFading(gone);
     clearSelection();
-    try {
-      await deleteItem(id);
-      invalidate('boards');
-    } catch (e) {
-      setItems(beforeItems);
-      setLinks(beforeLinks);
-      fail(e);
-    }
+    setTimeout(() => {
+      setItems((prev) => prev?.filter((it) => !gone.includes(it.id)) ?? prev);
+      setLinks((prev) => prev.filter((l) => !goneLinks.includes(l)));
+      setFading([]);
+    }, 200);
+    undoRef.current = { items: mine, links: goneLinks };
+    setUndo(undoRef.current);
+    undoTimer.current = setTimeout(commitUndo, 5000);
+  }
+
+  function undoDelete() {
+    clearTimeout(undoTimer.current);
+    const u = undoRef.current;
+    if (!u) return;
+    undoRef.current = null;
+    setUndo(null);
+    setItems((prev) => (prev ? [...prev.filter((it) => !u.items.some((x) => x.id === it.id)), ...u.items] : prev));
+    setLinks((prev) => [...prev, ...u.links]);
+  }
+
+  const keyRef = useRef({ deleteCards, undoDelete, clearSelection });
+  useEffect(() => {
+    keyRef.current = { deleteCards, undoDelete, clearSelection };
+  });
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const typing = (t: EventTarget | null) => {
+      const el = t as HTMLElement | null;
+      return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+    };
+    const mods = (e: KeyboardEvent | MouseEvent) => {
+      modRef.current = e.ctrlKey || e.metaKey || e.shiftKey;
+    };
+    const down = (e: KeyboardEvent) => {
+      mods(e);
+      if (typing(e.target)) return;
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        keyRef.current.deleteCards();
+      } else if (e.key === 'Escape') {
+        keyRef.current.clearSelection();
+        setMenu(null);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        keyRef.current.undoDelete();
+      }
+    };
+    const ctx = (e: MouseEvent) => {
+      if (typing(e.target)) return;
+      e.preventDefault();
+      setMenu({ x: e.clientX, y: e.clientY });
+    };
+    const close = () => setMenu(null);
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', mods);
+    window.addEventListener('pointerdown', mods, true);
+    window.addEventListener('contextmenu', ctx);
+    window.addEventListener('click', close);
+    return () => {
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', mods);
+      window.removeEventListener('pointerdown', mods, true);
+      window.removeEventListener('contextmenu', ctx);
+      window.removeEventListener('click', close);
+    };
+  }, []);
+  // Panodan çıkarken bekleyen silme kesinleşir.
+  useEffect(() => () => commitUndo(), [commitUndo]);
+
+  async function removeSelected() {
+    deleteCards();
   }
 
   const selLink = links.find((l) => l.id === selectedLink);
@@ -592,6 +689,8 @@ function BoardEditor({ board, all }: { board: BoardWithItems; all: BoardWithItem
             onDragStart={onDragStart}
             onMove={onMove}
             onResize={onResize}
+            multi={multi.length > 1 ? multi : []}
+            fading={fading}
             onLinkDrop={onLinkDrop}
             onBend={onBend}
             onData={onData}
@@ -657,6 +756,72 @@ function BoardEditor({ board, all }: { board: BoardWithItems; all: BoardWithItem
           </>
         )}
       </View>
+      {menu && (selected || multi.length > 0) && canEdit && (
+        <View
+          style={{
+            position: (Platform.OS === 'web' ? 'fixed' : 'absolute') as 'absolute',
+            left: menu.x,
+            top: menu.y,
+            zIndex: 200,
+            minWidth: 170,
+            padding: 6,
+            borderRadius: 14,
+            backgroundColor: colors.surface,
+            boxShadow: '0 0 0 1px ' + colors.line + ', 0 12px 30px rgba(0,0,0,0.2)',
+          }}
+        >
+          <Press
+            onPress={() => {
+              setMenu(null);
+              deleteCards();
+            }}
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              paddingHorizontal: 10,
+              paddingVertical: 8,
+              borderRadius: 10,
+            }}
+          >
+            <Txt size={14} weight={700}>
+              Sil
+            </Txt>
+            <Txt size={13} color="faint">
+              Del
+            </Txt>
+          </Press>
+        </View>
+      )}
+      {undo && (
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 24,
+            alignSelf: 'center',
+            zIndex: 150,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+            paddingLeft: 16,
+            paddingRight: 6,
+            paddingVertical: 6,
+            borderRadius: 999,
+            backgroundColor: colors.text,
+          }}
+        >
+          <Txt size={14} weight={700} style={{ color: colors.bg }}>
+            {undo.items.length > 1 ? undo.items.length + ' kart silindi' : 'Kart silindi'}
+          </Txt>
+          <Press
+            onPress={undoDelete}
+            style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: colors.a1 }}
+          >
+            <Txt size={13.5} weight={800} color="a1-ink">
+              Geri al
+            </Txt>
+          </Press>
+        </View>
+      )}
     </Animated.View>
   );
 }

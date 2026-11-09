@@ -34,6 +34,8 @@ export type BoardItem = {
   z: number;
   data: ItemData;
   updated_at?: string;
+  /** Ekleyen kişi (yerelde yeni eklenen kartta yok). */
+  created_by?: string | null;
 };
 
 /**
@@ -209,6 +211,13 @@ export async function renameBoard(id: string, title: string) {
   const { error } = await supabase.from('boards').update({ title }).eq('id', id);
   if (error) throw error;
   invalidate('boards');
+}
+
+/** Kartı ve Storage'daki dosyasını siler (fotoğraf / dosya kartları). */
+export async function deleteItemWithFile(item: { id: string; data: { path?: unknown } }) {
+  await deleteItem(item.id);
+  if (typeof item.data.path === 'string' && item.data.path)
+    await supabase.storage.from('board-files').remove([item.data.path]);
 }
 
 export async function deleteItem(id: string) {

@@ -4,6 +4,14 @@ ABN Merkez'in sürümleri. Yeni özellik getiren sürüm 0.x.0, sadece düzeltme
 Uygulama yeni bir sürüme ilk açıldığında "Neler yeni" panelinde o sürümün maddeleri gösterilir
 (`npm run changelog` bu dosyadan `lib/changelog.ts`'i üretir).
 
+## 0.9.0 · 9 Kasım 2026
+
+### Yeni
+
+- Panoda fotoğraf, video ve not kartları köşelerinden büyütülüp küçültülebiliyor. Fotoğraf ve videoda oran korunuyor (Shift ile serbest); boyutlandırırken ölçü görünüyor.
+- Ctrl ya da Shift ile tıklayarak birden fazla kart seçip birlikte taşıyabilirsin.
+- Seçili kartlar Delete / Backspace ya da sağ tık > Sil ile siliniyor; 5 sn içinde "Geri al" ya da Ctrl+Z ile geri gelir.
+
 ## Launcher 1.1.0 · 9 Kasım 2026
 
 ### Yeni

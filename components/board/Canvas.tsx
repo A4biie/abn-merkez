@@ -24,6 +24,7 @@ import { distToLink, handlePoints, linkGeom } from './geometry';
 import { LinkHandles, LinksLayer, type Origin } from './Links';
 import { BoardContext, liveRect, type BoardCtx, type Live, type LiveLink, type LiveRect } from './live';
 import { DropGlow, Trail } from './Trail';
+import { useTheme } from '@/theme/ThemeProvider';
 
 /** Hareket eşiği: altında kalan dokunuş tıklama sayılır (Board.dc.html: 6px). */
 const TAP_SLOP = 6;
@@ -63,7 +64,11 @@ type Props = {
   onTapEmpty: () => void;
   onDragStart: (id: string) => void;
   onMove: (id: string, x: number, y: number) => void;
-  onResize: (id: string, w: number, h: number) => void;
+  onResize: (id: string, x: number, y: number, w: number, h: number) => void;
+  /** Ctrl/Shift ile seçilen diğer kartlar: birlikte taşınır. */
+  multi: string[];
+  /** Silinmekte olan kartlar (0.2 sn küçülüp solar). */
+  fading: string[];
   onLinkDrop: (
     from: string,
     to: string | null,
@@ -93,6 +98,7 @@ export function Canvas(p: Props) {
   } | null>(null);
 
   // ── Canlı durum ──
+  const { colors } = useTheme();
   const mode = useSharedValue(IDLE);
   const rects = useMemo<LiveRect[]>(
     () =>
@@ -103,6 +109,7 @@ export function Canvas(p: Props) {
         w: it.w,
         h: it.type === 'zone' ? (it.h ?? 300) : (heights[it.id] ?? estimateHeight(it)),
         zone: it.type === 'zone' ? 1 : 0,
+        rs: it.type === 'image' || it.type === 'video' ? 1 : it.type === 'note' ? 2 : 0,
       })),
     [items, heights],
   );
@@ -124,7 +131,31 @@ export function Canvas(p: Props) {
   const dragId = useSharedValue('');
   const dragX = useSharedValue(0);
   const dragY = useSharedValue(0);
-  const rz = useSharedValue({ id: '', w: 0, h: 0 });
+  const rz = useSharedValue({ id: '', x: 0, y: 0, w: 0, h: 0 });
+  const dragOX = useSharedValue(0);
+  const dragOY = useSharedValue(0);
+  const group = useSharedValue<string[]>([]);
+  // Shift basılı mı (fotoğraf/videoda serbest boyutlandırma) ve görünen alan (en büyük boyut sınırı).
+  const shiftSV = useSharedValue(false);
+  const viewSV = useSharedValue({ w: 1200, h: 800 });
+  const [rzLabel, setRzLabel] = useState<{ x: number; y: number; t: string } | null>(null);
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const on = (e: KeyboardEvent) => shiftSV.set(e.shiftKey);
+    const size = () => viewSV.set({ w: window.innerWidth, h: window.innerHeight });
+    size();
+    window.addEventListener('keydown', on);
+    window.addEventListener('keyup', on);
+    window.addEventListener('resize', size);
+    return () => {
+      window.removeEventListener('keydown', on);
+      window.removeEventListener('keyup', on);
+      window.removeEventListener('resize', size);
+    };
+  }, [shiftSV, viewSV]);
+  useEffect(() => {
+    group.set(p.multi);
+  }, [p.multi, group]);
   const bend = useSharedValue({ id: '', x: 0, y: 0 });
   const tmp = useSharedValue({ from: '', x: 0, y: 0, hover: '' });
   const selLink = useSharedValue('');
@@ -133,13 +164,14 @@ export function Canvas(p: Props) {
       cam,
       rects: rectsSV,
       links: linksSV,
-      drag: { id: dragId, x: dragX, y: dragY },
+      drag: { id: dragId, x: dragX, y: dragY, ox: dragOX, oy: dragOY },
+      group,
       rz,
       bend,
       tmp,
       selLink,
     }),
-    [cam, rectsSV, linksSV, dragId, dragX, dragY, rz, bend, tmp, selLink],
+    [cam, rectsSV, linksSV, dragId, dragX, dragY, dragOX, dragOY, group, rz, bend, tmp, selLink],
   );
 
   useEffect(() => {
@@ -147,7 +179,7 @@ export function Canvas(p: Props) {
     // Yeni konum/boyut React'e yansıdı: geçici değerler bırakılır.
     if (!mode.get()) {
       if (dragId.get()) dragId.set('');
-      if (rz.get().id) rz.set({ id: '', w: 0, h: 0 });
+      if (rz.get().id) rz.set({ id: '', x: 0, y: 0, w: 0, h: 0 });
     }
   });
   useEffect(() => {
@@ -180,6 +212,12 @@ export function Canvas(p: Props) {
   const finishDrag = useCallback(
     (id: string, x: number, y: number, ox: number, oy: number) => {
       p.onMove(id, x, y);
+      // Çoklu seçimde diğer kartlar da aynı kadar kayar.
+      for (const other of p.multi) {
+        if (other === id) continue;
+        const r = rects.find((it) => it.id === other);
+        if (r) p.onMove(other, Math.round(r.x + x - ox), Math.round(r.y + y - oy));
+      }
       if (Math.hypot(x - ox, y - oy) > 40) {
         const r = rects.find((it) => it.id === id);
         if (r) setGlow({ key: Date.now(), rect: { x, y, w: r.w, h: r.h } });
@@ -210,6 +248,8 @@ export function Canvas(p: Props) {
     wy: 0,
     reconnId: '',
     reconnWhich: 'to' as 'from' | 'to',
+    corner: 2,
+    rs: 2,
   });
 
   /** Dünya noktasının altındaki en üstteki kart (bölgeler en son; except hariç). */
@@ -240,7 +280,7 @@ export function Canvas(p: Props) {
     }
     if (m === LINK) tmp.set({ from: '', x: 0, y: 0, hover: '' });
     if (m === BEND) bend.set({ id: '', x: 0, y: 0 });
-    if (m === RESIZE) rz.set({ id: '', w: 0, h: 0 });
+    if (m === RESIZE) rz.set({ id: '', x: 0, y: 0, w: 0, h: 0 });
   };
 
   const gesture = useManualGesture({
@@ -313,18 +353,25 @@ export function Canvas(p: Props) {
         const r = liveRect(live, sel);
         if (r) {
           const list = rectsSV.get();
-          const isZone = list.some((x) => x.id === sel && x.zone === 1);
-          if (
-            isZone &&
-            wx > r.x + r.w - 26 &&
-            wx < r.x + r.w + 4 &&
-            wy > r.y + r.h - 26 &&
-            wy < r.y + r.h + 4
-          ) {
+          const me = list.find((x) => x.id === sel);
+          const isZone = me?.zone === 1;
+          let corner = -1;
+          if (isZone && wx > r.x + r.w - 26 && wx < r.x + r.w + 4 && wy > r.y + r.h - 26 && wy < r.y + r.h + 4)
+            corner = 2;
+          if (me && me.rs && group.get().length <= 1) {
+            const cs = [
+              [r.x, r.y],
+              [r.x + r.w, r.y],
+              [r.x + r.w, r.y + r.h],
+              [r.x, r.y + r.h],
+            ];
+            for (let i = 0; i < 4; i++) if (Math.hypot(wx - cs[i][0], wy - cs[i][1]) < 10 / z) corner = i;
+          }
+          if (corner >= 0) {
             GestureStateManager.activate(e.handlerTag);
             mode.set(RESIZE);
-            g.set({ ...base, target: sel, ow: r.w, oh: r.h });
-            rz.set({ id: sel, w: r.w, h: r.h });
+            g.set({ ...base, target: sel, ox: r.x, oy: r.y, ow: r.w, oh: r.h, corner, rs: isZone ? 2 : (me?.rs ?? 2) });
+            rz.set({ id: sel, x: r.x, y: r.y, w: r.w, h: isZone || me?.rs === 2 ? r.h : 0 });
             return;
           }
           const hs = handlePoints(r);
@@ -422,6 +469,8 @@ export function Canvas(p: Props) {
         mode.set(DRAG);
         dragX.set(s.ox);
         dragY.set(s.oy);
+        dragOX.set(s.ox);
+        dragOY.set(s.oy);
         dragId.set(s.target);
         scheduleOnRN(p.onDragStart, s.target);
       } else if (m === DRAG) {
@@ -444,11 +493,20 @@ export function Canvas(p: Props) {
         }
         bend.set({ id: s.target, x: bx, y: by });
       } else if (m === RESIZE) {
-        rz.set({
-          id: s.target,
-          w: Math.max(220, Math.round(s.ow + dx / z)),
-          h: Math.max(140, Math.round(s.oh + dy / z)),
-        });
+        // Köşe: 0 sol üst, 1 sağ üst, 2 sağ alt, 3 sol alt. Karşı köşe sabit kalır.
+        const sx = s.corner === 1 || s.corner === 2 ? 1 : -1;
+        const sy = s.corner >= 2 ? 1 : -1;
+        const v = viewSV.get();
+        const maxW = (v.w * 2) / z;
+        const maxH = (v.h * 2) / z;
+        const clamp = (n: number, hi: number) => Math.min(hi, Math.max(80, Math.round(n)));
+        const keep = s.rs === 1 && !shiftSV.get();
+        const nw = clamp(s.ow + (sx * dx) / z, maxW);
+        const nh = keep ? Math.round((nw * s.oh) / s.ow) : clamp(s.oh + (sy * dy) / z, maxH);
+        const nx = sx < 0 ? s.ox + s.ow - nw : s.ox;
+        const ny = sy < 0 ? s.oy + s.oh - nh : s.oy;
+        rz.set({ id: s.target, x: nx, y: ny, w: nw, h: keep ? 0 : nh });
+        scheduleOnRN(setRzLabel, { x: nx + nw + 8, y: ny + nh + 8, t: nw + ' × ' + nh });
       }
     },
 
@@ -488,7 +546,8 @@ export function Canvas(p: Props) {
         scheduleOnRN(p.onBend, b.id, b.x, b.y);
       } else if (m === RESIZE) {
         const r = rz.get();
-        scheduleOnRN(p.onResize, r.id, r.w, r.h);
+        scheduleOnRN(setRzLabel, null);
+        scheduleOnRN(p.onResize, r.id, r.x, r.y, r.w, r.h);
       }
       mode.set(IDLE);
     },
@@ -609,15 +668,39 @@ export function Canvas(p: Props) {
                 key={it.id}
                 item={it}
                 index={i}
-                selected={selected === it.id}
+                selected={selected === it.id || p.multi.includes(it.id)}
+                resizable={
+                  selected === it.id && p.multi.length <= 1 && !readOnly && editing !== it.id &&
+                  (it.type === 'image' || it.type === 'video' || it.type === 'note')
+                }
                 editing={editing === it.id}
                 isFrom={linkFrom === it.id}
+                fading={p.fading.includes(it.id)}
                 canLink={selected === it.id && editing !== it.id && !readOnly && !linkFrom}
                 live={live}
                 onHeight={onHeight}
               />
             ))}
             {selLinkObj && !readOnly && <LinkHandles link={selLinkObj} live={live} />}
+            {rzLabel && (
+              <View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  left: rzLabel.x,
+                  top: rzLabel.y,
+                  zIndex: 90,
+                  paddingHorizontal: 8,
+                  paddingVertical: 3,
+                  borderRadius: 8,
+                  backgroundColor: colors.text,
+                }}
+              >
+                <Txt size={12} weight={700} style={{ color: colors.bg }}>
+                  {rzLabel.t}
+                </Txt>
+              </View>
+            )}
             {items.length === 0 && (
               <View pointerEvents="none" style={{ position: 'absolute', left: 80, top: 80, width: 360 }}>
                 <Txt size={22} weight={800} style={{ marginBottom: 6 }}>

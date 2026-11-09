@@ -21,6 +21,9 @@ type Props = {
   item: BoardItem;
   index: number;
   selected: boolean;
+  /** Köşe tutamaçları (tek seçili fotoğraf / video / not). */
+  resizable?: boolean;
+  fading?: boolean;
   editing: boolean;
   /** "Bağla" aracında seçilen ilk kart */
   isFrom: boolean;
@@ -43,7 +46,7 @@ const HANDLES: [`${number}%`, `${number}%`][] = [
 ];
 
 /** Kart kabı: konum (sürüklerken paylaşılan değerden), seçim halkası, tutamak şeridi, içerik. */
-function BoardCardInner({ item, index, selected, editing, isFrom, canLink, live, onHeight }: Props) {
+function BoardCardInner({ item, index, selected, resizable, fading, editing, isFrom, canLink, live, onHeight }: Props) {
   const { colors } = useTheme();
   const motion = useMotion();
   const isHeading = item.type === 'heading';
@@ -54,20 +57,27 @@ function BoardCardInner({ item, index, selected, editing, isFrom, canLink, live,
   const bg = plainBg ? 'transparent' : tinted ? colors[tint.bg] : colors.surface;
   const fg = tinted ? colors[tint.fg] : colors.text;
   const baseShadow = plainBg ? 'none' : `0 0 0 1px ${colors.line}, 0 4px 14px rgba(0,0,0,0.08)`;
-  const selShadow = `0 0 0 2.5px ${colors.a2}${isZone ? '' : ', 0 12px 30px rgba(0,0,0,0.18)'}`;
+  const selShadow = `0 0 0 1.5px ${colors.a1}${isZone ? '' : ', 0 12px 30px rgba(0,0,0,0.18)'}`;
 
   const pos = useAnimatedStyle(() => {
-    const dragging = live.drag.id.get() === item.id;
+    const did = live.drag.id.get();
+    const dragging = did === item.id;
+    const inGroup = !!did && !dragging && live.group.get().includes(item.id);
+    const gdx = inGroup ? live.drag.x.get() - live.drag.ox.get() : 0;
+    const gdy = inGroup ? live.drag.y.get() - live.drag.oy.get() : 0;
     const rz = live.rz.get();
+    const rzMe = rz.id === item.id;
     const linkTarget = live.tmp.get().hover === item.id;
     return {
-      zIndex: dragging ? 60 : selected ? 50 : isZone ? 0 : 2 + index,
-      width: rz.id === item.id ? rz.w : item.w,
-      height: isZone ? (rz.id === item.id ? rz.h : (item.h ?? 300)) : undefined,
+      opacity: withTiming(fading ? 0 : 1, { duration: fading ? 200 : 0 }),
+      zIndex: dragging || inGroup ? 60 : selected ? 50 : isZone ? 0 : 2 + index,
+      width: rzMe ? rz.w : item.w,
+      height: isZone ? (rzMe ? rz.h : (item.h ?? 300)) : rzMe ? rz.h || undefined : (item.h ?? undefined),
+      overflow: !isZone && (rzMe ? rz.h : item.h) ? 'hidden' : undefined,
       transform: [
-        { translateX: dragging ? live.drag.x.get() : item.x },
-        { translateY: dragging ? live.drag.y.get() : item.y },
-        { scale: withTiming(dragging ? 1.035 : 1, { duration: 220 }) },
+        { translateX: dragging ? live.drag.x.get() : rzMe ? rz.x : item.x + gdx },
+        { translateY: dragging ? live.drag.y.get() : rzMe ? rz.y : item.y + gdy },
+        { scale: fading ? withTiming(0.85, { duration: 200 }) : withTiming(dragging ? 1.035 : 1, { duration: 220 }) },
         { rotate: withTiming(dragging ? '-1deg' : '0deg', { duration: 220 }) },
       ],
       boxShadow: linkTarget
@@ -91,6 +101,13 @@ function BoardCardInner({ item, index, selected, editing, isFrom, canLink, live,
       borderRadius: s / 2,
       borderWidth: 1.3 / live.cam.zoom.get(),
     };
+  });
+
+  // Boyutlandırma tutamaçları: ekranda sabit 10px, beyaz dolgu, a1 kenar.
+  const cornerStyle = useAnimatedStyle(() => {
+    const z = live.cam.zoom.get();
+    const s = 10 / z;
+    return { width: s, height: s, marginLeft: -s / 2, marginTop: -s / 2, borderRadius: s / 2, borderWidth: 1.5 / z };
   });
 
   return (
@@ -133,6 +150,18 @@ function BoardCardInner({ item, index, selected, editing, isFrom, canLink, live,
         </View>
       )}
 
+      {resizable &&
+        CORNERS.map(([left, top], i) => (
+          <Animated.View
+            key={'c' + i}
+            pointerEvents="none"
+            style={[
+              { position: 'absolute', left, top, zIndex: 4, backgroundColor: '#FFFFFF', borderColor: colors.a1 },
+              cornerStyle,
+            ]}
+          />
+        ))}
+
       {canLink &&
         HANDLES.map(([left, top], i) => (
           <Animated.View
@@ -154,6 +183,13 @@ function BoardCardInner({ item, index, selected, editing, isFrom, canLink, live,
     </Animated.View>
   );
 }
+
+const CORNERS = [
+  ['0%', '0%'],
+  ['100%', '0%'],
+  ['100%', '100%'],
+  ['0%', '100%'],
+] as const;
 
 export const BoardCard = memo(BoardCardInner);
 
