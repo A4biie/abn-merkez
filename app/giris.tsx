@@ -1,5 +1,12 @@
 import { useRef, useState, type ComponentRef, type Ref } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View, type TextInputProps } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  TextInput,
+  View,
+  type TextInputProps,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemeList } from '@/components/ThemePicker';
@@ -70,7 +77,13 @@ export default function Giris() {
               accessibilityLabel="Tema seç"
               bg="surface"
               shadow
-              style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
               <Icon name="palette" size={20} color={colors.text} />
             </Press>
@@ -147,6 +160,7 @@ export default function Giris() {
                 onPress={submit}
                 disabled={sending || !ready}
                 bg={ready ? 'a1' : 'surface2'}
+                gradient={ready ? 'btn' : undefined}
                 style={{ borderRadius: 999, padding: 14, alignItems: 'center' }}
               >
                 <Txt weight={700} color={ready ? 'a1-ink' : 'text-3'}>

@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Platform } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
 
 import { useAuth } from '@/lib/auth';
-import { DEFAULT_THEME, isThemeName, THEMES, type Palette, type ThemeDef, type ThemeName } from './themes';
+import { defaultTheme, resolveTheme, THEMES, type Palette, type ThemeDef, type ThemeName } from './themes';
 
 const STORAGE_KEY = 'abn.theme';
 
@@ -11,6 +11,8 @@ type ThemeState = {
   name: ThemeName;
   theme: ThemeDef;
   colors: Palette;
+  /** Sayfaların kendi zemini: gradyanlı temada şeffaf (arkadaki AppBackground görünsün), düzde bg. */
+  pageBg: string;
   setTheme: (name: ThemeName) => void;
 };
 
@@ -56,18 +58,21 @@ function applyWebChrome(def: ThemeDef) {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const { profile, updateProfile } = useAuth();
+  // Hiç seçim yoksa sistem: koyu modda Gece Yarısı, açık modda Nane.
+  const system = defaultTheme(useColorScheme());
   // Giriş yapılmamışken (giriş ekranı) cihazdaki son seçim kullanılır.
-  const [local, setLocal] = useState<ThemeName>(DEFAULT_THEME);
+  const [local, setLocal] = useState<ThemeName | null>(null);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((saved) => {
-      if (isThemeName(saved)) setLocal(saved);
+      const t = resolveTheme(saved);
+      if (t) setLocal(t);
     });
   }, []);
 
   // Giriş yapılınca profildeki tema geçerli olur; başka cihazda seçilen tema buraya da gelir.
-  const profileTheme = profile && isThemeName(profile.theme) ? profile.theme : null;
-  const name = profileTheme ?? local;
+  // Kaldırılmış eski bir tema adı yenisine çevrilir (dark → Gece Yarısı, light → Nane).
+  const name = resolveTheme(profile?.theme) ?? local ?? system;
 
   useEffect(() => {
     applyWebChrome(THEMES[name]);
@@ -84,7 +89,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ name, theme: THEMES[name], colors: THEMES[name].colors, setTheme }),
+    () => ({
+      name,
+      theme: THEMES[name],
+      colors: THEMES[name].colors,
+      pageBg: THEMES[name].gradients ? 'transparent' : THEMES[name].colors.bg,
+      setTheme,
+    }),
     [name, setTheme],
   );
 

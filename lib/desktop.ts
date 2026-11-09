@@ -26,6 +26,16 @@ export const launcherDemo: boolean =
   typeof location !== 'undefined' &&
   new URLSearchParams(location.search).has('launcher');
 
+/** Tarayıcıda bildirim kartlarını denemek için: http://localhost:8081/?bildirim */
+export const notifyDemo: boolean =
+  !isDesktop &&
+  Platform.OS === 'web' &&
+  typeof location !== 'undefined' &&
+  new URLSearchParams(location.search).has('bildirim');
+
+/** Bu pencere bildirim kartlarının penceresi mi (gerçek ya da tarayıcıda deneme)? */
+export const isNotifyWindow = windowLabel === 'bildirim' || notifyDemo;
+
 /** Bu pencere launcher mı (gerçek ya da tarayıcıda deneme)? */
 export const isLauncherWindow = windowLabel === 'main' || launcherDemo;
 

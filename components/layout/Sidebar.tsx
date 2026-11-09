@@ -128,6 +128,7 @@ function NavItem({ label, icon, active, dot, isFocused: _isFocused, ...rest }: N
     <Press
       {...rest}
       bg={active ? 'nav-pill' : undefined}
+      gradient={active ? 'pill' : undefined}
       hoverBg={active ? 'nav-pill' : 'hover'}
       pressScale={0.97}
       accessibilityRole="link"

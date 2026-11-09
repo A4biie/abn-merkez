@@ -6,7 +6,10 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { Icon } from './Icon';
 import { Txt } from './Txt';
 
-const spin = css.keyframes({ from: { transform: [{ rotate: '0deg' }] }, to: { transform: [{ rotate: '360deg' }] } });
+const spin = css.keyframes({
+  from: { transform: [{ rotate: '0deg' }] },
+  to: { transform: [{ rotate: '360deg' }] },
+});
 const pop = css.keyframes({
   '0%': { transform: [{ scale: 0.4 }], opacity: 0 },
   '60%': { transform: [{ scale: 1.2 }], opacity: 1 },
@@ -25,8 +28,17 @@ export function PendingBadge({ sent, color }: { sent?: boolean; color?: string }
       <Animated.View
         accessibilityLabel="Gönderildi"
         style={[
-          { width: 16, height: 16, borderRadius: 8, backgroundColor: colors.a3, alignItems: 'center', justifyContent: 'center' },
-          motion.reduced ? null : { animationName: pop, animationDuration: 450, animationTimingFunction: EASE_SPRING },
+          {
+            width: 16,
+            height: 16,
+            borderRadius: 8,
+            backgroundColor: colors.a3,
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
+          motion.reduced
+            ? null
+            : { animationName: pop, animationDuration: 450, animationTimingFunction: EASE_SPRING },
         ]}
       >
         <Icon name="check" size={10} color={colors['a3-ink']} strokeWidth={3.2} />
@@ -34,12 +46,20 @@ export function PendingBadge({ sent, color }: { sent?: boolean; color?: string }
     );
   }
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }} accessibilityLabel="Gönderilmeyi bekliyor">
+    <View
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+      accessibilityLabel="Gönderilmeyi bekliyor"
+    >
       <Animated.View
         style={
           motion.reduced
             ? null
-            : { animationName: spin, animationDuration: 2400, animationIterationCount: 'infinite', animationTimingFunction: 'linear' }
+            : {
+                animationName: spin,
+                animationDuration: 2400,
+                animationIterationCount: 'infinite',
+                animationTimingFunction: 'linear',
+              }
         }
       >
         <Icon name="clock" size={13} color={ink} strokeWidth={2} />

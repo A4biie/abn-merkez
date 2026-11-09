@@ -34,7 +34,15 @@ export function Select<T extends string>({
         bg="surface2"
         border="line-2"
         pressScale={0.98}
-        style={{ minWidth, borderRadius: 10, paddingVertical: 7, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+        style={{
+          minWidth,
+          borderRadius: 10,
+          paddingVertical: 7,
+          paddingHorizontal: 10,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+        }}
       >
         <Txt size={14} style={{ flex: 1 }} numberOfLines={1}>
           {current}
@@ -60,7 +68,13 @@ export function Select<T extends string>({
                 bg={on ? 'sel-bg' : 'surface2'}
                 hoverBg={on ? 'sel-bg' : 'hover'}
                 accessibilityState={{ selected: on }}
-                style={{ borderRadius: 14, paddingVertical: 12, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center' }}
+                style={{
+                  borderRadius: 14,
+                  paddingVertical: 12,
+                  paddingHorizontal: 14,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}
               >
                 <Txt weight={600} color={on ? 'sel-fg' : 'text'} style={{ flex: 1 }}>
                   {o.label}
@@ -76,7 +90,15 @@ export function Select<T extends string>({
 }
 
 /** Açık/kapalı anahtarı (prototipteki role="switch"). */
-export function Switch({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label: string }) {
+export function Switch({
+  value,
+  onChange,
+  label,
+}: {
+  value: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+}) {
   const { colors } = useTheme();
   const motion = useMotion();
   return (
@@ -90,7 +112,16 @@ export function Switch({ value, onChange, label }: { value: boolean; onChange: (
     >
       <Animated.View
         style={[
-          { position: 'absolute', top: 3, left: value ? 23 : 3, width: 20, height: 20, borderRadius: 10, backgroundColor: '#FFFFFF', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' },
+          {
+            position: 'absolute',
+            top: 3,
+            left: value ? 23 : 3,
+            width: 20,
+            height: 20,
+            borderRadius: 10,
+            backgroundColor: '#FFFFFF',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+          },
           motion.transition('left', 400, EASE_BOUNCE),
         ]}
       />

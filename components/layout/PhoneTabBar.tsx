@@ -6,6 +6,7 @@ import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Box } from '@/components/ui/Box';
+import { GradientFill, useGradient } from '@/components/ui/Gradient';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { Press } from '@/components/ui/Press';
 import { Txt } from '@/components/ui/Txt';
@@ -26,6 +27,7 @@ export function PhoneTabBar() {
   const [width, setWidth] = useState(0);
   const unread = useChatUnread();
 
+  const pill = useGradient('pill');
   const current = activeTab(pathname);
   const index = PHONE_TABS.findIndex((t) => t.name === current);
   const cell = width / PHONE_TABS.length;
@@ -54,10 +56,14 @@ export function PhoneTabBar() {
               height: 32,
               borderRadius: 999,
               backgroundColor: colors['nav-pill'],
+              overflow: 'hidden',
             },
             motion.transition(['left', 'backgroundColor'], 500, EASE_BOUNCE),
           ]}
-        />
+        >
+          {/* Aktif sekme: gradyanlı temalarda pillGradient (0.8.0). */}
+          {pill && <GradientFill pair={pill} />}
+        </Animated.View>
       )}
       <View style={{ flex: 1, flexDirection: 'row' }}>
         {PHONE_TABS.map((t) => (

@@ -15,22 +15,33 @@
       @font-face { font-family: 'Urbanist'; font-weight: 700; src: url('fonts/Urbanist_700Bold.ttf') format('truetype'); }
       @font-face { font-family: 'Urbanist'; font-weight: 800; src: url('fonts/Urbanist_800ExtraBold.ttf') format('truetype'); }
 
-      /* Uygulamanın 4 teması (theme/themes.ts ile aynı değerler) */
-      :root, body[data-abn='dark'] {
-        --surface: #1c1c21; --line-2: #3a3a41; --text: #f4f4f5; --text-3: #c9c9d1; --muted: #a1a1aa; --faint: #92929b;
-        --a1: #e4f68f; --a2: #c5b5fa; --a3: #8ee8f5;
+      /* Uygulamanın 9 teması (theme/themes.ts ile aynı değerler; varsayılan Gece Yarısı) */
+      body[data-abn='okyanus'] {
+        --surface: #15303a; --line-2: #2c4a55; --text: #eaf6f6; --text-3: #b5cfd1; --muted: #94b4b8; --faint: #7fa0a4; --a1: #7fe3c4; --a2: #90c6ff; --a3: #f4d68f;
       }
-      body[data-abn='gece'] {
-        --surface: #172a40; --line-2: #3a4b5f; --text: #eef3f8; --text-3: #beccd9; --muted: #9fb0c1; --faint: #93a4b5;
-        --a1: #f04e2a; --a2: #8fa6bc; --a3: #f7a48f;
+      body[data-abn='kor'] {
+        --surface: #2a1c19; --line-2: #4a342c; --text: #fff2ea; --text-3: #dcc3b5; --muted: #c4a797; --faint: #a88d7e; --a1: #ffb47c; --a2: #f28372; --a3: #f5d690;
       }
-      body[data-abn='light'] {
-        --surface: #ffffff; --line-2: #cfcfd8; --text: #121215; --text-3: #4a4a55; --muted: #5e5e69; --faint: #65656f;
-        --a1: #e4f68f; --a2: #c5b5fa; --a3: #8ee8f5;
+      :root, body[data-abn='geceyarisi'] {
+        --surface: #1f1d31; --line-2: #3b3857; --text: #f2f0fa; --text-3: #c6c2de; --muted: #a8a4c2; --faint: #8f8bab; --a1: #bba9ff; --a2: #82d3ea; --a3: #f2a9c5;
+      }
+      body[data-abn='noirisik'] {
+        --surface: #121212; --line-2: #383838; --text: #efefef; --text-3: #c4c4c4; --muted: #a3a3a3; --faint: #8f8f8f; --a1: #f0b7b8; --a2: #bc4d4b; --a3: #efefef;
+      }
+      body[data-abn='noir'] {
+        --surface: #121212; --line-2: #383838; --text: #efefef; --text-3: #c4c4c4; --muted: #a3a3a3; --faint: #8f8f8f; --a1: #f0b7b8; --a2: #bc4d4b; --a3: #efefef;
+      }
+      body[data-abn='nane'] {
+        --surface: #ffffff; --line-2: #c3d6cb; --text: #17231d; --text-3: #3e5047; --muted: #526459; --faint: #5c6e63; --a1: #bee9cf; --a2: #ffe08c; --a3: #abd5f2;
+      }
+      body[data-abn='zeytin'] {
+        --surface: #ffffff; --line-2: #d6d4ae; --text: #2b2a14; --text-3: #55532f; --muted: #686540; --faint: #737048; --a1: #dad6ab; --a2: #c2be8a; --a3: #8e8a5a;
       }
       body[data-abn='adacayi'] {
-        --surface: #fbf5ec; --line-2: #d0bea6; --text: #2b1f2a; --text-3: #574554; --muted: #685664; --faint: #675663;
-        --a1: #85a2a0; --a2: #8a6281; --a3: #d7ccb6;
+        --surface: #fbf5ec; --line-2: #d0bea6; --text: #2b1f2a; --text-3: #574554; --muted: #6a5866; --faint: #74616f; --a1: #85a2a0; --a2: #8a6281; --a3: #d7ccb6;
+      }
+      body[data-abn='pudra'] {
+        --surface: #ffffff; --line-2: #dfcbc0; --text: #2e231c; --text-3: #5a4a3f; --muted: #6e5d52; --faint: #78665a; --a1: #f7ddd2; --a2: #cdbca9; --a3: #dad0c1;
       }
       :root {
         --io: cubic-bezier(0.65, 0, 0.35, 1);
@@ -175,7 +186,8 @@
 
         // Tema: uygulamanın kaydettiği tema (AsyncStorage → localStorage "abn.theme").
         var theme = params.get('tema') || store('abn.theme');
-        if (theme && /^(dark|gece|light|adacayi)$/.test(theme)) document.body.setAttribute('data-abn', theme);
+        theme = ({ dark: 'geceyarisi', gece: 'geceyarisi', indigo: 'geceyarisi', gunbatimi: 'geceyarisi', light: 'nane', gul: 'nane', tropik: 'nane' })[theme] || theme;
+        if (theme && /^(okyanus|kor|geceyarisi|noirisik|noir|nane|zeytin|adacayi|pudra)$/.test(theme)) document.body.setAttribute('data-abn', theme);
         if (reduced) document.documentElement.classList.add('reduced');
         // Tarayıcıda denerken şeffaf zemin beyaz görünmesin (Tauri'de pencere şeffaf kalır).
         if (!T) document.documentElement.style.background = '#2c2c33';

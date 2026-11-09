@@ -262,7 +262,7 @@ function Content({ person }: { person: Profile }) {
       </View>
 
       <View style={{ flexDirection: 'row', gap: 10, maxWidth: 560 }}>
-        <Box bg="a1" style={{ flex: 1, borderRadius: 20, padding: 14 }}>
+        <Box bg="a1" gradient="task" style={{ flex: 1, borderRadius: 20, padding: 14 }}>
           <Txt size={24} weight={700} color="a1-ink" leading={1.2} style={{ fontVariant: ['tabular-nums'] }}>
             {done}
           </Txt>

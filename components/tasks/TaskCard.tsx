@@ -33,7 +33,14 @@ export function TaskCard({ task, variant = 'card' }: { task: Task; variant?: Var
   const assignee = team.person(task.assignee_id);
 
   const claimButton = pool && (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: variant === 'kanban' ? 8 : 10, flexWrap: 'wrap' }}>
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: variant === 'kanban' ? 8 : 10,
+        flexWrap: 'wrap',
+      }}
+    >
       <Button
         label={pending ? 'İstek gönderildi' : locked ? 'Kilitli' : 'Ben alırım'}
         kind={locked || pending ? 'muted' : 'primary'}
@@ -55,7 +62,12 @@ export function TaskCard({ task, variant = 'card' }: { task: Task; variant?: Var
       key={celebrating ? 'bitti-pop' : task.status}
       style={
         celebrating && !motion.reduced
-          ? { animationName: statusPop, animationDuration: 500, animationDelay: 200, animationTimingFunction: EASE_SPRING }
+          ? {
+              animationName: statusPop,
+              animationDuration: 500,
+              animationDelay: 200,
+              animationTimingFunction: EASE_SPRING,
+            }
           : null
       }
     >
@@ -104,7 +116,13 @@ export function TaskCard({ task, variant = 'card' }: { task: Task; variant?: Var
       <Card radius={16} padding={14} gap={8}>
         {celebrating && <Confetti />}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Txt size={12} weight={600} color={project ? 'accent-text' : 'muted'} style={{ flex: 1 }} numberOfLines={1}>
+          <Txt
+            size={12}
+            weight={600}
+            color={project ? 'accent-text' : 'muted'}
+            style={{ flex: 1 }}
+            numberOfLines={1}
+          >
             {project?.name ?? 'Projesiz'}
           </Txt>
           {celebrating && chip}
@@ -144,7 +162,13 @@ export function TaskCard({ task, variant = 'card' }: { task: Task; variant?: Var
     <Card radius={24} gap={10}>
       {celebrating && <Confetti />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Txt size={12.5} weight={600} color={project ? 'accent-text' : 'muted'} style={{ flex: 1 }} numberOfLines={1}>
+        <Txt
+          size={12.5}
+          weight={600}
+          color={project ? 'accent-text' : 'muted'}
+          style={{ flex: 1 }}
+          numberOfLines={1}
+        >
           {project?.name ?? 'Projesiz'}
         </Txt>
         {chip}
@@ -156,9 +180,19 @@ export function TaskCard({ task, variant = 'card' }: { task: Task; variant?: Var
         </Txt>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <Txt size={13} color="muted">
-          {who} · {task.due_label}
-        </Txt>
+        {mine ? (
+          <>
+            {/* Koyu rozet: gradyanlı temalarda badgeGradient (0.8.0). */}
+            <Chip label="Sende" bg="a1-ink" fg="a1" gradient="badge" />
+            <Txt size={13} color="muted">
+              {task.due_label}
+            </Txt>
+          </>
+        ) : (
+          <Txt size={13} color="muted">
+            {who} · {task.due_label}
+          </Txt>
+        )}
         {task.needs_help && (
           <Txt size={13} weight={600} color="warn-text">
             · Yardım istiyor

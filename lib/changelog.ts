@@ -4,6 +4,23 @@ export type Release = { version: string; date: string; sections: { title: string
 
 export const RELEASES: Release[] = [
   {
+    "version": "0.8.0",
+    "date": "10 Kasım 2026",
+    "sections": [
+      {
+        "title": "Yeni",
+        "items": [
+          "Temalar yenilendi: 9 tema, 5'i gradyanlı (üstten ışık ve kart gradyanları)",
+          "Koyu: Okyanus, Kor, Gece Yarısı, Noir Işık, Noir. Açık: Nane, Zeytin, Adaçayı, Pudra.",
+          "Gradyanlı temalarda ekranın tepesinden yumuşak bir ışık yayılıyor; duyuru ve görev kartları, ana butonlar, seçili sekmeler gradyanlı.",
+          "Tema seçicide her temanın kendi zemini ve ışığıyla küçük bir önizleme.",
+          "Varsayılan tema sistem moduna göre: koyu modda Gece Yarısı, açık modda Nane. Kaldırılan temaları kullananlar en yakın yeni temaya geçti.",
+          "Sabit duyuru kartı artık duyuru rengiyle (a2) gösteriliyor; görev kartında \"Sende\" küçük bir rozet."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.7.0",
     "date": "5 Kasım 2026",
     "sections": [
@@ -134,6 +151,19 @@ export const RELEASES: Release[] = [
 
 /** ABN Launcher (masaüstü) sürümleri. */
 export const LAUNCHER_RELEASES: Release[] = [
+  {
+    "version": "1.0.5",
+    "date": "9 Kasım 2026",
+    "sections": [
+      {
+        "title": "Yeni",
+        "items": [
+          "Merkez 0.8.0 masaüstünde: 9 yeni tema, 5'i gradyanlı.",
+          "Kendi bildirim penceremiz (ilk adım): mesajlar, anmalar ve bildirimler ekranın sağ altında ABN'nin kartlarında görünüyor; Windows'un standart bildirimi kaldırıldı. Launcher ve Merkez kapalıyken de (tepsideyken) geliyor; açık olduğun sohbetten bildirim gelmiyor."
+        ]
+      }
+    ]
+  },
   {
     "version": "1.0.4",
     "date": "9 Kasım 2026",

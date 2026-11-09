@@ -14,19 +14,13 @@ const sweep = css.keyframes({
 });
 
 /** Yüklenirken içeriğin yerinde duran blok: surface2 zemin, üstünden a2'nin %22'si kadar soluk parıltı. */
-export function Bone({
-  w = '100%',
-  h = 14,
-  r = 8,
-}: {
-  w?: DimensionValue;
-  h?: number;
-  r?: number;
-}) {
+export function Bone({ w = '100%', h = 14, r = 8 }: { w?: DimensionValue; h?: number; r?: number }) {
   const { colors } = useTheme();
   const motion = useMotion();
   return (
-    <View style={{ width: w, height: h, borderRadius: r, backgroundColor: colors.surface2, overflow: 'hidden' }}>
+    <View
+      style={{ width: w, height: h, borderRadius: r, backgroundColor: colors.surface2, overflow: 'hidden' }}
+    >
       {!motion.reduced && (
         <Animated.View
           style={[
@@ -85,7 +79,9 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
       <Txt size={14} color="muted">
         {message}
       </Txt>
-      {onRetry && <Button label="Tekrar dene" kind="soft" onPress={onRetry} style={{ alignSelf: 'flex-start' }} />}
+      {onRetry && (
+        <Button label="Tekrar dene" kind="soft" onPress={onRetry} style={{ alignSelf: 'flex-start' }} />
+      )}
     </Card>
   );
 }

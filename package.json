@@ -1,6 +1,6 @@
 {
   "name": "abn-merkez",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo-google-fonts/urbanist": "^0.4.2",
@@ -26,6 +26,7 @@
     "expo-haptics": "~58.0.7",
     "expo-image": "~58.0.18",
     "expo-image-picker": "~58.0.10",
+    "expo-linear-gradient": "~58.0.3",
     "expo-linking": "~58.0.15",
     "expo-notifications": "~58.1.7",
     "expo-router": "~58.0.28",

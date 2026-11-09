@@ -13,6 +13,7 @@ import { useActions } from '@/components/sheets/ActionsProvider';
 import { ShareForm } from '@/components/sheets/ShareForm';
 import { Avatar } from '@/components/ui/Avatar';
 import { Box } from '@/components/ui/Box';
+import { GradientCard } from '@/components/ui/GradientCard';
 import { Button, Card, IconButton, Pill } from '@/components/ui/Controls';
 import { ErrorState, SkeletonCards } from '@/components/ui/Feedback';
 import { Icon } from '@/components/ui/Icon';
@@ -132,6 +133,7 @@ function PhoneAkis({
     <Press
       onPress={() => router.navigate({ pathname: '/gorevler', params: { sekme } })}
       bg={bg}
+      gradient={bg === 'a1' ? 'task' : bg === 'a2' ? 'ann' : undefined}
       style={{ flex: 1, borderRadius: 22, padding: 14, gap: 2 }}
     >
       <Txt size={26} weight={700} color={`${bg}-ink`} leading={1.2} style={{ fontVariant: ['tabular-nums'] }}>
@@ -224,6 +226,7 @@ function TourNote() {
   return (
     <Box
       bg="a2"
+      gradient="ann"
       style={{
         borderRadius: 20,
         paddingVertical: 12,
@@ -288,25 +291,26 @@ function PinnedAnnouncement({ compact }: { compact?: boolean }) {
   const { colors } = useTheme();
   if (!data) return null;
   return (
-    <Box bg="a1" style={{ borderRadius: compact ? 22 : 24, padding: 18, gap: 6 }}>
+    // Duyurular a2 kartı: gradyanlı temalarda annGradient (0.8.0).
+    <GradientCard tone="a2" style={{ borderRadius: compact ? 22 : 24, padding: 18, gap: 6 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Icon name="pin" size={14} color={colors['a1-ink']} strokeWidth={2.2} />
-        <Txt size={12} weight={700} color="a1-ink" style={{ letterSpacing: 0.72 }}>
+        <Icon name="pin" size={14} color={colors['a2-ink']} strokeWidth={2.2} />
+        <Txt size={12} weight={700} color="a2-ink" style={{ letterSpacing: 0.72 }}>
           {(data.author_id
             ? `Sabit duyuru · ${team.nameOf(data.author_id)}`
             : 'Sabit duyuru'
           ).toLocaleUpperCase('tr')}
         </Txt>
       </View>
-      <Txt size={18} weight={700} color="a1-ink" leading={1.3}>
+      <Txt size={18} weight={700} color="a2-ink" leading={1.3}>
         {data.title}
       </Txt>
       {!!data.body && (
-        <Txt size={14} color="a1-ink">
+        <Txt size={14} color="a2-ink">
           {data.body}
         </Txt>
       )}
-    </Box>
+    </GradientCard>
   );
 }
 

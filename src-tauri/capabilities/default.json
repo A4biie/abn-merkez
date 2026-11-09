@@ -1,11 +1,12 @@
 {
   "identifier": "default",
-  "description": "Launcher, açılış, Merkez ve hızlı fikir pencereleri.",
+  "description": "Launcher, açılış, Merkez, hızlı fikir ve bildirim pencereleri.",
   "windows": [
     "main",
     "splash",
     "merkez",
-    "fikir"
+    "fikir",
+    "bildirim"
   ],
   "permissions": [
     "core:default",

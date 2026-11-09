@@ -7,11 +7,9 @@ import Animated from 'react-native-reanimated';
 
 import { ConnectionCapsule } from '@/components/layout/ConnectionCapsule';
 import { Box } from '@/components/ui/Box';
-import { useAuth } from '@/lib/auth';
 import { listenAuthLinks } from '@/lib/launcher/desktopAuth';
 import { autoUpdateGames, loadInstalled, useGames } from '@/lib/launcher/games';
 import { initMerkezWindow, openMerkez } from '@/lib/launcher/merkez';
-import { startNotifier } from '@/lib/launcher/notifier';
 import { syncSettings } from '@/lib/launcher/settings';
 import { checkForUpdate } from '@/lib/launcher/updater';
 import { useMotion } from '@/theme/motion';
@@ -24,7 +22,6 @@ import { DownloadsTab, GamesTab, SettingsTab } from './Tabs';
 export function LauncherApp() {
   const motion = useMotion();
   const [tab, setTab] = useState<LauncherTab>('ana');
-  const { profile } = useAuth();
   const games = useGames();
 
   useEffect(() => {
@@ -52,9 +49,6 @@ export function LauncherApp() {
       off?.();
     };
   }, []);
-
-  // Windows bildirimleri ve tepsideki okunmamış noktası (giriş yapılmışsa).
-  useEffect(() => (profile ? startNotifier(profile) : undefined), [profile]);
 
   // Otomatik güncelleme açıksa yeni sürümü çıkan kurulu oyunlar arka planda iner.
   useEffect(() => {

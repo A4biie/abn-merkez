@@ -13,6 +13,8 @@ import { EASE_OUT, useMotion } from '@/theme/motion';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { Token } from '@/theme/themes';
 
+import { GradientFill, useGradient, useHighlight, type GradientKind } from './Gradient';
+
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type Props = Omit<PressableProps, 'style'> & {
@@ -23,6 +25,8 @@ type Props = Omit<PressableProps, 'style'> & {
   shadow?: boolean;
   /** Basınca küçülme oranı. Prototipte telefonda .95, bilgisayarda .97. */
   pressScale?: number;
+  /** Gradyanlı temalarda zeminin üstüne bu tür gradyan. Basınca gradyan değişmez, sadece küçülür. */
+  gradient?: GradientKind;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -38,8 +42,25 @@ function targetSlop(style: StyleProp<ViewStyle>): Insets | undefined {
 }
 
 /** Basınca hafifçe küçülen buton (.app button:active { transform: scale(.95) }). */
-export function Press({ bg, hoverBg, border, shadow, pressScale = 0.95, style, disabled, ...rest }: Props) {
+export function Press({
+  bg,
+  hoverBg,
+  border,
+  shadow,
+  pressScale = 0.95,
+  gradient,
+  style,
+  disabled,
+  children,
+  ...rest
+}: Props) {
   const { colors } = useTheme();
+  const pair = useGradient(gradient);
+  const highlight = useHighlight();
+  // Ana butonlarda üst kenar parıltısı (inset), gölgeyle birlikte.
+  const shadows = [shadow ? colors.shadow : null, pair && gradient === 'btn' ? highlight : null]
+    .filter((x) => x && x !== 'none')
+    .join(', ');
   const motion = useMotion();
   const [pressed, setPressed] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -71,7 +92,8 @@ export function Press({ bg, hoverBg, border, shadow, pressScale = 0.95, style, d
       style={[
         fill && { backgroundColor: colors[fill] },
         border && { borderColor: colors[border], borderWidth: 1 },
-        shadow && { boxShadow: colors.shadow },
+        shadows ? { boxShadow: shadows } : null,
+        pair && { overflow: 'hidden' },
         { transform: [{ scale: pressed && !disabled ? pressScale : 1 }] },
         motion.reduced
           ? null
@@ -83,6 +105,15 @@ export function Press({ bg, hoverBg, border, shadow, pressScale = 0.95, style, d
         { cursor: disabled ? 'auto' : 'pointer' },
         style,
       ]}
-    />
+    >
+      {pair
+        ? (state) => (
+            <>
+              <GradientFill pair={pair} />
+              {typeof children === 'function' ? children(state) : children}
+            </>
+          )
+        : children}
+    </AnimatedPressable>
   );
 }

@@ -23,7 +23,8 @@ export type Profile = {
   links: ProfileLink[];
   availability: Availability;
   availability_until: string | null;
-  theme: ThemeName;
+  /** null: sistem moduna göre (koyu → Gece Yarısı, açık → Nane). */
+  theme: ThemeName | null;
   /** Hoş geldin turu bitti ya da atlandı. */
   onboarded: boolean;
   /** "Ne yaparsın?" seçimleri (Yazar, Çizer...). */

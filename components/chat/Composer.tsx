@@ -293,6 +293,7 @@ export function Composer({
             disabled={busy || !hasText}
             accessibilityLabel={editing ? 'Kaydet' : 'Gönder'}
             bg={hasText ? 'a1' : 'surface2'}
+            gradient={hasText ? 'btn' : undefined}
             style={{
               width: 44,
               height: 44,

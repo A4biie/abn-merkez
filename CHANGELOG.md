@@ -4,6 +4,13 @@ ABN Merkez'in sürümleri. Yeni özellik getiren sürüm 0.x.0, sadece düzeltme
 Uygulama yeni bir sürüme ilk açıldığında "Neler yeni" panelinde o sürümün maddeleri gösterilir
 (`npm run changelog` bu dosyadan `lib/changelog.ts`'i üretir).
 
+## Launcher 1.0.5 · 9 Kasım 2026
+
+### Yeni
+
+- Merkez 0.8.0 masaüstünde: 9 yeni tema, 5'i gradyanlı.
+- Kendi bildirim penceremiz (ilk adım): mesajlar, anmalar ve bildirimler ekranın sağ altında ABN'nin kartlarında görünüyor; Windows'un standart bildirimi kaldırıldı. Launcher ve Merkez kapalıyken de (tepsideyken) geliyor; açık olduğun sohbetten bildirim gelmiyor.
+
 ## Launcher 1.0.4 · 9 Kasım 2026
 
 ### Yeni
@@ -27,6 +34,17 @@ Uygulama yeni bir sürüme ilk açıldığında "Neler yeni" panelinde o sürüm
 - Windows bildirimleri: yorum, kalp, duyuru, görev ataması ve anma; tıklayınca ilgili sayfa açılıyor. Sessiz saatlere ve tepsideki "Sessiz mod"a uyuyor.
 - Ctrl+Shift+Space ile her yerden hızlı fikir: Enter kaydeder, Fikir Defteri'ne düşer.
 - Kendini otomatik güncelliyor; yeni sürümler GitHub'dan geliyor.
+
+## 0.8.0 · 10 Kasım 2026
+
+### Yeni
+
+- Temalar yenilendi: 9 tema, 5'i gradyanlı (üstten ışık ve kart gradyanları)
+- Koyu: Okyanus, Kor, Gece Yarısı, Noir Işık, Noir. Açık: Nane, Zeytin, Adaçayı, Pudra.
+- Gradyanlı temalarda ekranın tepesinden yumuşak bir ışık yayılıyor; duyuru ve görev kartları, ana butonlar, seçili sekmeler gradyanlı.
+- Tema seçicide her temanın kendi zemini ve ışığıyla küçük bir önizleme.
+- Varsayılan tema sistem moduna göre: koyu modda Gece Yarısı, açık modda Nane. Kaldırılan temaları kullananlar en yakın yeni temaya geçti.
+- Sabit duyuru kartı artık duyuru rengiyle (a2) gösteriliyor; görev kartında "Sende" küçük bir rozet.
 
 ## 0.7.0 · 5 Kasım 2026
 

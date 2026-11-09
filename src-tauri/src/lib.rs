@@ -12,12 +12,16 @@ use std::time::Duration;
 
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
 const MAIN: &str = "main";
 const SPLASH: &str = "splash";
 const MERKEZ: &str = "merkez";
 const FIKIR: &str = "fikir";
+/// ABN bildirim kartlarının penceresi (kendi tasarımımız; Windows'un standart bildirimi kullanılmaz).
+const BILDIRIM: &str = "bildirim";
+/// Bildirim penceresinin genişliği (mantıksal px): 360 px kart + iki yanda 16 px boşluk.
+const BILDIRIM_W: f64 = 392.0;
 const TRAY: &str = "abn";
 /// Açılış penceresi bir sebeple kendini kapatamazsa ana pencere en geç bu süre sonunda açılır.
 const SPLASH_TIMEOUT: Duration = Duration::from_secs(90);
@@ -142,6 +146,64 @@ fn quiet_mode(app: AppHandle) -> bool {
 fn quit(app: &AppHandle) {
     app.state::<Flags>().quitting.store(true, Ordering::Relaxed);
     app.exit(0);
+}
+
+// ── Bildirim penceresi ──
+//
+// Çerçevesiz, şeffaf, her zaman üstte, görev çubuğunda yok, odak çalmaz. Uygulama açılırken bir kez
+// oluşturulur ve hep yaşar: Realtime dinlemesi bu pencerede çalışır, launcher ve Merkez kapalıyken de.
+// "Gizli" durumda ekran dışına alınır (Windows'ta göster/gizle pencereyi öne alıp odağı çalabiliyor).
+
+fn create_notification_window(app: &AppHandle) -> tauri::Result<()> {
+    if app.get_webview_window(BILDIRIM).is_some() {
+        return Ok(());
+    }
+    WebviewWindowBuilder::new(app, BILDIRIM, WebviewUrl::App("index.html".into()))
+        .title("ABN bildirimleri")
+        .inner_size(BILDIRIM_W, 10.0)
+        .position(-20000.0, -20000.0)
+        .decorations(false)
+        .transparent(true)
+        .shadow(false)
+        .resizable(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .focused(false)
+        .visible(true)
+        .build()?;
+    Ok(())
+}
+
+/// Bildirim penceresini içeriğin yüksekliğine göre boyutlar ve ekranın sağ alt (ya da sağ üst) köşesine,
+/// görev çubuğunun üstüne yerleştirir. height 0 ise pencere ekran dışına çekilir (gizli).
+#[tauri::command]
+fn notif_layout(app: AppHandle, height: f64, corner: String) {
+    let Some(w) = app.get_webview_window(BILDIRIM) else { return };
+    if height <= 0.0 {
+        let _ = w.set_position(PhysicalPosition::new(-20000, -20000));
+        return;
+    }
+    let Some(mon) = w.primary_monitor().ok().flatten() else { return };
+    let scale = mon.scale_factor();
+    let area = mon.work_area();
+    let pw = (BILDIRIM_W * scale).round() as i32;
+    let ph = (height * scale).round() as i32;
+    let x = area.position.x + area.size.width as i32 - pw;
+    let y = if corner == "sag-ust" {
+        area.position.y
+    } else {
+        area.position.y + area.size.height as i32 - ph
+    };
+    let _ = w.set_size(PhysicalSize::new(pw as u32, ph as u32));
+    let _ = w.set_position(PhysicalPosition::new(x, y));
+}
+
+/// Kart "Yanıtla"ya basılınca pencere odak alır (yazı alanı için).
+#[tauri::command]
+fn notif_focus(app: AppHandle) {
+    if let Some(w) = app.get_webview_window(BILDIRIM) {
+        let _ = w.set_focus();
+    }
 }
 
 // ── Tepsi ──
@@ -299,6 +361,7 @@ pub fn run() {
             }
 
             build_tray(&handle)?;
+            create_notification_window(&handle)?;
 
             let splash = app
                 .config()
@@ -354,6 +417,8 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             splash_finished,
+            notif_layout,
+            notif_focus,
             open_merkez,
             merkez_is_open,
             set_close_to_tray,

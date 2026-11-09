@@ -5,6 +5,7 @@ import { fontFamily } from '@/theme/fonts';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { Palette, Token } from '@/theme/themes';
 import { Box } from './Box';
+import { GradientFill, useGradient } from './Gradient';
 import { Icon, type IconName } from './Icon';
 import { Press } from './Press';
 import { Txt } from './Txt';
@@ -66,6 +67,7 @@ export function Button({
       onPress={onPress}
       disabled={disabled}
       bg={bg}
+      gradient={kind === 'primary' ? 'btn' : undefined}
       hoverBg={kind === 'soft' ? 'hover' : undefined}
       accessibilityLabel={accessibilityLabel}
       style={[
@@ -91,6 +93,11 @@ export function Button({
   );
 }
 
+/** Ana buton (a1): gradyanlı temalarda btnGradient ve üst kenar parıltısı, düz temada a1. */
+export function GradientButton(props: Omit<ButtonProps, 'kind'>) {
+  return <Button {...props} kind="primary" />;
+}
+
 /** Yuvarlak ikon butonu (Görev ekle, Süreç paylaş). */
 export function IconButton({
   icon,
@@ -112,6 +119,7 @@ export function IconButton({
       onPress={onPress}
       accessibilityLabel={label}
       bg={bg}
+      gradient={kind === 'primary' ? 'btn' : undefined}
       shadow={kind === 'surface'}
       style={{
         width: size,
@@ -129,8 +137,20 @@ export function IconButton({
 // ───────────────────────── Etiketler ─────────────────────────
 
 /** Durum etiketi: "Geliştirmede", "Bitti" (12px, 700). */
-export function Chip({ label, bg, fg }: { label: string; bg: Token | string; fg: Token | string }) {
+export function Chip({
+  label,
+  bg,
+  fg,
+  gradient,
+}: {
+  label: string;
+  bg: Token | string;
+  fg: Token | string;
+  /** "Sende" gibi koyu rozetler: badge (gradyanlı temalarda badgeGradient). */
+  gradient?: 'badge';
+}) {
   const { colors } = useTheme();
+  const pair = useGradient(gradient);
   return (
     <View
       style={{
@@ -139,8 +159,10 @@ export function Chip({ label, bg, fg }: { label: string; bg: Token | string; fg:
         paddingVertical: 4,
         paddingHorizontal: 10,
         backgroundColor: paint(colors, bg),
+        overflow: pair ? 'hidden' : undefined,
       }}
     >
+      {pair && <GradientFill pair={pair} />}
       <Txt size={12} weight={700} leading={1.3} style={{ color: paint(colors, fg) }}>
         {label}
       </Txt>
@@ -174,6 +196,7 @@ export function Pill({
     <Press
       onPress={onPress}
       bg={active ? 'sel-bg' : onSheet ? 'surface2' : 'surface'}
+      gradient={active ? 'chip' : undefined}
       hoverBg={active ? 'sel-bg' : 'hover'}
       shadow={!onSheet}
       accessibilityState={{ selected: active }}

@@ -1,19 +1,21 @@
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { DefaultTheme, ThemeProvider as NavThemeProvider, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AppBackground } from '@/components/layout/AppBackground';
 import { DesktopAppIn } from '@/components/layout/DesktopAppIn';
 import { LauncherApp } from '@/components/launcher/LauncherApp';
 import { MerkezBridge } from '@/components/launcher/MerkezBridge';
 import { QuickIdea } from '@/components/launcher/QuickIdea';
+import { NotifyOverlay } from '@/components/notify/Overlay';
 import { Splash } from '@/components/Splash';
 import { ToastProvider } from '@/components/ui/Toast';
 import { AuthProvider, useAuth } from '@/lib/auth';
-import { isDesktop, isLauncherWindow, windowLabel } from '@/lib/desktop';
+import { isDesktop, isLauncherWindow, isNotifyWindow, windowLabel } from '@/lib/desktop';
 import { startSessionSync } from '@/lib/launcher/desktopAuth';
 import { fetchFeed, fetchProfiles } from '@/lib/queries';
 import { useQuery } from '@/lib/useQuery';
@@ -21,6 +23,8 @@ import { FONT_ASSETS } from '@/theme/fonts';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 
 SplashScreen.preventAutoHideAsync();
+// React Navigation kendi zeminini (#F2F2F2) çizmesin: zemini AppBackground çiziyor (düz renk + üstten ışık).
+const NAV_THEME = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: 'transparent' } };
 // Masaüstü: pencereler (launcher, Merkez, hızlı fikir) oturumu paylaşır.
 startSessionSync();
 
@@ -30,9 +34,11 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <AuthProvider>
           <ThemeProvider>
-            <ToastProvider>
-              <RootNavigator />
-            </ToastProvider>
+            <NavThemeProvider value={NAV_THEME}>
+              <ToastProvider>
+                <RootNavigator />
+              </ToastProvider>
+            </NavThemeProvider>
           </ThemeProvider>
         </AuthProvider>
       </SafeAreaProvider>
@@ -57,11 +63,13 @@ function useFirstData(enabled: boolean) {
 function RootNavigator() {
   const [fontsLoaded] = useFonts(FONT_ASSETS);
   const { loading, session } = useAuth();
-  const { theme, colors } = useTheme();
+  const { theme, pageBg } = useTheme();
   const ready = fontsLoaded && !loading;
   const dataReady = useFirstData(ready);
   // Masaüstünde açılışı launcher'ın kendi penceresi (public/splash.html) yapar.
-  const [splashDone, setSplashDone] = useState(isDesktop || isLauncherWindow);
+  const [splashDone, setSplashDone] = useState(isDesktop || isLauncherWindow || isNotifyWindow);
+  // Şeffaf küçük pencereler (hızlı fikir, bildirimler) zemin çizmez.
+  const overlayWindow = isNotifyWindow || windowLabel === 'fikir';
   const finishSplash = useCallback(() => setSplashDone(true), []);
 
   // Expo'nun kendi açılış ekranı sadece düz renk; yazı tipleri yüklenince animasyonlu açılış başlar.
@@ -73,6 +81,8 @@ function RootNavigator() {
 
   return (
     <>
+      {/* Zemin ve üstten ışık: bütün ekranların arkasında, kaydırılınca yerinde kalır. */}
+      {!overlayWindow && <AppBackground />}
       {!splashDone && <Splash ready={dataReady} onDone={finishSplash} />}
       <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
       {ready && isLauncherWindow && (
@@ -82,9 +92,10 @@ function RootNavigator() {
         </DesktopAppIn>
       )}
       {ready && windowLabel === 'fikir' && <QuickIdea />}
-      {ready && !isLauncherWindow && windowLabel !== 'fikir' && (
+      {ready && isNotifyWindow && <NotifyOverlay />}
+      {ready && !isLauncherWindow && !overlayWindow && (
         <DesktopAppIn>
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: pageBg } }}>
             {/* Oturum yoksa her yol giriş ekranına, varsa giriş ekranı uygulamaya döner. */}
             <Stack.Protected guard={!!session}>
               <Stack.Screen name="(app)" />

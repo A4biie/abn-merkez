@@ -60,13 +60,21 @@ export function Sheet({ open, onClose, children, label }: Props) {
         >
           <ScrollView
             contentContainerStyle={
-              wide ? { padding: 26, gap: 14 } : { padding: 20, paddingTop: 12, paddingBottom: 28 + insets.bottom, gap: 14 }
+              wide
+                ? { padding: 26, gap: 14 }
+                : { padding: 20, paddingTop: 12, paddingBottom: 28 + insets.bottom, gap: 14 }
             }
             showsVerticalScrollIndicator={false}
           >
             {!wide && (
               <View
-                style={{ alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: colors['line-2'] }}
+                style={{
+                  alignSelf: 'center',
+                  width: 40,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: colors['line-2'],
+                }}
               />
             )}
             {children}

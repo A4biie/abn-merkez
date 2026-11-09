@@ -7,6 +7,7 @@ import Animated from 'react-native-reanimated';
 import { Logo } from '@/components/Logo';
 import { Avatar } from '@/components/ui/Avatar';
 import { Icon, type IconName } from '@/components/ui/Icon';
+import { GradientFill, useGradient } from '@/components/ui/Gradient';
 import { Press } from '@/components/ui/Press';
 import { Txt } from '@/components/ui/Txt';
 import { useAuth } from '@/lib/auth';
@@ -103,6 +104,7 @@ export function Rail({ tab, onTab }: { tab: LauncherTab; onTab: (t: LauncherTab)
   const motion = useMotion();
   const { profile } = useAuth();
   const active = Object.keys(useGameState().downloads).length;
+  const pill = useGradient('pill');
 
   return (
     <View
@@ -137,10 +139,12 @@ export function Rail({ tab, onTab }: { tab: LauncherTab; onTab: (t: LauncherTab)
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: on ? colors['nav-pill'] : 'transparent',
+                  overflow: 'hidden',
                 },
                 motion.transition(['backgroundColor'], 300),
               ]}
             >
+              {on && pill && <GradientFill pair={pill} />}
               <Icon
                 name={it.icon}
                 size={21}

@@ -406,8 +406,14 @@ check('Süre dolunca zamanlanmış iş bildirim gönderir (bir kez)', due === 1 
 console.log('\n— temalar');
 res = await as('ece', async () => q(`update profiles set theme = 'indigo' where id = auth.uid()`));
 check('Kaldırılmış tema seçilemez', !!res.error, res);
-res = await as('ece', async () => q(`update profiles set theme = 'gece' where id = auth.uid() returning theme`));
-check('Kalan 4 temadan biri seçilir', res.rows?.[0]?.theme === 'gece', res);
+res = await as('ece', async () => q(`update profiles set theme = 'gece' where id = auth.uid()`));
+check('0.8.0\'da kaldırılan tema (gece) seçilemez', !!res.error, res);
+res = await as('ece', async () => q(`update profiles set theme = 'okyanus' where id = auth.uid() returning theme`));
+check('Yeni 9 temadan biri seçilir', res.rows?.[0]?.theme === 'okyanus', res);
+res = await as('ece', async () => q(`update profiles set theme = null where id = auth.uid() returning theme`));
+check('Tema boş bırakılabilir (sistem moduna göre)', !res.error && res.rows?.[0]?.theme === null, res);
+const legacy = (await db.query(`select count(*)::int n from profiles where theme in ('dark','gece','light','indigo','gul','tropik','gunbatimi')`)).rows[0].n;
+check('Eski tema adı kalmadı', legacy === 0, { legacy });
 
 console.log('\n— ilk giriş');
 res = await as('ece', async () => q(`select onboarded, skills from profiles where id = auth.uid()`));

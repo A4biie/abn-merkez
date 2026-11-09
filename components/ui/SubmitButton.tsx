@@ -9,6 +9,7 @@ import { useTime } from '@/lib/ticker';
 import { EASE_OUT, EASE_SPRING, useMotion } from '@/theme/motion';
 import { fontFamily } from '@/theme/fonts';
 import { useTheme } from '@/theme/ThemeProvider';
+import { GradientFill, useGradient, useHighlight } from './Gradient';
 import { Txt } from './Txt';
 
 type State = 'idle' | 'busy' | 'done';
@@ -78,6 +79,8 @@ export function SubmitButton({
   const full = block ? blockW : null;
   const width = state === 'busy' ? s.h : (full ?? (state === 'done' ? (doneW ?? idleW) : idleW) ?? undefined);
   const bg = state === 'done' ? colors.a3 : disabled ? colors.surface2 : colors.a1;
+  const gradient = useGradient('btn');
+  const highlight = useHighlight();
   const ink = state === 'done' ? colors['a3-ink'] : disabled ? colors['text-3'] : colors['a1-ink'];
   const checkP = motion.reduced ? 1 : ease.out(span(t, 0, 400));
 
@@ -121,9 +124,11 @@ export function SubmitButton({
       <Animated.View
         style={[
           { width, height: s.h, borderRadius: s.h / 2, backgroundColor: bg, overflow: 'hidden' },
+          gradient && state !== 'done' && !disabled && highlight ? { boxShadow: highlight } : null,
           transition,
         ]}
       >
+        {gradient && state !== 'done' && !disabled && <GradientFill pair={gradient} />}
         <Pressable
           onPress={press}
           disabled={disabled || state !== 'idle'}
