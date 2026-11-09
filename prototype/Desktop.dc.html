@@ -1,0 +1,1363 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>ABN Merkez — Bilgisayar</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="themes.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0}
+a{color:#E4F68F}a:hover{color:#F1FAC0}
+.app *{transition:background-color .45s ease,color .45s ease,border-color .45s ease,fill .45s ease,stroke .45s ease,box-shadow .3s ease,transform .2s cubic-bezier(.2,.8,.2,1),width .6s cubic-bezier(.2,.8,.2,1),left .4s cubic-bezier(.34,1.45,.5,1)}
+.app{transition:background-color .45s ease,color .45s ease}
+.app button,.app select{font-family:inherit;cursor:pointer}
+.app button:active{transform:scale(.97)}
+.app button:focus-visible,.app input:focus-visible,.app textarea:focus-visible,.app select:focus-visible,.app a:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+.app input::placeholder,.app textarea::placeholder{color:var(--faint)}
+.hov:hover{background:var(--hover)!important}
+.lift:hover{transform:translateY(-2px)}
+@keyframes enter{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes push{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes dialogIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes toastIn{0%{opacity:0;transform:translateY(18px) scale(.96)}60%{opacity:1;transform:translateY(-3px) scale(1.01)}100%{transform:none}}
+@keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.35)}65%{transform:scale(.9)}100%{transform:scale(1)}}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes spinIn{from{opacity:0;transform:rotate(-120deg) scale(.5)}to{opacity:1;transform:none}}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(197,181,250,.55)}100%{box-shadow:0 0 0 10px rgba(197,181,250,0)}}
+.stagger>*{animation:enter .5s cubic-bezier(.2,.8,.2,1) both}
+.stagger>*:nth-child(2){animation-delay:.04s}.stagger>*:nth-child(3){animation-delay:.08s}.stagger>*:nth-child(4){animation-delay:.12s}.stagger>*:nth-child(5){animation-delay:.16s}.stagger>*:nth-child(6){animation-delay:.2s}.stagger>*:nth-child(n+7){animation-delay:.24s}
+.pushin>*{animation:push .45s cubic-bezier(.2,.8,.2,1) both}
+.pushin>*:nth-child(2){animation-delay:.05s}.pushin>*:nth-child(n+3){animation-delay:.1s}
+.scrim{animation:fade .25s ease both}
+.dialog{animation:dialogIn .38s cubic-bezier(.2,.9,.25,1) both}
+.toast{animation:toastIn .42s cubic-bezier(.2,.8,.2,1) both}
+.heart.on svg{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+.bar{transform-origin:left center;animation:grow .9s .15s cubic-bezier(.2,.8,.2,1) both}
+.spin{animation:spinIn .5s cubic-bezier(.3,1.4,.5,1) both}
+.pulse{animation:ring 1.6s ease-out infinite}
+@media (prefers-reduced-motion: reduce){.app *,.app{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div class="app {{ themeClass }}" style="position: relative; min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--bg); color: var(--text); font-family: Urbanist, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.45">
+
+<!-- ================= KENAR MENÜ ================= -->
+<aside style="flex: 1 0 248px; max-width: 248px; box-sizing: border-box; background: var(--nav); border-right: 1px solid var(--line); padding: 22px 14px; display: flex; flex-direction: column; gap: 4px">
+  <div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 18px">
+    <span style="width: 38px; height: 38px; border-radius: 50%; background: var(--a2); display: flex; align-items: center; justify-content: center; flex: none">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="#0E0E10" aria-hidden="true"><path d="M12 3 21.5 19.5H2.5Z"/></svg></span>
+    <span style="display: block"><span style="display: block; font-weight: 800; font-size: 16px">ABN Merkez</span><span style="display: block; font-size: 12.5px; color: var(--muted)">Abby's Nexus</span></span>
+  </div>
+  <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="5">
+    <button class="hov" onClick="{{ n.go }}" aria-current="{{ n.current }}" style="border: 0; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; text-align: left; background: {{ n.bg }}; color: {{ n.fg }}">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ n.icon }}"/></svg>
+      <span style="flex-grow: 1">{{ n.label }}</span>
+      <sc-if value="{{ n.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--a2); color: var(--a2-ink); font-variant-numeric: tabular-nums">{{ n.badge }}</span></sc-if>
+    </button>
+  </sc-for>
+  <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ true }}">
+    <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 14px">
+      <div style="font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); padding: 0 12px 4px">Yönetim</div>
+      <button class="hov" onClick="{{ goAdmin }}" style="border: 0; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; text-align: left; background: {{ adminNav.bg }}; color: {{ adminNav.fg }}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4"/></svg>
+        <span style="flex-grow: 1">Yönetim paneli</span>
+        <sc-if value="{{ hasPending }}" hint-placeholder-val="{{ true }}"><span class="pulse" style="width: 8px; height: 8px; border-radius: 50%; background: var(--a2)"></span></sc-if>
+      </button>
+    </div>
+  </sc-if>
+  <div style="flex-grow: 1; min-height: 24px"></div>
+  <div style="padding: 0 8px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint)">Tema · {{ themeName }}</div>
+    <div style="display: grid; grid-template-columns: repeat(6, 28px); gap: 9px">
+      <sc-for list="{{ themeChips }}" as="tc" hint-placeholder-count="11">
+        <button onClick="{{ tc.pick }}" aria-label="{{ tc.label }} tema" aria-pressed="{{ tc.pressed }}" title="{{ tc.label }}" style="width: 28px; height: 28px; border-radius: 50%; padding: 0; border: 1px solid var(--line-2); background: {{ tc.bg }}; display: flex; align-items: center; justify-content: center; gap: 2px; box-shadow: 0 0 0 2px var(--nav), 0 0 0 4px {{ tc.ring }}">
+          <span style="width: 5px; height: 12px; border-radius: 3px; background: {{ tc.a1 }}"></span><span style="width: 5px; height: 12px; border-radius: 3px; background: {{ tc.a2 }}"></span><span style="width: 5px; height: 12px; border-radius: 3px; background: {{ tc.a3 }}"></span>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+  <button class="hov" onClick="{{ openMyProfile }}" style="margin-top: 14px; border: 0; border-radius: 14px; padding: 10px; display: flex; align-items: center; gap: 10px; text-align: left; background: var(--surface); color: var(--text)">
+    <span style="width: 38px; height: 38px; border-radius: 50%; overflow: hidden; background: {{ me.bg }}; color: #0E0E10; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">
+      <sc-if value="{{ me.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ me.photo }}" alt="" style="width: 100%; height: 100%; object-fit: cover"></sc-if>
+      <sc-if value="{{ me.noPhoto }}" hint-placeholder-val="{{ true }}"><span>{{ me.ini }}</span></sc-if>
+    </span>
+    <span style="display: block; flex-grow: 1; min-width: 0"><span style="display: block; font-weight: 700">{{ me.name }}</span><span style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted)"><span style="width: 7px; height: 7px; border-radius: 50%; background: {{ myAvailColor }}"></span>{{ myAvailLabel }}</span></span>
+  </button>
+</aside>
+
+<!-- ================= ANA ALAN ================= -->
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+  <header style="position: relative; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 20px 32px; border-bottom: 1px solid var(--line)">
+    <div style="flex-grow: 1; min-width: 200px">
+      <div style="font-size: 13px; color: var(--muted)">{{ crumb }}</div>
+      <h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.15">{{ pageTitle }}</h1>
+    </div>
+    <label style="display: flex; align-items: center; gap: 8px; background: var(--surface); box-shadow: var(--shadow); border-radius: 999px; padding: 0 14px; height: 42px; width: 280px; max-width: 100%; color: var(--muted)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" id="search" aria-label="Görev ve fikir ara" placeholder="Görev ya da fikir ara…" value="{{ search }}" onChange="{{ onSearch }}" style="flex-grow: 1; min-width: 0; border: 0; background: none; color: var(--text); font: inherit; font-size: 14.5px; outline: none">
+    </label>
+    <button onClick="{{ toggleBell }}" aria-label="Bildirimler" aria-expanded="{{ bellExpanded }}" style="position: relative; width: 42px; height: 42px; border-radius: 50%; border: 0; background: var(--surface); box-shadow: var(--shadow); color: var(--text); display: flex; align-items: center; justify-content: center">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      <span class="pulse" style="position: absolute; top: 9px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--a2)"></span>
+    </button>
+    <button onClick="{{ newAction }}" style="height: 42px; border: 0; border-radius: 999px; padding: 0 18px; background: var(--a2); color: var(--a2-ink); font-size: 14.5px; font-weight: 700; display: flex; align-items: center; gap: 8px">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>{{ newLabel }}</button>
+    <sc-if value="{{ bellOpen }}" hint-placeholder-val="{{ false }}">
+      <div class="dialog" style="position: absolute; z-index: 20; top: 72px; right: 32px; width: 340px; max-width: calc(100% - 64px); background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 10px">
+        <div style="font-weight: 700">Son olanlar</div>
+        <sc-for list="{{ feedNotes }}" as="n" hint-placeholder-count="3">
+          <div style="display: flex; gap: 10px; align-items: flex-start">
+            <span style="width: 9px; height: 9px; margin-top: 6px; border-radius: 50%; background: {{ n.dot }}; flex: none"></span>
+            <div><div style="font-size: 14px">{{ n.text }}</div><div style="font-size: 12px; color: var(--muted)">{{ n.time }}</div></div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </header>
+
+  <div style="padding: 28px 32px 56px; flex-grow: 1; min-width: 0">
+
+  <!-- ============ AKIŞ ============ -->
+  <sc-if value="{{ isAkis }}" hint-placeholder-val="{{ true }}">
+  <div style="display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start">
+    <div class="stagger" style="flex: 999 1 520px; min-width: 0; max-width: 700px; display: flex; flex-direction: column; gap: 18px">
+      <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; gap: 12px; align-items: flex-start">
+          <span style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: {{ me.bg }}; color: #0E0E10; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">
+            <sc-if value="{{ me.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ me.photo }}" alt="" style="width: 100%; height: 100%; object-fit: cover"></sc-if>
+            <sc-if value="{{ me.noPhoto }}" hint-placeholder-val="{{ true }}"><span>{{ me.ini }}</span></sc-if>
+          </span>
+          <textarea id="share-text" aria-label="Süreç paylaş" placeholder="Ne üzerinde çalışıyorsun? Taslak, ekran görüntüsü, kısa bir not…" value="{{ shareDraft }}" onChange="{{ onShareInput }}" style="flex-grow: 1; min-height: 70px; resize: vertical; background: var(--surface2); border: 0; border-radius: 16px; padding: 12px 14px; color: var(--text); font: inherit; font-size: 15px"></textarea>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-left: 52px">
+          <button onClick="{{ mediaTap }}" class="hov" style="border: 1px dashed var(--line-2); border-radius: 999px; padding: 7px 12px; font-size: 13.5px; font-weight: 600; background: none; color: var(--muted)">+ Görsel / video</button>
+          <sc-for list="{{ shareChips }}" as="c" hint-placeholder-count="3">
+            <button onClick="{{ c.pick }}" style="border: 0; border-radius: 999px; padding: 7px 12px; font-size: 13.5px; font-weight: 600; background: {{ c.bg }}; color: {{ c.fg }}">{{ c.label }}</button>
+          </sc-for>
+          <button onClick="{{ toggleFeedback }}" aria-pressed="{{ fbPressed }}" style="border: 0; border-radius: 999px; padding: 7px 12px; font-size: 13.5px; font-weight: 600; background: {{ fbBg }}; color: {{ fbFg }}">Fikrinizi istiyorum</button>
+          <span style="flex-grow: 1"></span>
+          <button onClick="{{ addPost }}" style="border: 0; border-radius: 999px; padding: 9px 18px; font-size: 14.5px; font-weight: 700; background: var(--a1); color: var(--a1-ink)">Paylaş</button>
+        </div>
+      </div>
+
+      <sc-for list="{{ posts }}" as="p" hint-placeholder-count="3">
+        <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 26px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: center; gap: 10px">
+            <button onClick="{{ p.openAuthor }}" style="border: 0; background: none; padding: 0; color: inherit; text-align: left; display: flex; align-items: center; gap: 10px; flex-grow: 1; min-width: 0">
+              <span style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: {{ p.author.bg }}; color: #0E0E10; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">
+                <sc-if value="{{ p.author.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ p.author.photo }}" alt="" style="width: 100%; height: 100%; object-fit: cover"></sc-if>
+                <sc-if value="{{ p.author.noPhoto }}" hint-placeholder-val="{{ true }}"><span>{{ p.author.ini }}</span></sc-if>
+              </span>
+              <span style="display: block"><span style="display: block; font-weight: 700">{{ p.author.name }}</span><span style="display: block; font-size: 12.5px; color: var(--muted)">{{ p.time }}</span></span>
+            </button>
+            <sc-if value="{{ p.feedback }}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; font-weight: 700; background: var(--a2); color: var(--a2-ink); padding: 5px 10px; border-radius: 999px">Fikrinizi istiyor</span></sc-if>
+          </div>
+          <sc-if value="{{ p.hasTag }}" hint-placeholder-val="{{ true }}"><div style="font-size: 13px; font-weight: 600; color: var(--accent-text)">{{ p.tag }}</div></sc-if>
+          <div style="font-size: 15.5px; max-width: 62ch">{{ p.text }}</div>
+          <sc-if value="{{ p.artFace }}" hint-placeholder-val="{{ false }}">
+            <div style="position: relative; height: 260px; border-radius: 20px; background: #C5B5FA; display: flex; align-items: center; justify-content: center; gap: 30px; overflow: hidden">
+              <svg width="120" height="146" viewBox="0 0 92 112" fill="none" stroke="#0E0E10" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="Yüz ifadesi taslağı 1"><ellipse cx="46" cy="58" rx="34" ry="44"/><circle cx="33" cy="52" r="4"/><circle cx="59" cy="52" r="4"/><path d="M34 80q12 8 24 0"/></svg>
+              <svg width="120" height="146" viewBox="0 0 92 112" fill="none" stroke="#0E0E10" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="Yüz ifadesi taslağı 2, korku"><ellipse cx="46" cy="58" rx="34" ry="44"/><circle cx="33" cy="50" r="8"/><circle cx="59" cy="50" r="8"/><ellipse cx="46" cy="84" rx="7" ry="10"/></svg>
+              <span class="pulse" style="position: absolute; left: 55%; top: 30%; width: 26px; height: 26px; border-radius: 50%; background: #0E0E10; color: #E4F68F; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center">1</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{ p.artVideo }}" hint-placeholder-val="{{ false }}">
+            <div style="height: 230px; border-radius: 20px; background: var(--a3); color: var(--a3-ink); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 18px">
+              <span style="width: 60px; height: 60px; border-radius: 50%; background: #0E0E10; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="#8EE8F5" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>
+              <div style="width: 70%; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums">0:00<span style="flex-grow: 1; height: 4px; border-radius: 2px; background: rgba(14,14,16,.25)"><span class="bar" style="display: block; width: 34%; height: 4px; border-radius: 2px; background: #0E0E10"></span></span>0:20</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ p.artMood }}" hint-placeholder-val="{{ false }}">
+            <div style="height: 230px; border-radius: 20px; overflow: hidden; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px">
+              <div style="background: #6B4E3D"></div><div style="background: #C9A66B"></div><div style="background: #2F3B3A"></div>
+              <div style="background: #8C3B2E"></div><div style="background: #E8D9B5"></div><div style="background: #4A5A6A"></div>
+            </div>
+          </sc-if>
+          <div style="display: flex; align-items: center; gap: 10px">
+            <button class="{{ p.heartClass }}" onClick="{{ p.toggleLike }}" aria-label="Kalp bırak" aria-pressed="{{ p.liked }}" style="width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--surface2); display: flex; align-items: center; justify-content: center; flex: none">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="{{ p.heartFill }}" stroke="{{ p.heartStroke }}" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg></button>
+            <div style="display: flex">
+              <sc-for list="{{ p.likers }}" as="l" hint-placeholder-count="2"><span style="width: 24px; height: 24px; margin-right: -6px; border-radius: 50%; border: 2px solid var(--surface); background: {{ l.bg }}; color: #0E0E10; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ l.ini }}</span></sc-for>
+            </div>
+            <span style="font-size: 13px; color: var(--muted); margin-left: 6px">{{ p.likeText }}</span>
+          </div>
+          <sc-for list="{{ p.comments }}" as="c" hint-placeholder-count="1">
+            <div style="display: flex; gap: 10px; background: var(--surface2); border-radius: 16px; padding: 10px 12px">
+              <sc-if value="{{ c.pinned }}" hint-placeholder-val="{{ false }}"><span style="width: 22px; height: 22px; border-radius: 50%; background: #0E0E10; color: #E4F68F; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">{{ c.pin }}</span></sc-if>
+              <div style="font-size: 14px"><b>{{ c.name }}</b> {{ c.text }}</div>
+            </div>
+          </sc-for>
+          <div style="display: flex; gap: 8px">
+            <input type="text" id="{{ p.inputId }}" aria-label="Yorum yaz" placeholder="Yorum yaz…" value="{{ p.draft }}" onChange="{{ p.onDraft }}" style="flex-grow: 1; min-width: 0; background: var(--surface2); border: 0; border-radius: 999px; padding: 10px 14px; color: var(--text); font: inherit; font-size: 14px">
+            <button onClick="{{ p.sendComment }}" class="hov" style="border: 0; border-radius: 999px; padding: 0 16px; background: var(--chip); color: var(--text); font-weight: 600; font-size: 14px">Gönder</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div class="pushin" style="flex: 1 1 300px; max-width: 380px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+      <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+        <div style="font-weight: 700">Durumun</div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap">
+          <sc-for list="{{ availChips }}" as="c" hint-placeholder-count="3">
+            <button onClick="{{ c.pick }}" style="border: 0; border-radius: 999px; padding: 8px 12px; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 6px; background: {{ c.bg }}; color: {{ c.fg }}"><span style="width: 7px; height: 7px; border-radius: 50%; background: {{ c.dot }}"></span>{{ c.label }}</button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ isMolada }}" hint-placeholder-val="{{ false }}"><div style="font-size: 13px; color: var(--muted)">Molada olduğun sürece sana görev atanmaz, bildirim de gelmez.</div></sc-if>
+      </div>
+      <sc-if value="{{ showNudge }}" hint-placeholder-val="{{ true }}">
+        <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+          <div style="font-size: 12.5px; color: var(--muted)">Sadece sen görüyorsun</div>
+          <div style="font-weight: 600">“{{ nudgeTitle }}” bir süredir hareketsiz. Hâlâ sende mi?</div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap">
+            <button onClick="{{ nudgeKeep }}" style="border: 0; border-radius: 999px; padding: 8px 12px; font-size: 13.5px; font-weight: 600; background: var(--a1); color: var(--a1-ink)">Devam ediyorum</button>
+            <button onClick="{{ nudgeTime }}" class="hov" style="border: 0; border-radius: 999px; padding: 8px 12px; font-size: 13.5px; font-weight: 600; background: var(--chip); color: var(--text)">Vakit lazım</button>
+            <button onClick="{{ nudgeDrop }}" class="hov" style="border: 0; border-radius: 999px; padding: 8px 12px; font-size: 13.5px; font-weight: 600; background: var(--chip); color: var(--text)">Havuza bırak</button>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ hasPinned }}" hint-placeholder-val="{{ true }}">
+        <div style="background: var(--a1); color: var(--a1-ink); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 6px">
+          <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase">Sabit duyuru</div>
+          <div style="font-size: 18px; font-weight: 700">{{ pinned.title }}</div>
+          <div style="font-size: 14px">{{ pinned.body }}</div>
+        </div>
+      </sc-if>
+      <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: baseline"><div style="font-weight: 700; flex-grow: 1">Bu hafta</div><span style="font-size: 12.5px; color: var(--muted)">26 Ekim – 1 Kasım</span></div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+          <div style="background: var(--a1); color: var(--a1-ink); border-radius: 14px; padding: 10px"><div style="font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums">{{ cntDone }}</div><div style="font-size: 12px; font-weight: 600">Biten</div></div>
+          <div style="background: var(--a2); color: var(--a2-ink); border-radius: 14px; padding: 10px"><div style="font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums">{{ cntBlocked }}</div><div style="font-size: 12px; font-weight: 600">Yardım bekleyen</div></div>
+          <div style="background: var(--a3); color: var(--a3-ink); border-radius: 14px; padding: 10px"><div style="font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums">{{ cntHavuz }}</div><div style="font-size: 12px; font-weight: 600">Havuzda</div></div>
+        </div>
+      </div>
+      <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+        <div style="font-weight: 700">Havuzda senin için</div>
+        <sc-if value="{{ noSuggest }}" hint-placeholder-val="{{ false }}"><div style="font-size: 13.5px; color: var(--muted)">Şu an alabileceğin görev yok.</div></sc-if>
+        <sc-for list="{{ suggest }}" as="t" hint-placeholder-count="2">
+          <div style="display: flex; align-items: center; gap: 10px">
+            <div style="flex-grow: 1; min-width: 0"><div style="font-size: 12px; font-weight: 600; color: var(--accent-text)">{{ t.projName }}</div><div style="font-size: 14.5px; font-weight: 600">{{ t.title }}</div></div>
+            <button onClick="{{ t.claim }}" style="border: 0; border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 700; background: var(--a1); color: var(--a1-ink); white-space: nowrap">Ben alırım</button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ============ GÖREVLER ============ -->
+  <sc-if value="{{ isGorev }}" hint-placeholder-val="{{ false }}">
+  <div class="stagger" style="display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
+      <div style="display: flex; gap: 4px; background: var(--surface); box-shadow: var(--shadow); border-radius: 999px; padding: 4px">
+        <sc-for list="{{ scopeTabs }}" as="sc" hint-placeholder-count="3">
+          <button onClick="{{ sc.pick }}" style="border: 0; border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 600; background: {{ sc.bg }}; color: {{ sc.fg }}">{{ sc.label }} <span style="opacity: 0.7; font-variant-numeric: tabular-nums">{{ sc.count }}</span></button>
+        </sc-for>
+      </div>
+      <span style="width: 1px; height: 26px; background: var(--line-2)"></span>
+      <sc-for list="{{ projFilters }}" as="pf2" hint-placeholder-count="4">
+        <button onClick="{{ pf2.pick }}" class="hov" style="border: 0; border-radius: 999px; padding: 8px 14px; font-size: 13.5px; font-weight: 600; background: {{ pf2.bg }}; color: {{ pf2.fg }}">{{ pf2.label }}</button>
+      </sc-for>
+      <span style="flex-grow: 1"></span>
+      <span style="font-size: 13.5px; color: var(--muted)">{{ scopeHint }}</span>
+    </div>
+    <div style="overflow-x: auto; padding-bottom: 6px">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(240px, 1fr)); gap: 16px; min-width: 1000px">
+        <sc-for list="{{ board }}" as="col" hint-placeholder-count="4">
+          <div style="background: var(--surface2); border-radius: 22px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-height: 320px">
+            <div style="display: flex; align-items: center; gap: 8px; padding: 4px 6px">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: {{ col.dot }}"></span>
+              <span style="font-weight: 700; flex-grow: 1">{{ col.label }}</span>
+              <span style="font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums">{{ col.count }}</span>
+            </div>
+            <sc-if value="{{ col.empty }}" hint-placeholder-val="{{ false }}"><div style="border: 1.5px dashed var(--line-2); border-radius: 16px; padding: 18px; text-align: center; font-size: 13.5px; color: var(--muted)">Boş</div></sc-if>
+            <sc-for list="{{ col.cards }}" as="t" hint-placeholder-count="2">
+              <div class="lift" style="background: var(--surface); box-shadow: var(--shadow); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+                <div style="font-size: 12px; font-weight: 600; color: {{ t.projColor }}">{{ t.projName }}</div>
+                <div style="font-size: 15px; font-weight: 600">{{ t.title }}</div>
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted)">
+                  <span style="width: 22px; height: 22px; border-radius: 50%; background: {{ t.whoBg }}; color: #0E0E10; font-size: 10.5px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ t.whoIni }}</span>
+                  <span style="flex-grow: 1">{{ t.whoLabel }}</span><span>{{ t.due }}</span>
+                </div>
+                <sc-if value="{{ t.blocked }}" hint-placeholder-val="{{ false }}"><div style="font-size: 12.5px; font-weight: 600; color: var(--warn-text)">Yardım istiyor</div></sc-if>
+                <sc-if value="{{ t.showClaim }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+                    <button onClick="{{ t.claim }}" style="border: 0; border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; background: {{ t.claimBg }}; color: {{ t.claimFg }}">
+                      <sc-if value="{{ t.locked }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></sc-if>{{ t.claimLabel }}</button>
+                    <span style="font-size: 12px; color: var(--muted)">{{ t.lockHint }}</span>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ t.mine }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap">
+                    <button onClick="{{ t.advance }}" style="border: 0; border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 700; background: var(--a1); color: var(--a1-ink)">{{ t.nextLabel }} →</button>
+                    <button onClick="{{ t.toggleBlock }}" class="hov" style="border: 0; border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 600; background: var(--chip); color: var(--text)">{{ t.blockLabel }}</button>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ============ PROJELER ============ -->
+  <sc-if value="{{ isProje }}" hint-placeholder-val="{{ false }}">
+  <div class="stagger" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px">
+    <sc-for list="{{ projects }}" as="pr" hint-placeholder-count="3">
+      <button onClick="{{ pr.open }}" class="lift" style="border: 0; text-align: left; color: var(--text); background: var(--surface); box-shadow: var(--shadow); border-radius: 26px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+        <span style="display: flex; align-items: center; gap: 10px; width: 100%"><span style="font-size: 21px; font-weight: 700; flex-grow: 1">{{ pr.name }}</span><span style="font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: {{ pr.stBg }}; color: {{ pr.stFg }}">{{ pr.status }}</span></span>
+        <span style="font-size: 14px; color: var(--muted)">{{ pr.summary }}</span>
+        <span style="font-size: 14px">Sıradaki adım: <b>{{ pr.current }}</b></span>
+        <span style="display: flex; align-items: center; gap: 10px; width: 100%"><span style="flex-grow: 1; height: 8px; border-radius: 4px; background: var(--chip); overflow: hidden"><span class="bar" style="display: block; height: 8px; border-radius: 4px; width: {{ pr.pct }}%; background: var(--bar)"></span></span><span style="font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums">%{{ pr.pct }}</span></span>
+        <span style="display: flex; align-items: center; width: 100%; gap: 10px">
+          <span style="display: flex; flex-grow: 1"><sc-for list="{{ pr.members }}" as="m" hint-placeholder-count="3"><span style="width: 30px; height: 30px; margin-right: -8px; border-radius: 50%; border: 2px solid var(--surface); background: {{ m.bg }}; color: #0E0E10; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ m.ini }}</span></sc-for></span>
+          <span style="font-size: 13px; color: var(--muted)">{{ pr.openCount }} açık görev</span>
+          <sc-if value="{{ pr.notMember }}" hint-placeholder-val="{{ false }}"><span style="font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Ekibinde değilsin</span></sc-if>
+        </span>
+      </button>
+    </sc-for>
+  </div>
+  </sc-if>
+
+  <!-- ============ PROJE DETAY ============ -->
+  <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+  <div class="pushin" style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+      <button onClick="{{ goProjects }}" class="hov" style="border: 0; background: var(--surface); box-shadow: var(--shadow); color: var(--text); border-radius: 999px; padding: 8px 14px 8px 10px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 4px">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Tüm projeler</button>
+      <span style="font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: {{ d.stBg }}; color: {{ d.stFg }}">{{ d.status }}</span>
+      <span style="color: var(--muted); font-size: 14px; flex-grow: 1">{{ d.summary }} · Yönetici: {{ d.lead }}</span>
+      <button onClick="{{ d.openPano }}" style="border: 0; border-radius: 999px; padding: 9px 16px; font-size: 14px; font-weight: 700; background: var(--a3); color: var(--a3-ink); display: flex; align-items: center; gap: 8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z"/></svg>Projenin panosu</button>
+    </div>
+    <div style="display: flex; gap: 22px; flex-wrap: wrap; align-items: flex-start">
+      <div style="flex: 999 1 460px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+        <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 24px; padding: 20px">
+          <div style="display: flex; align-items: baseline; margin-bottom: 14px"><h2 style="margin: 0; font-size: 18px; font-weight: 700; flex-grow: 1">Kilometre taşları</h2><span style="font-weight: 700; font-variant-numeric: tabular-nums">%{{ d.pct }}</span></div>
+          <div style="display: flex; gap: 0; flex-wrap: wrap">
+            <sc-for list="{{ d.ms }}" as="ms" hint-placeholder-count="4">
+              <div style="flex: 1 1 120px; display: flex; flex-direction: column; gap: 8px; min-width: 110px">
+                <div style="display: flex; align-items: center">
+                  <span class="{{ ms.dotClass }}" style="width: 24px; height: 24px; border-radius: 50%; box-sizing: border-box; background: {{ ms.dotBg }}; border: 2.5px solid {{ ms.dotBorder }}; display: flex; align-items: center; justify-content: center; flex: none">
+                    <sc-if value="{{ ms.done }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0E0E10" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></sc-if></span>
+                  <sc-if value="{{ ms.notLast }}" hint-placeholder-val="{{ true }}"><span style="flex-grow: 1; height: 2px; background: {{ ms.lineBg }}"></span></sc-if>
+                </div>
+                <div style="padding-right: 10px"><div style="font-weight: 600; font-size: 14px; color: {{ ms.color }}">{{ ms.title }}</div><sc-if value="{{ ms.current }}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: var(--lilac-text); font-weight: 600">Şu an burada</div></sc-if></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 24px; padding: 8px 20px">
+          <sc-for list="{{ d.tasks }}" as="t" hint-placeholder-count="3">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line)">
+              <div style="flex-grow: 1; min-width: 0"><div style="font-weight: 600">{{ t.title }}</div><div style="font-size: 13px; color: var(--muted)">{{ t.whoLabel }} · {{ t.due }}</div></div>
+              <span style="font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: {{ t.stBg }}; color: {{ t.stFg }}; white-space: nowrap">{{ t.statusLabel }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="flex: 1 1 280px; max-width: 360px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+        <sc-if value="{{ d.notMember }}" hint-placeholder-val="{{ false }}">
+          <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+            <div style="font-weight: 700">Bu projenin ekibinde değilsin</div>
+            <div style="font-size: 14px; color: var(--muted)">Görevleri görebilirsin ama alamazsın. Katılmak istersen proje yöneticisi {{ d.lead }}'a istek gönder.</div>
+            <button onClick="{{ d.join }}" style="align-self: flex-start; border: 0; border-radius: 999px; padding: 9px 16px; font-size: 14px; font-weight: 700; background: {{ d.joinBg }}; color: {{ d.joinFg }}">{{ d.joinLabel }}</button>
+          </div>
+        </sc-if>
+        <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+          <div style="font-weight: 700">Ekip</div>
+          <sc-for list="{{ d.members }}" as="m" hint-placeholder-count="3">
+            <button onClick="{{ m.open }}" class="hov" style="border: 0; background: none; color: var(--text); border-radius: 12px; padding: 6px; display: flex; align-items: center; gap: 10px; text-align: left">
+              <span style="width: 32px; height: 32px; border-radius: 50%; background: {{ m.bg }}; color: #0E0E10; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">{{ m.ini }}</span>
+              <span style="display: block; flex-grow: 1"><span style="display: block; font-weight: 600; font-size: 14px">{{ m.name }}</span><span style="display: block; font-size: 12.5px; color: var(--muted)">{{ m.role }}</span></span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ============ FİKİRLER ============ -->
+  <sc-if value="{{ isFikir }}" hint-placeholder-val="{{ false }}">
+  <div class="stagger" style="display: flex; flex-direction: column; gap: 18px">
+    <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 24px; padding: 16px; display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap">
+      <textarea id="idea-input" aria-label="Yeni fikir" value="{{ ideaDraft }}" onChange="{{ onIdeaInput }}" placeholder="Aklına bir şey mi geldi? Kaybolmadan yaz…" style="flex: 999 1 320px; min-height: 56px; resize: vertical; background: var(--surface2); border: 0; border-radius: 16px; padding: 12px 14px; color: var(--text); font: inherit; font-size: 15px"></textarea>
+      <div style="display: flex; gap: 8px">
+        <button onClick="{{ mediaTap }}" aria-label="Sesli not" class="hov" style="width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--surface2); color: var(--text); display: flex; align-items: center; justify-content: center">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3"/></svg></button>
+        <button onClick="{{ addIdea }}" style="height: 46px; border: 0; border-radius: 999px; padding: 0 20px; background: var(--a1); color: var(--a1-ink); font-weight: 700; font-size: 15px">Fikri kaydet</button>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap">
+      <sc-for list="{{ ideaFilters }}" as="f" hint-placeholder-count="5">
+        <button onClick="{{ f.pick }}" class="hov" style="border: 0; border-radius: 999px; padding: 8px 15px; font-size: 14px; font-weight: 600; background: {{ f.bg }}; color: {{ f.fg }}">{{ f.label }}</button>
+      </sc-for>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px">
+      <sc-for list="{{ ideas }}" as="i" hint-placeholder-count="4">
+        <div class="lift" style="background: var(--surface); box-shadow: var(--shadow); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: center; gap: 8px"><span style="font-size: 12.5px; font-weight: 600; color: var(--accent-text); flex-grow: 1">{{ i.tag }}</span><span style="font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: {{ i.stBg }}; color: {{ i.stFg }}">{{ i.statusLabel }}</span></div>
+          <div style="font-size: 16px; flex-grow: 1">{{ i.text }}</div>
+          <div style="display: flex; align-items: center; gap: 10px">
+            <span style="width: 26px; height: 26px; border-radius: 50%; background: {{ i.author.bg }}; color: #0E0E10; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ i.author.ini }}</span>
+            <span style="font-size: 13px; color: var(--muted); flex-grow: 1">{{ i.author.name }} · {{ i.likeText }}</span>
+            <button class="{{ i.heartClass }}" onClick="{{ i.toggleLike }}" aria-label="Kalp bırak" aria-pressed="{{ i.liked }}" style="width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--surface2); display: flex; align-items: center; justify-content: center">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="{{ i.heartFill }}" stroke="{{ i.heartStroke }}" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg></button>
+          </div>
+          <sc-if value="{{ i.canConvert }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; gap: 6px">
+              <button onClick="{{ i.convert }}" style="border: 0; border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 700; background: var(--a2); color: var(--a2-ink)">Göreve dönüştür</button>
+              <sc-if value="{{ i.canShelve }}" hint-placeholder-val="{{ true }}"><button onClick="{{ i.shelve }}" class="hov" style="border: 0; border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 600; background: var(--chip); color: var(--text)">Şimdilik değil</button></sc-if>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ============ EKİP ============ -->
+  <sc-if value="{{ isEkip }}" hint-placeholder-val="{{ false }}">
+  <div class="stagger" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px">
+    <sc-for list="{{ members }}" as="m" hint-placeholder-count="5">
+      <button onClick="{{ m.open }}" class="lift" style="border: 0; padding: 0; text-align: left; color: var(--text); background: var(--surface); box-shadow: var(--shadow); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column">
+        <span style="display: block; height: 70px; width: 100%; background: {{ m.bannerBg }}"></span>
+        <span style="display: flex; flex-direction: column; gap: 10px; padding: 0 18px 18px; margin-top: -30px">
+          <span style="width: 60px; height: 60px; border-radius: 50%; overflow: hidden; box-sizing: border-box; border: 4px solid var(--surface); background: {{ m.bg }}; color: #0E0E10; font-size: 22px; font-weight: 800; display: flex; align-items: center; justify-content: center">
+            <sc-if value="{{ m.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ m.photo }}" alt="" style="width: 100%; height: 100%; object-fit: cover"></sc-if>
+            <sc-if value="{{ m.noPhoto }}" hint-placeholder-val="{{ true }}"><span>{{ m.ini }}</span></sc-if>
+          </span>
+          <span style="display: block"><span style="display: block; font-size: 18px; font-weight: 700">{{ m.name }}</span><span style="display: block; font-size: 13.5px; color: var(--muted)">{{ m.role }}</span></span>
+          <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text-2)"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{ m.availColor }}"></span>{{ m.availLabel }}</span>
+          <span style="font-size: 13.5px; color: var(--text-3)">{{ m.bio }}</span>
+          <span style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{ m.projects }}" as="pn" hint-placeholder-count="2"><span style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--surface2); color: var(--text-2)">{{ pn }}</span></sc-for></span>
+        </span>
+      </button>
+    </sc-for>
+  </div>
+  </sc-if>
+
+  <!-- ============ PROFİL ============ -->
+  <sc-if value="{{ isProfil }}" hint-placeholder-val="{{ false }}">
+  <div class="pushin" style="display: flex; flex-direction: column; gap: 0">
+    <div style="position: relative; height: 220px; border-radius: 28px; overflow: hidden; background: {{ pf.bannerBg }}">
+      <sc-if value="{{ pf.hasBannerImg }}" hint-placeholder-val="{{ false }}"><img src="{{ pf.bannerImg }}" alt="Profil afişi" style="width: 100%; height: 100%; object-fit: cover; display: block"></sc-if>
+      <sc-if value="{{ pf.noBannerImg }}" hint-placeholder-val="{{ true }}">
+        <svg width="100%" height="220" viewBox="0 0 1100 220" preserveAspectRatio="xMidYMid slice" fill="none" stroke="{{ pf.bannerInk }}" stroke-width="2.5" opacity="0.2" aria-hidden="true" style="position: absolute; inset: 0"><path d="M60 230 140 90 220 230Z"/><path d="M420 170 510 14 600 170Z"/><path d="M820 240 890 116 960 240Z"/><path d="M260 70 300 0 340 70Z"/><path d="M1000 110 1040 40 1080 110Z"/><circle cx="700" cy="180" r="18"/><circle cx="110" cy="40" r="10"/><circle cx="960" cy="40" r="7"/></svg>
+      </sc-if>
+      <button onClick="{{ goBackFromProfile }}" aria-label="Geri" style="position: absolute; top: 18px; left: 18px; height: 40px; border-radius: 999px; padding: 0 14px 0 10px; border: 0; background: rgba(14,14,16,0.55); color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 4px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Geri</button>
+    </div>
+    <div style="display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; padding: 0 28px">
+      <div style="flex: 999 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; align-items: flex-end; gap: 18px; margin-top: -60px; flex-wrap: wrap">
+          <span style="width: 128px; height: 128px; border-radius: 50%; overflow: hidden; box-sizing: border-box; border: 6px solid var(--bg); background: {{ pf.bg }}; color: #0E0E10; font-size: 48px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">
+            <sc-if value="{{ pf.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ pf.photo }}" alt="{{ pf.name }}" style="width: 100%; height: 100%; object-fit: cover"></sc-if>
+            <sc-if value="{{ pf.noPhoto }}" hint-placeholder-val="{{ true }}"><span>{{ pf.ini }}</span></sc-if>
+          </span>
+          <div style="flex-grow: 1; padding-bottom: 8px">
+            <h2 style="margin: 0; font-size: 30px; font-weight: 700; line-height: 1.1">{{ pf.name }}</h2>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14.5px; color: var(--muted)"><span>{{ pf.role }}</span><span>·</span><span style="display: flex; align-items: center; gap: 6px; color: var(--text-2); font-weight: 600"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{ pf.availColor }}"></span>{{ pf.availLabel }}</span></div>
+          </div>
+          <sc-if value="{{ pf.isMe }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ editProfile }}" style="margin-bottom: 10px; border: 0; border-radius: 999px; padding: 10px 18px; font-size: 14px; font-weight: 700; background: var(--sel-bg); color: var(--sel-fg)">Profili düzenle</button>
+          </sc-if>
+        </div>
+        <sc-if value="{{ pf.hasBio }}" hint-placeholder-val="{{ true }}"><div style="font-size: 16.5px; max-width: 58ch">{{ pf.bio }}</div></sc-if>
+        <sc-if value="{{ pf.noBio }}" hint-placeholder-val="{{ false }}"><div style="font-size: 15px; color: var(--muted)">Henüz bir şey yazılmamış.</div></sc-if>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px">
+          <sc-for list="{{ pf.links }}" as="l" hint-placeholder-count="2">
+            <a href="{{ l.href }}" target="_blank" rel="noopener" class="lift" style="text-decoration: none; color: var(--text); background: var(--surface); box-shadow: var(--shadow); border-radius: 16px; padding: 12px 14px; display: flex; align-items: center; gap: 12px">
+              <span style="width: 34px; height: 34px; border-radius: 50%; background: var(--a2); color: var(--a2-ink); display: flex; align-items: center; justify-content: center; flex: none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></span>
+              <span style="display: block; flex-grow: 1; min-width: 0"><span style="display: block; font-weight: 700; font-size: 14.5px">{{ l.label }}</span><span style="display: block; font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ l.url }}</span></span>
+            </a>
+          </sc-for>
+          <sc-if value="{{ pf.noLinksMe }}" hint-placeholder-val="{{ false }}"><button onClick="{{ editProfile }}" class="hov" style="border: 1.5px dashed var(--line-2); background: none; color: var(--muted); border-radius: 16px; padding: 14px; font-size: 14px; font-weight: 600">+ Link ekle</button></sc-if>
+        </div>
+        <h3 style="margin: 8px 0 0; font-size: 18px; font-weight: 700">Paylaşımları</h3>
+        <sc-if value="{{ pf.noPosts }}" hint-placeholder-val="{{ false }}"><div style="font-size: 14px; color: var(--muted)">Henüz paylaşım yok.</div></sc-if>
+        <sc-for list="{{ pf.posts }}" as="pp" hint-placeholder-count="2">
+          <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 18px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px">
+            <div style="font-size: 12.5px; font-weight: 600; color: var(--accent-text)">{{ pp.tag }} · <span style="color: var(--muted); font-weight: 500">{{ pp.time }}</span></div>
+            <div style="font-size: 15px">{{ pp.text }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="flex: 1 1 260px; max-width: 340px; min-width: 0; display: flex; flex-direction: column; gap: 14px; padding-top: 24px">
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+          <div style="background: var(--a1); color: var(--a1-ink); border-radius: 18px; padding: 14px"><div style="font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums">{{ pf.doneCount }}</div><div style="font-size: 13px; font-weight: 600">Bitirdiği görev</div></div>
+          <div style="background: var(--a3); color: var(--a3-ink); border-radius: 18px; padding: 14px"><div style="font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums">{{ pf.openCount }}</div><div style="font-size: 13px; font-weight: 600">Üzerindeki görev</div></div>
+        </div>
+        <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+          <div style="font-weight: 700">Projeleri</div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{ pf.projects }}" as="pn" hint-placeholder-count="2"><span style="font-size: 13px; font-weight: 600; padding: 5px 11px; border-radius: 999px; background: var(--surface2); color: var(--text-2)">{{ pn }}</span></sc-for></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ============ PANOLAR ============ -->
+  <sc-if value="{{ isPano }}" hint-placeholder-val="{{ false }}">
+    <div style="height: calc(100vh - 175px); min-height: 620px; border-radius: 24px; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow)">
+      <dc-import name="Board" theme="{{ themeClass }}" compact="{{ no }}" start-board="{{ panoStart }}" height="max(620px, calc(100vh - 177px))" hint-size="100%,700px"></dc-import>
+    </div>
+  </sc-if>
+
+  <!-- ============ YÖNETİM PANELİ ============ -->
+  <sc-if value="{{ isAdminView }}" hint-placeholder-val="{{ false }}">
+  <div style="display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; gap: 4px; flex-wrap: wrap; background: var(--surface); box-shadow: var(--shadow); border-radius: 999px; padding: 4px; align-self: flex-start; max-width: 100%">
+      <sc-for list="{{ adminTabs }}" as="at" hint-placeholder-count="6">
+        <button onClick="{{ at.pick }}" style="border: 0; border-radius: 999px; padding: 9px 16px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; background: {{ at.bg }}; color: {{ at.fg }}">{{ at.label }}<sc-if value="{{ at.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="font-size: 11.5px; font-weight: 700; padding: 0 7px; border-radius: 999px; background: var(--a2); color: var(--a2-ink)">{{ at.badge }}</span></sc-if></button>
+      </sc-for>
+    </div>
+
+    <!-- Genel bakış -->
+    <sc-if value="{{ adm.genel }}" hint-placeholder-val="{{ true }}">
+    <div class="stagger" style="display: flex; flex-direction: column; gap: 20px">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px">
+        <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="5">
+          <button onClick="{{ k.go }}" class="lift" style="border: 0; text-align: left; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 4px; background: {{ k.bg }}; color: {{ k.fg }}; box-shadow: var(--shadow)">
+            <span style="font-size: 34px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">{{ k.value }}</span>
+            <span style="font-size: 14px; font-weight: 600">{{ k.label }}</span>
+            <span style="font-size: 12.5px; opacity: 0.75">{{ k.sub }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start">
+        <div style="flex: 999 1 440px; min-width: 0; background: var(--surface); box-shadow: var(--shadow); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 4px">
+          <h2 style="margin: 0 0 8px; font-size: 18px; font-weight: 700">Dikkat isteyenler</h2>
+          <sc-if value="{{ noAttention }}" hint-placeholder-val="{{ false }}"><div style="color: var(--muted); font-size: 14px; padding: 8px 0">Her şey yolunda görünüyor.</div></sc-if>
+          <sc-for list="{{ attention }}" as="a" hint-placeholder-count="4">
+            <div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; border-top: 1px solid var(--line)">
+              <span style="width: 36px; height: 36px; border-radius: 50%; background: {{ a.dot }}; color: #0E0E10; display: flex; align-items: center; justify-content: center; flex: none">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ a.icon }}"/></svg></span>
+              <div style="flex-grow: 1; min-width: 0"><div style="font-weight: 600">{{ a.text }}</div><div style="font-size: 13px; color: var(--muted)">{{ a.sub }}</div></div>
+              <button onClick="{{ a.act }}" class="hov" style="border: 0; border-radius: 999px; padding: 8px 14px; font-size: 13.5px; font-weight: 700; background: {{ a.btnBg }}; color: {{ a.btnFg }}; white-space: nowrap">{{ a.btn }}</button>
+            </div>
+          </sc-for>
+        </div>
+        <div style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+          <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+            <h2 style="margin: 0; font-size: 18px; font-weight: 700">Proje ilerlemesi</h2>
+            <sc-for list="{{ projects }}" as="pr" hint-placeholder-count="3">
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <div style="display: flex; align-items: center; gap: 8px"><span style="font-weight: 600; flex-grow: 1">{{ pr.name }}</span><span style="font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: {{ pr.stBg }}; color: {{ pr.stFg }}">{{ pr.status }}</span><span style="font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; width: 40px; text-align: right">%{{ pr.pct }}</span></div>
+                <div style="height: 8px; border-radius: 4px; background: var(--chip); overflow: hidden"><div class="bar" style="height: 8px; border-radius: 4px; width: {{ pr.pct }}%; background: var(--bar)"></div></div>
+                <div style="font-size: 12.5px; color: var(--muted)">Sıradaki: {{ pr.current }} · {{ pr.openCount }} açık görev</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+            <h2 style="margin: 0; font-size: 18px; font-weight: 700">Ekip durumu</h2>
+            <div style="display: flex; height: 14px; border-radius: 7px; overflow: hidden; gap: 3px">
+              <sc-for list="{{ availDist }}" as="ad" hint-placeholder-count="3"><div class="bar" style="width: {{ ad.pct }}%; background: {{ ad.color }}"></div></sc-for>
+            </div>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap">
+              <sc-for list="{{ availDist }}" as="ad" hint-placeholder-count="3"><span style="display: flex; align-items: center; gap: 6px; font-size: 13.5px"><span style="width: 9px; height: 9px; border-radius: 50%; background: {{ ad.color }}"></span>{{ ad.label }} <b style="font-variant-numeric: tabular-nums">{{ ad.count }}</b></span></sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- İstekler -->
+    <sc-if value="{{ adm.istek }}" hint-placeholder-val="{{ false }}">
+    <div class="stagger" style="background: var(--surface); box-shadow: var(--shadow); border-radius: 24px; padding: 8px 20px 12px; overflow-x: auto">
+      <table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14.5px">
+        <thead><tr style="text-align: left; color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.05em">
+          <th style="padding: 12px 8px; font-weight: 700">Kim</th><th style="padding: 12px 8px; font-weight: 700">İstek</th><th style="padding: 12px 8px; font-weight: 700">Kime gider</th><th style="padding: 12px 8px; font-weight: 700">Durum</th><th style="padding: 12px 8px; font-weight: 700; text-align: right">İşlem</th></tr></thead>
+        <tbody>
+          <sc-for list="{{ reqRows }}" as="r" hint-placeholder-count="3">
+            <tr style="border-top: 1px solid var(--line)">
+              <td style="padding: 12px 8px"><span style="display: flex; align-items: center; gap: 10px"><span style="width: 32px; height: 32px; border-radius: 50%; background: {{ r.bg }}; color: #0E0E10; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ r.ini }}</span><b>{{ r.name }}</b></span></td>
+              <td style="padding: 12px 8px">{{ r.text }}</td>
+              <td style="padding: 12px 8px; color: var(--muted)">{{ r.to }}</td>
+              <td style="padding: 12px 8px"><span style="font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: {{ r.stBg }}; color: {{ r.stFg }}">{{ r.statusLabel }}</span></td>
+              <td style="padding: 12px 8px; text-align: right">
+                <sc-if value="{{ r.pending }}" hint-placeholder-val="{{ true }}"><span style="display: inline-flex; gap: 6px"><button onClick="{{ r.accept }}" style="border: 0; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 700; background: var(--a1); color: var(--a1-ink)">Kabul et</button><button onClick="{{ r.decline }}" class="hov" style="border: 0; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; background: var(--chip); color: var(--text)">Şimdilik değil</button></span></sc-if>
+              </td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+      <sc-if value="{{ noReqs }}" hint-placeholder-val="{{ false }}"><div style="padding: 18px 8px; color: var(--muted)">Henüz istek yok.</div></sc-if>
+    </div>
+    </sc-if>
+
+    <!-- Üyeler -->
+    <sc-if value="{{ adm.uye }}" hint-placeholder-val="{{ false }}">
+    <div class="stagger" style="display: flex; flex-direction: column; gap: 12px">
+      <div style="font-size: 14px; color: var(--muted)">Rol değişikliği görev kilitlerini de etkiler. Örneğin birini Çizer yaparsan sadece çizerlere açık görevleri alabilir.</div>
+      <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 24px; padding: 8px 20px 12px; overflow-x: auto">
+        <table style="width: 100%; min-width: 980px; border-collapse: collapse; font-size: 14.5px">
+          <thead><tr style="text-align: left; color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.05em">
+            <th style="padding: 12px 8px; font-weight: 700">Kişi</th><th style="padding: 12px 8px; font-weight: 700">Rol</th><th style="padding: 12px 8px; font-weight: 700">Projeler</th><th style="padding: 12px 8px; font-weight: 700">Durum</th><th style="padding: 12px 8px; font-weight: 700">Kâr payı</th><th style="padding: 12px 8px; font-weight: 700">Biten / Açık</th><th style="padding: 12px 8px; font-weight: 700">Yönetici</th><th style="padding: 12px 8px"></th></tr></thead>
+          <tbody>
+            <sc-for list="{{ userRows }}" as="u" hint-placeholder-count="5">
+              <tr style="border-top: 1px solid var(--line)">
+                <td style="padding: 12px 8px"><span style="display: flex; align-items: center; gap: 10px"><span style="width: 34px; height: 34px; border-radius: 50%; background: {{ u.bg }}; color: #0E0E10; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ u.ini }}</span><b>{{ u.name }}</b></span></td>
+                <td style="padding: 12px 8px">
+                  <select id="{{ u.roleId }}" aria-label="{{ u.name }} rolü" value="{{ u.role }}" onChange="{{ u.onRole }}" style="background: var(--surface2); color: var(--text); border: 1px solid var(--line-2); border-radius: 10px; padding: 7px 10px; font-size: 14px">
+                    <sc-for list="{{ roleOptions }}" as="ro" hint-placeholder-count="5"><option value="{{ ro }}">{{ ro }}</option></sc-for>
+                  </select>
+                </td>
+                <td style="padding: 12px 8px"><span style="display: flex; gap: 4px; flex-wrap: wrap"><sc-for list="{{ u.projects }}" as="pn" hint-placeholder-count="2"><span style="font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--surface2); color: var(--text-2)">{{ pn }}</span></sc-for></span></td>
+                <td style="padding: 12px 8px"><span style="display: flex; align-items: center; gap: 6px; font-size: 13.5px"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{ u.availColor }}"></span>{{ u.availLabel }}</span></td>
+                <td style="padding: 12px 8px"><span style="display: inline-flex; align-items: center; gap: 4px; background: var(--surface2); border: 1px solid var(--line-2); border-radius: 10px; padding: 0 10px"><span style="color: var(--muted)">%</span><input type="number" id="{{ u.shareId }}" aria-label="{{ u.name }} kâr payı" min="0" max="100" step="0.5" value="{{ u.share }}" onChange="{{ u.onShare }}" placeholder="—" style="width: 54px; border: 0; background: none; color: var(--text); font: inherit; font-size: 14px; padding: 7px 0; font-variant-numeric: tabular-nums"></span></td>
+                <td style="padding: 12px 8px; font-variant-numeric: tabular-nums">{{ u.done }} / {{ u.open }}</td>
+                <td style="padding: 12px 8px">
+                  <button role="switch" aria-checked="{{ u.adminStr }}" aria-label="{{ u.name }} yönetici yetkisi" onClick="{{ u.toggleAdmin }}" style="position: relative; width: 46px; height: 26px; border-radius: 999px; border: 0; padding: 0; background: {{ u.swBg }}">
+                    <span style="position: absolute; top: 3px; left: {{ u.knob }}px; width: 20px; height: 20px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.3)"></span>
+                  </button>
+                </td>
+                <td style="padding: 12px 8px; text-align: right"><button onClick="{{ u.open2 }}" class="hov" style="border: 0; border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 600; background: var(--chip); color: var(--text)">Profil</button></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- Projeler yönetimi -->
+    <sc-if value="{{ adm.proje }}" hint-placeholder-val="{{ false }}">
+    <div class="stagger" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 18px">
+      <sc-for list="{{ projAdmin }}" as="pa" hint-placeholder-count="3">
+        <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; align-items: center; gap: 10px"><h2 style="margin: 0; font-size: 20px; font-weight: 700; flex-grow: 1">{{ pa.name }}</h2><span style="font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums">%{{ pa.pct }}</span></div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+            <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted)">Durum
+              <select id="{{ pa.statusId }}" value="{{ pa.status }}" onChange="{{ pa.onStatus }}" style="background: var(--surface2); color: var(--text); border: 1px solid var(--line-2); border-radius: 10px; padding: 8px 10px; font-size: 14px">
+                <sc-for list="{{ statusOptions }}" as="so" hint-placeholder-count="6"><option value="{{ so }}">{{ so }}</option></sc-for>
+              </select></label>
+            <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted)">Proje yöneticisi
+              <select id="{{ pa.leadId }}" value="{{ pa.lead }}" onChange="{{ pa.onLead }}" style="background: var(--surface2); color: var(--text); border: 1px solid var(--line-2); border-radius: 10px; padding: 8px 10px; font-size: 14px">
+                <sc-for list="{{ pa.leadOptions }}" as="lo" hint-placeholder-count="3"><option value="{{ lo.id }}">{{ lo.name }}</option></sc-for>
+              </select></label>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <div style="font-size: 12.5px; color: var(--muted)">Ekip</div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center">
+              <sc-for list="{{ pa.members }}" as="pm2" hint-placeholder-count="3">
+                <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 4px 4px 4px; border-radius: 999px; background: var(--surface2); font-size: 13px; font-weight: 600">
+                  <span style="width: 24px; height: 24px; border-radius: 50%; background: {{ pm2.bg }}; color: #0E0E10; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ pm2.ini }}</span>{{ pm2.name }}
+                  <button onClick="{{ pm2.remove }}" aria-label="{{ pm2.name }} kişisini projeden çıkar" style="width: 22px; height: 22px; border-radius: 50%; border: 0; background: var(--chip); color: var(--text); display: flex; align-items: center; justify-content: center; padding: 0"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+                </span>
+              </sc-for>
+              <sc-for list="{{ pa.addable }}" as="ad2" hint-placeholder-count="1">
+                <button onClick="{{ ad2.add }}" class="hov" style="border: 1px dashed var(--line-2); border-radius: 999px; padding: 5px 10px; font-size: 13px; font-weight: 600; background: none; color: var(--muted)">+ {{ ad2.name }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <div style="font-size: 12.5px; color: var(--muted)">Kilometre taşları</div>
+            <sc-for list="{{ pa.ms }}" as="m3" hint-placeholder-count="3">
+              <button onClick="{{ m3.toggle }}" role="checkbox" aria-checked="{{ m3.doneStr }}" class="hov" style="border: 0; background: none; color: var(--text); border-radius: 10px; padding: 6px; display: flex; align-items: center; gap: 10px; text-align: left; font-size: 14.5px">
+                <span style="width: 20px; height: 20px; border-radius: 6px; box-sizing: border-box; border: 2px solid {{ m3.boxBorder }}; background: {{ m3.boxBg }}; display: flex; align-items: center; justify-content: center; flex: none">
+                  <sc-if value="{{ m3.done }}" hint-placeholder-val="{{ false }}"><svg class="spin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0E0E10" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></sc-if></span>
+                <span style="color: {{ m3.color }}">{{ m3.title }}</span>
+              </button>
+            </sc-for>
+            <div style="display: flex; gap: 6px">
+              <input type="text" id="{{ pa.msInputId }}" aria-label="Yeni kilometre taşı" placeholder="Yeni adım ekle…" value="{{ pa.msDraft }}" onChange="{{ pa.onMsDraft }}" style="flex-grow: 1; min-width: 0; background: var(--surface2); border: 1px solid var(--line-2); border-radius: 10px; padding: 8px 10px; color: var(--text); font: inherit; font-size: 14px">
+              <button onClick="{{ pa.addMs }}" style="border: 0; border-radius: 10px; padding: 0 14px; background: var(--a2); color: var(--a2-ink); font-weight: 700; font-size: 14px">Ekle</button>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    </sc-if>
+
+    <!-- Görev kilitleri -->
+    <sc-if value="{{ adm.kilit }}" hint-placeholder-val="{{ false }}">
+    <div class="stagger" style="display: flex; flex-direction: column; gap: 12px">
+      <div style="font-size: 14px; color: var(--muted)">Proje görevleri otomatik olarak o projenin ekibine açıktır. Burada projesiz görevlerin kimlere açık olacağını seçersin.</div>
+      <sc-for list="{{ lockRows }}" as="lr" hint-placeholder-count="3">
+        <div style="background: var(--surface); box-shadow: var(--shadow); border-radius: 20px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+            <div style="flex-grow: 1; min-width: 200px"><div style="font-weight: 700">{{ lr.title }}</div><div style="font-size: 13px; color: var(--muted)">{{ lr.whoLabel }} · {{ lr.due }}</div></div>
+            <div style="display: flex; gap: 3px; background: var(--surface2); border-radius: 999px; padding: 3px">
+              <sc-for list="{{ lr.opts }}" as="o" hint-placeholder-count="4">
+                <button onClick="{{ o.pick }}" style="border: 0; border-radius: 999px; padding: 7px 13px; font-size: 13px; font-weight: 600; background: {{ o.bg }}; color: {{ o.fg }}">{{ o.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <sc-if value="{{ lr.showRoles }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center"><span style="font-size: 13px; color: var(--muted)">Alabilecek roller:</span>
+              <sc-for list="{{ lr.roles }}" as="rc" hint-placeholder-count="4"><button onClick="{{ rc.toggle }}" aria-pressed="{{ rc.on }}" style="border: 0; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; background: {{ rc.bg }}; color: {{ rc.fg }}">{{ rc.label }}</button></sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ lr.showPeople }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center"><span style="font-size: 13px; color: var(--muted)">Alabilecek kişiler:</span>
+              <sc-for list="{{ lr.people }}" as="pc" hint-placeholder-count="4"><button onClick="{{ pc.toggle }}" aria-pressed="{{ pc.on }}" style="border: 0; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; background: {{ pc.bg }}; color: {{ pc.fg }}">{{ pc.label }}</button></sc-for>
+            </div>
+          </sc-if>
+          <div style="font-size: 13px; color: var(--text-3)">{{ lr.summary }}</div>
+        </div>
+      </sc-for>
+    </div>
+    </sc-if>
+
+    <!-- Duyurular -->
+    <sc-if value="{{ adm.duyuru }}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start">
+      <div class="stagger" style="flex: 1 1 340px; max-width: 440px; min-width: 0; background: var(--surface); box-shadow: var(--shadow); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-size: 18px; font-weight: 700">Yeni duyuru</h2>
+        <input type="text" id="ann-title" aria-label="Duyuru başlığı" placeholder="Başlık" value="{{ annTitle }}" onChange="{{ onAnnTitle }}" style="background: var(--surface2); border: 1px solid var(--line-2); border-radius: 12px; padding: 11px 12px; color: var(--text); font: inherit; font-size: 15px">
+        <textarea id="ann-body" aria-label="Duyuru metni" placeholder="Ekibe ne söylemek istiyorsun?" value="{{ annBody }}" onChange="{{ onAnnBody }}" style="min-height: 100px; resize: vertical; background: var(--surface2); border: 1px solid var(--line-2); border-radius: 12px; padding: 11px 12px; color: var(--text); font: inherit; font-size: 15px"></textarea>
+        <button onClick="{{ toggleAnnPin }}" role="checkbox" aria-checked="{{ annPinStr }}" style="border: 0; background: none; color: var(--text); display: flex; align-items: center; gap: 10px; padding: 4px 0; font-size: 14.5px; font-weight: 600; text-align: left">
+          <span style="width: 22px; height: 22px; border-radius: 7px; box-sizing: border-box; border: 2px solid var(--a2); background: {{ annPinBox }}; display: flex; align-items: center; justify-content: center"><sc-if value="{{ annPin }}" hint-placeholder-val="{{ false }}"><svg class="spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0E0E10" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></sc-if></span>
+          Akışın en üstüne sabitle (herkese bildirim gider)</button>
+        <button onClick="{{ addAnn }}" style="border: 0; border-radius: 999px; padding: 12px; font-size: 15px; font-weight: 700; background: var(--a1); color: var(--a1-ink)">Yayınla</button>
+      </div>
+      <div class="stagger" style="flex: 999 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+        <sc-for list="{{ annRows }}" as="an" hint-placeholder-count="2">
+          <div style="background: var(--surface); box-shadow: 0 0 0 2px {{ an.ring }}; border-radius: 20px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; align-items: center; gap: 8px">
+              <sc-if value="{{ an.pinned }}" hint-placeholder-val="{{ false }}"><span style="font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--a1); color: var(--a1-ink)">Sabit</span></sc-if>
+              <span style="font-weight: 700; font-size: 16px; flex-grow: 1">{{ an.title }}</span><span style="font-size: 12.5px; color: var(--muted)">{{ an.time }}</span>
+            </div>
+            <div style="font-size: 14.5px; color: var(--text-3); max-width: 64ch">{{ an.body }}</div>
+            <div style="display: flex; gap: 6px">
+              <button onClick="{{ an.togglePin }}" class="hov" style="border: 0; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; background: var(--chip); color: var(--text)">{{ an.pinLabel }}</button>
+              <button onClick="{{ an.del }}" style="border: 0; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; background: {{ an.delBg }}; color: {{ an.delFg }}">{{ an.delLabel }}</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isNoAccess }}" hint-placeholder-val="{{ false }}">
+    <div style="background: var(--surface); border-radius: 24px; padding: 28px; max-width: 520px"><div style="font-weight: 700; font-size: 18px">Bu bölüm yöneticilere özel</div><div style="color: var(--muted); margin-top: 6px">Yönetim paneline erişmen gerekiyorsa Rüzgar'la konuş.</div></div>
+  </sc-if>
+
+  </div>
+</main>
+
+<!-- ================= TOAST ================= -->
+<sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+  <div class="toast" role="status" style="position: fixed; right: 28px; bottom: 28px; z-index: 40; max-width: 360px; background: var(--sel-bg); color: var(--sel-fg); border-radius: 16px; padding: 13px 18px; font-weight: 600; font-size: 14.5px; box-shadow: 0 14px 40px rgba(0,0,0,0.3)">{{ toast }}</div>
+</sc-if>
+
+<!-- ================= PENCERELER ================= -->
+<sc-if value="{{ hasModal }}" hint-placeholder-val="{{ false }}">
+<div class="scrim" onClick="{{ closeModal }}" style="position: fixed; inset: 0; z-index: 30; background: var(--scrim); display: flex; align-items: center; justify-content: center; padding: 24px">
+<div class="dialog" role="dialog" aria-modal="true" onClick="{{ stop }}" style="width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto; background: var(--surface); border-radius: 28px; padding: 26px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 30px 80px rgba(0,0,0,0.35)">
+
+  <sc-if value="{{ modalLock }}" hint-placeholder-val="{{ false }}">
+    <div class="stagger" style="display: flex; flex-direction: column; gap: 14px">
+      <span style="width: 52px; height: 52px; border-radius: 50%; background: var(--surface2); color: var(--accent-text); display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 700">{{ lock.title }}</h2>
+      <div style="color: var(--text-3)">{{ lock.text }}</div>
+      <div style="background: var(--surface2); border-radius: 14px; padding: 12px 14px; font-size: 14px"><span style="color: var(--muted)">Görev:</span> {{ lock.task }}</div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end">
+        <button onClick="{{ closeModal }}" class="hov" style="border: 0; border-radius: 999px; padding: 11px 18px; font-size: 14.5px; font-weight: 600; background: var(--chip); color: var(--text)">Vazgeç</button>
+        <button onClick="{{ sendRequest }}" style="border: 0; border-radius: 999px; padding: 11px 18px; font-size: 14.5px; font-weight: 700; background: {{ lock.btnBg }}; color: {{ lock.btnFg }}">{{ lock.btn }}</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ modalAdd }}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <h2 style="margin: 0; font-size: 22px; font-weight: 700">Yeni görev</h2>
+      <input type="text" id="task-title" aria-label="Görev adı" placeholder="Ne yapılması lazım?" value="{{ taskDraft }}" onChange="{{ onTaskInput }}" style="background: var(--surface2); border: 0; border-radius: 14px; padding: 13px 14px; color: var(--text); font: inherit; font-size: 16px">
+      <div style="font-size: 13px; color: var(--muted)">Proje</div>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{ addProjChips }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.pick }}" style="border: 0; border-radius: 999px; padding: 8px 13px; font-size: 14px; font-weight: 600; background: {{ c.bg }}; color: {{ c.fg }}">{{ c.label }}</button></sc-for></div>
+      <div style="display: flex; gap: 8px">
+        <button onClick="{{ setPool }}" style="flex: 1; border: 0; border-radius: 999px; padding: 10px; font-size: 14px; font-weight: 600; background: {{ poolBg }}; color: {{ poolFg }}">Havuza koy</button>
+        <button onClick="{{ setMine }}" style="flex: 1; border: 0; border-radius: 999px; padding: 10px; font-size: 14px; font-weight: 600; background: {{ mineBg }}; color: {{ mineFg }}">Ben yapacağım</button>
+      </div>
+      <div style="font-size: 13px; color: var(--muted)">Sadece başlık yeterli. Tarih, not ve dosyayı sonra da ekleyebilirsin.</div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end">
+        <button onClick="{{ closeModal }}" class="hov" style="border: 0; border-radius: 999px; padding: 11px 18px; font-size: 14.5px; font-weight: 600; background: var(--chip); color: var(--text)">Vazgeç</button>
+        <button onClick="{{ addTask }}" style="border: 0; border-radius: 999px; padding: 11px 18px; font-size: 14.5px; font-weight: 700; background: var(--a1); color: var(--a1-ink)">Görevi ekle</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ modalAsk }}" hint-placeholder-val="{{ false }}">
+    <div class="stagger" style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+      <span class="spin" style="width: 52px; height: 52px; border-radius: 50%; background: var(--a1); color: var(--a1-ink); display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 700">Bitti, eline sağlık!</h2>
+      <div style="color: var(--text-3)">“{{ askTask }}” tamamlandı. Sonucu ekiple paylaşmak ister misin?</div>
+      <div style="display: flex; gap: 8px; align-self: flex-end">
+        <button onClick="{{ closeModal }}" class="hov" style="border: 0; border-radius: 999px; padding: 11px 18px; font-size: 14.5px; font-weight: 600; background: var(--chip); color: var(--text)">Şimdi değil</button>
+        <button onClick="{{ askShare }}" style="border: 0; border-radius: 999px; padding: 11px 18px; font-size: 14.5px; font-weight: 700; background: var(--a1); color: var(--a1-ink)">Akışta paylaş</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ modalProfile }}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <h2 style="margin: 0; font-size: 22px; font-weight: 700">Profili düzenle</h2>
+      <div style="position: relative; padding-bottom: 38px">
+        <div style="height: 120px; border-radius: 18px; overflow: hidden; position: relative; background: {{ pe.bannerBg }}">
+          <sc-if value="{{ pe.hasBannerImg }}" hint-placeholder-val="{{ false }}"><img src="{{ pe.bannerImg }}" alt="Afiş önizlemesi" style="width: 100%; height: 100%; object-fit: cover; display: block"></sc-if>
+        </div>
+        <span style="position: absolute; left: 16px; bottom: 0; width: 80px; height: 80px; border-radius: 50%; overflow: hidden; box-sizing: border-box; border: 4px solid var(--surface); background: {{ pe.avBg }}; color: #0E0E10; font-size: 30px; font-weight: 800; display: flex; align-items: center; justify-content: center">
+          <sc-if value="{{ pe.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ pe.photo }}" alt="Fotoğraf önizlemesi" style="width: 100%; height: 100%; object-fit: cover"></sc-if>
+          <sc-if value="{{ pe.noPhoto }}" hint-placeholder-val="{{ true }}"><span>{{ pe.ini }}</span></sc-if>
+        </span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+        <span style="font-size: 13px; color: var(--muted); width: 90px">Afiş</span>
+        <label for="banner-file" style="cursor: pointer; border-radius: 999px; padding: 8px 13px; font-size: 13.5px; font-weight: 600; background: var(--surface2); color: var(--text)">Görsel yükle</label>
+        <input id="banner-file" type="file" accept="image/*" onChange="{{ onBannerFile }}" style="display: none">
+        <sc-for list="{{ pe.swatches }}" as="sw" hint-placeholder-count="4"><button onClick="{{ sw.pick }}" aria-label="{{ sw.label }} afiş" style="width: 30px; height: 30px; border-radius: 50%; border: 0; background: {{ sw.bg }}; box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px {{ sw.ring }}"></button></sc-for>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+        <span style="font-size: 13px; color: var(--muted); width: 90px">Fotoğraf</span>
+        <label for="photo-file" style="cursor: pointer; border-radius: 999px; padding: 8px 13px; font-size: 13.5px; font-weight: 600; background: var(--surface2); color: var(--text)">Fotoğraf yükle</label>
+        <input id="photo-file" type="file" accept="image/*" onChange="{{ onPhotoFile }}" style="display: none">
+        <sc-if value="{{ pe.hasPhoto }}" hint-placeholder-val="{{ false }}"><button onClick="{{ removePhoto }}" style="border: 0; background: none; color: var(--muted); font-size: 13.5px; font-weight: 600">Kaldır</button></sc-if>
+      </div>
+      <div style="display: flex"><label for="bio-input" style="font-size: 13px; color: var(--muted); flex-grow: 1">Hakkında</label><span style="font-size: 12.5px; color: var(--faint); font-variant-numeric: tabular-nums">{{ pe.bioCount }}</span></div>
+      <textarea id="bio-input" value="{{ pe.bio }}" onChange="{{ onBio }}" placeholder="Ne yaparsın, neyle uğraşıyorsun?" style="min-height: 76px; resize: vertical; background: var(--surface2); border: 0; border-radius: 14px; padding: 12px 14px; color: var(--text); font: inherit; font-size: 15px"></textarea>
+      <div style="font-size: 13px; color: var(--muted)">Linkler</div>
+      <sc-for list="{{ pe.links }}" as="l" hint-placeholder-count="1">
+        <div style="display: flex; align-items: center; gap: 10px; background: var(--surface2); border-radius: 12px; padding: 7px 7px 7px 14px">
+          <span style="display: block; flex-grow: 1; min-width: 0"><span style="display: block; font-weight: 700; font-size: 14px">{{ l.label }}</span><span style="display: block; font-size: 12.5px; color: var(--muted)">{{ l.url }}</span></span>
+          <button onClick="{{ l.remove }}" aria-label="Linki kaldır" style="width: 32px; height: 32px; border-radius: 50%; border: 0; background: var(--chip); color: var(--text); display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+      </sc-for>
+      <div style="display: flex; gap: 8px">
+        <input type="text" id="link-label" aria-label="Link adı" placeholder="Ad (örn. Instagram)" value="{{ linkLabel }}" onChange="{{ onLinkLabel }}" style="width: 36%; min-width: 0; background: var(--surface2); border: 0; border-radius: 12px; padding: 10px 12px; color: var(--text); font: inherit; font-size: 14px">
+        <input type="text" id="link-url" aria-label="Link adresi" placeholder="Adres" value="{{ linkUrl }}" onChange="{{ onLinkUrl }}" style="flex-grow: 1; min-width: 0; background: var(--surface2); border: 0; border-radius: 12px; padding: 10px 12px; color: var(--text); font: inherit; font-size: 14px">
+        <button onClick="{{ addLink }}" style="border: 0; border-radius: 12px; padding: 0 14px; background: var(--a2); color: var(--a2-ink); font-weight: 700">Ekle</button>
+      </div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px">
+        <button onClick="{{ closeModal }}" class="hov" style="border: 0; border-radius: 999px; padding: 11px 18px; font-size: 14.5px; font-weight: 600; background: var(--chip); color: var(--text)">Vazgeç</button>
+        <button onClick="{{ saveProfile }}" style="border: 0; border-radius: 999px; padding: 11px 22px; font-size: 14.5px; font-weight: 700; background: var(--a1); color: var(--a1-ink)">Kaydet</button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"viewer":{"editor":"enum","options":["uye","admin"],"default":"admin","section":"Görünüm"},"theme":{"editor":"enum","options":["dark","light","indigo","gul","zeytin","adacayi","tropik","gunbatimi","gece","pudra","noir"],"default":"dark","section":"Görünüm"},"$preview":{"width":1440,"height":900}}'>
+var M = {
+  ruzgar: { name: 'Rüzgar', ini: 'R', bg: '#E4F68F', avail: 'musait' },
+  ece: { name: 'Ece', ini: 'E', bg: '#C5B5FA', avail: 'musait', back: '' },
+  mert: { name: 'Mert', ini: 'M', bg: '#8EE8F5', avail: 'az' },
+  deniz: { name: 'Deniz', ini: 'D', bg: '#F5C77E', avail: 'molada', back: '15 Ocak' },
+  selin: { name: 'Selin', ini: 'S', bg: '#F2A7C3', avail: 'musait' }
+};
+var IDS = ['ruzgar', 'ece', 'mert', 'deniz', 'selin'];
+var ROLES = ['ABN Temsilcisi', 'Çizer', 'Video editörü', 'Yazar', 'Ses tasarımcısı', 'Programcı'];
+var STATUSES = ['Fikir', 'Geliştirmede', 'Test', 'Beklemede', 'Yayında', 'Rafa kalktı'];
+var PST = { 'Fikir': ['var(--a3)', 'var(--a3-ink)'], 'Geliştirmede': ['var(--a2)', 'var(--a2-ink)'], 'Test': ['#F5C77E', '#0E0E10'], 'Beklemede': ['var(--chip)', 'var(--text-2)'], 'Yayında': ['var(--a1)', 'var(--a1-ink)'], 'Rafa kalktı': ['var(--chip)', 'var(--text-3)'] };
+var TS = { yapilacak: ['Yapılacak', 'var(--chip)', 'var(--text-2)', '#A1A1AA'], devam: ['Devam ediyor', 'var(--a2)', 'var(--a2-ink)', '#A794F0'], inceleme: ['İncelemede', 'var(--a3)', 'var(--a3-ink)', '#3FC3D6'], bitti: ['Bitti', 'var(--a1)', 'var(--a1-ink)', '#B5D334'] };
+var NEXT = { yapilacak: 'Başla', devam: 'İncelemeye gönder', inceleme: 'Bitir' };
+var ORDER = ['yapilacak', 'devam', 'inceleme', 'bitti'];
+var IS = { yeni: ['Yeni', 'var(--a3)', 'var(--a3-ink)'], konusuluyor: ['Konuşuluyor', 'var(--a2)', 'var(--a2-ink)'], gorev: ['Göreve dönüştü', 'var(--a1)', 'var(--a1-ink)'], simdilik: ['Şimdilik değil', 'var(--chip)', 'var(--text-3)'] };
+var AV = { musait: ['Müsait', '#B5D334'], az: ['Az vaktim var', '#3FC3D6'], molada: ['Molada', '#E9A23B'] };
+var BN = { lilac: ['var(--a2)', 'var(--a2-ink)', 'Tema rengi 2'], lime: ['var(--a1)', 'var(--a1-ink)', 'Tema rengi 1'], cyan: ['var(--a3)', 'var(--a3-ink)', 'Tema rengi 3'], gece: ['#2B2540', '#C5B5FA', 'Gece'] };
+var THEMES = [
+  ['dark', 'ABN Koyu', '#0E0E10', '#1C1C21', '#E4F68F', '#C5B5FA', '#8EE8F5'],
+  ['light', 'ABN Açık', '#F2F2F5', '#FFFFFF', '#E4F68F', '#C5B5FA', '#8EE8F5'],
+  ['indigo', 'İndigo', '#15163A', '#1F2052', '#EBCFE5', '#A094C8', '#6366B0'],
+  ['gul', 'Gül', '#FFF3F7', '#FFFFFF', '#F592B4', '#B11F5B', '#EF6A94'],
+  ['zeytin', 'Zeytin', '#FCFDEE', '#FFFFFF', '#DAD6AB', '#C2BE8A', '#8E8A5A'],
+  ['adacayi', 'Adaçayı', '#F2E5D5', '#FBF5EC', '#85A2A0', '#8A6281', '#D7CCB6'],
+  ['tropik', 'Tropik', '#F1F9F4', '#FFFFFF', '#FDD372', '#F05050', '#B3CFC6'],
+  ['gunbatimi', 'Gün Batımı', '#1B1310', '#281C16', '#FDB840', '#E07428', '#67C6CF'],
+  ['gece', 'Gece Mavisi', '#0E1F33', '#172A40', '#F04E2A', '#8FA6BC', '#F7A48F'],
+  ['pudra', 'Pudra', '#FDF5F3', '#FFFFFF', '#F7DDD2', '#CDBCA9', '#DAD0C1'],
+  ['noir', 'Noir', '#000000', '#121212', '#F0B7B8', '#BC4D4B', '#EFEFEF']
+];
+var PANO_START = { palemouth: 'pm', dedektif: 'dd', gumruk: 'gm' };
+var ICON = {
+  akis: 'M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
+  gorev: 'M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
+  proje: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  fikir: 'M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z',
+  ekip: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
+  help: 'M12 8v5M12 16.5v.5M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z',
+  clock: 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z',
+  inbox: 'M22 12h-6l-2 3h-4l-2-3H2M5.5 5h13l3.5 7v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z',
+  pool: 'M4 6h16M4 12h16M4 18h10',
+  moon: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',
+  pano: 'M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z'
+};
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      page: 'akis', projectId: null, profileId: null, backTo: 'akis', adminTab: 'genel', theme: null,
+      avail: 'musait', toast: '', modal: null, modalTask: null, bellOpen: false, search: '',
+      scope: 'tumu', projFilter: '', nudgeDone: false, nudged: {},
+      shareDraft: '', shareTag: '', shareFeedback: false, drafts: {},
+      ideaDraft: '', ideaFilter: 'tumu', taskDraft: '', taskProject: '', taskMine: false,
+      pdraft: null, linkLabel: '', linkUrl: '', msDraft: {},
+      annTitle: '', annBody: '', annPin: false, confirmDel: null,
+      meta: {
+        ruzgar: { role: 'ABN Temsilcisi', share: '', admin: true },
+        ece: { role: 'Çizer', share: '5', admin: false },
+        mert: { role: 'Çizer', share: '5', admin: false },
+        deniz: { role: 'Video editörü', share: '', admin: false },
+        selin: { role: 'Yazar', share: '', admin: false }
+      },
+      projs: {
+        palemouth: { name: 'PaleMouth', status: 'Geliştirmede', lead: 'ruzgar', summary: 'Türkçe psikolojik korku visual novel.', ms: [['Hikâye taslağı', 1], ['Karakter tasarımları', 1], ['Demo', 0], ['1. Bölüm', 0], ['Steam sayfası', 0]] },
+        dedektif: { name: 'Dedektif Antolojisi', status: 'Fikir', lead: 'ruzgar', summary: 'Her hikâyede ayrı bir dedektif, ortak mekanikler.', ms: [['Konsept', 1], ['İlk dedektif hikâyesi', 0], ['Sorgu mekaniği prototipi', 0]] },
+        gumruk: { name: 'Gümrük Oyunu', status: 'Rafa kalktı', lead: 'ruzgar', summary: 'Hikâye odaklı gümrük memuru simülatörü.', ms: [['Konsept', 1], ['Prototip', 0], ['Hikâye örgüsü', 0], ['Demo', 0]] }
+      },
+      pm: { palemouth: ['ruzgar', 'ece', 'mert', 'deniz'], dedektif: ['ruzgar', 'selin'], gumruk: ['ruzgar'] },
+      tasks: [
+        { id: 't1', title: 'Ana karakter yüz ifadeleri', project: 'palemouth', assignee: 'ece', status: 'devam', due: 'Bu hafta' },
+        { id: 't2', title: '2. sahne arka planı', project: 'palemouth', assignee: null, status: 'yapilacak', due: 'Bu ay' },
+        { id: 't3', title: 'Demo fragman kurgusu', project: 'palemouth', assignee: 'deniz', status: 'devam', due: 'Bu ay', blocked: true },
+        { id: 't4', title: 'Dedektif Michael hikâye taslağı', project: 'dedektif', assignee: 'selin', status: 'devam', due: 'Bu ay' },
+        { id: 't5', title: 'Sorgu mekaniği notları', project: 'dedektif', assignee: null, status: 'yapilacak', due: 'Acelesi yok' },
+        { id: 't6', title: 'ABN Instagram kapak görseli', project: null, assignee: null, status: 'yapilacak', due: 'Bu hafta', lock: 'rol', lockRoles: ['Çizer'], lockMembers: [] },
+        { id: 't7', title: 'Ekip tanıtım videosu metni', project: null, assignee: null, status: 'yapilacak', due: 'Bu ay', lock: 'yok', lockRoles: [], lockMembers: [] },
+        { id: 't8', title: 'Jessica karakter fikri', project: 'dedektif', assignee: 'selin', status: 'inceleme', due: '20 Ekim', stale: true },
+        { id: 't9', title: 'Kapı gıcırtısı ses efekti', project: 'palemouth', assignee: 'deniz', status: 'bitti', due: 'Bu hafta' },
+        { id: 't10', title: 'Konsept dokümanı', project: 'dedektif', assignee: 'selin', status: 'bitti', due: 'Bu hafta' },
+        { id: 't11', title: 'PaleMouth logo taslakları', project: 'palemouth', assignee: 'mert', status: 'bitti', due: 'Bu hafta' },
+        { id: 't12', title: 'ABN web sitesi metinleri', project: null, assignee: null, status: 'yapilacak', due: 'Acelesi yok', lock: 'admin', lockRoles: [], lockMembers: [] }
+      ],
+      posts: [
+        { id: 'p1', author: 'ece', time: '2 saat önce', tag: 'PaleMouth · Ana karakter yüz ifadeleri', text: 'Yüz ifadelerinin ilk turu. Korku sahnesindekini biraz abarttım, sizce fazla mı?', feedback: true, art: 'face', likes: ['ruzgar', 'mert'], comments: [{ who: 'ruzgar', text: 'Sağdaki çok iyi ama gözler biraz büyük mü?', pin: 1 }] },
+        { id: 'p2', author: 'deniz', time: 'Dün', tag: 'PaleMouth · Demo fragman kurgusu', text: 'Fragmanın ilk 20 saniyesi hazır. Müziği henüz oturtamadım.', feedback: false, art: 'video', likes: ['ruzgar'], comments: [] },
+        { id: 'p3', author: 'ruzgar', time: '3 gün önce', tag: 'Dedektif Antolojisi', text: 'Dedektif Michael için mekân moodboardu. 70’ler İstanbul havası düşünüyorum.', feedback: false, art: 'mood', likes: ['selin', 'ece', 'mert'], comments: [] }
+      ],
+      ideas: [
+        { id: 'i1', author: 'selin', project: 'dedektif', text: 'Her dedektifin bir alışkanlığı olsun. Michael hep kalem çevirsin, oyuncu bunu sorguda ipucu olarak kullansın.', status: 'konusuluyor', likes: ['ruzgar'] },
+        { id: 'i2', author: 'mert', project: null, text: 'Bir game jam’e katılalım, 48 saatte küçük bir oyun çıkaralım.', status: 'yeni', likes: [] },
+        { id: 'i3', author: 'ece', project: 'palemouth', text: 'Ana menüde karakter nefes alıyormuş gibi hafif bir animasyon.', status: 'gorev', likes: ['ruzgar', 'deniz'] },
+        { id: 'i4', author: 'ruzgar', project: 'gumruk', text: 'Pasaport kontrolüne gelen her yolcunun küçük bir hikâyesi olsun.', status: 'simdilik', likes: ['ece'] }
+      ],
+      requests: [
+        { id: 'r0', type: 'proje', who: 'mert', project: 'dedektif', status: 'bekliyor' },
+        { id: 'r1', type: 'gorev', who: 'selin', task: 't12', status: 'bekliyor' },
+        { id: 'r2', type: 'proje', who: 'deniz', project: 'dedektif', status: 'red' }
+      ],
+      anns: [
+        { id: 'a1', title: 'Cumartesi 21:00 sesli toplantı', body: 'PaleMouth demo planını konuşacağız. Gelemeyen not bıraksın, sorun değil.', pinned: true, time: 'Dün' },
+        { id: 'a2', title: 'Kasım hedefi: PaleMouth demo', body: 'Ay sonuna kadar demo için gereken görevler havuzda. Bakıp ilgini çekeni al.', pinned: false, time: '5 gün önce' }
+      ],
+      profiles: {
+        ruzgar: { bio: 'Abby’s Nexus’u kurdum. Oyunlar, sinema ve iyi hikâyeler peşindeyim.', links: [], banner: 'gece', photo: null, bannerImg: null },
+        ece: { bio: 'Karakter tasarımı ve konsept çizim. PaleMouth’un yüzlerini ben çiziyorum.', links: [{ label: 'ArtStation', url: 'artstation.com/ornek-ece' }, { label: 'Instagram', url: 'instagram.com/ornek.ece' }], banner: 'lilac', photo: null, bannerImg: null },
+        mert: { bio: 'Logo, arayüz ve piksel işleri. Game jam fikri benden.', links: [{ label: 'Behance', url: 'behance.net/ornek-mert' }], banner: 'cyan', photo: null, bannerImg: null },
+        deniz: { bio: 'Kurgu, ses ve fragman. Sınavlar bitince geri döneceğim.', links: [], banner: 'lime', photo: null, bannerImg: null },
+        selin: { bio: 'Dedektif Antolojisi’nin yazarıyım. Polisiye, eski İstanbul ve sıcak çay.', links: [{ label: 'Medium', url: 'medium.com/@ornek-selin' }], banner: 'lime', photo: null, bannerImg: null }
+      }
+    };
+  }
+
+  vid() { return (this.props.viewer ?? 'admin') === 'admin' ? 'ruzgar' : 'selin'; }
+  isAdm() { return !!this.state.meta[this.vid()].admin; }
+  theme() { return this.state.theme || this.props.theme || 'dark'; }
+  role(id) { return this.state.meta[id].role; }
+  say(msg) { clearTimeout(this._t); this.setState({ toast: msg }); this._t = setTimeout(() => this.setState({ toast: '' }), 2400); }
+  componentWillUnmount() { clearTimeout(this._t); }
+  go(page) { this.setState({ page: page, projectId: null, profileId: null, bellOpen: false, panoStart: page === 'pano' ? 'root' : this.state.panoStart }); }
+
+  canClaim(t) {
+    var v = this.vid();
+    if (this.isAdm()) return true;
+    if (t.project) return this.state.pm[t.project].indexOf(v) >= 0;
+    if (t.lock === 'rol') return (t.lockRoles || []).indexOf(this.role(v)) >= 0;
+    if (t.lock === 'kisi') return (t.lockMembers || []).indexOf(v) >= 0;
+    if (t.lock === 'admin') return false;
+    return true;
+  }
+  pendingFor(t) {
+    var v = this.vid();
+    return this.state.requests.some(r => r.who === v && r.status === 'bekliyor' && (t.project ? (r.type === 'proje' && r.project === t.project) : (r.type === 'gorev' && r.task === t.id)));
+  }
+  joinPending(pid) { var v = this.vid(); return this.state.requests.some(r => r.who === v && r.status === 'bekliyor' && r.type === 'proje' && r.project === pid); }
+  updTask(id, patch) { this.setState({ tasks: this.state.tasks.map(x => x.id === id ? Object.assign({}, x, patch) : x) }); }
+
+  claim(id) {
+    var t = this.state.tasks.find(x => x.id === id);
+    if (this.canClaim(t)) { this.updTask(id, { assignee: this.vid(), status: 'devam' }); this.say('Görev artık sende. Kolay gelsin!'); }
+    else this.setState({ modal: 'lock', modalTask: id });
+  }
+  advance(id) {
+    var finished = false;
+    var tasks = this.state.tasks.map(t => {
+      if (t.id !== id) return t;
+      var n = ORDER[Math.min(ORDER.indexOf(t.status) + 1, 3)];
+      if (n === 'bitti') finished = true;
+      return Object.assign({}, t, { status: n, stale: false });
+    });
+    this.setState({ tasks: tasks, modal: finished ? 'ask' : null, modalTask: finished ? id : null });
+    if (!finished) this.say('Durum güncellendi');
+  }
+  toggleBlock(id) {
+    var t = this.state.tasks.find(x => x.id === id);
+    this.updTask(id, { blocked: !t.blocked });
+    this.say(t.blocked ? 'Çözüldü olarak işaretlendi' : 'Yöneticiye haber verildi, yalnız değilsin');
+  }
+  sendRequest() {
+    var t = this.state.tasks.find(x => x.id === this.state.modalTask);
+    if (this.pendingFor(t)) { this.setState({ modal: null }); return; }
+    var r = t.project ? { type: 'proje', project: t.project } : { type: 'gorev', task: t.id };
+    this.setState({ requests: this.state.requests.concat([Object.assign({ id: 'r' + Date.now(), who: this.vid(), status: 'bekliyor' }, r)]), modal: null });
+    this.say('İstek gönderildi');
+  }
+  sendJoin(pid) {
+    if (this.joinPending(pid)) return;
+    this.setState({ requests: this.state.requests.concat([{ id: 'r' + Date.now(), type: 'proje', project: pid, who: this.vid(), status: 'bekliyor' }]) });
+    this.say('İstek proje yöneticisine gitti');
+  }
+  decide(rid, ok) {
+    var r = this.state.requests.find(x => x.id === rid);
+    var pm = this.state.pm, tasks = this.state.tasks;
+    if (ok) {
+      if (r.type === 'proje') { pm = Object.assign({}, pm); if (pm[r.project].indexOf(r.who) < 0) pm[r.project] = pm[r.project].concat([r.who]); }
+      else tasks = tasks.map(t => t.id === r.task ? Object.assign({}, t, { assignee: r.who, status: 'devam' }) : t);
+    }
+    this.setState({ pm: pm, tasks: tasks, requests: this.state.requests.map(x => x.id === rid ? Object.assign({}, x, { status: ok ? 'kabul' : 'red' }) : x) });
+    this.say(ok ? M[r.who].name + ' için kabul edildi' : 'Şimdilik olmadı dedin, nazikçe haber verildi');
+  }
+  toggleLike(kind, id) {
+    var v = this.vid();
+    var upd = x => x.id === id ? Object.assign({}, x, { likes: x.likes.indexOf(v) >= 0 ? x.likes.filter(l => l !== v) : [v].concat(x.likes) }) : x;
+    if (kind === 'post') this.setState({ posts: this.state.posts.map(upd) });
+    else this.setState({ ideas: this.state.ideas.map(upd) });
+  }
+  likeInfo(likes) {
+    var v = this.vid();
+    var ids = likes.indexOf(v) >= 0 ? [v].concat(likes.filter(l => l !== v)) : likes.slice();
+    var names = ids.map(id => id === v ? 'Sen' : M[id].name);
+    var you = ids[0] === v, txt = '';
+    if (names.length === 1) txt = you ? 'Sen beğendin' : names[0] + ' beğendi';
+    else if (names.length === 2) txt = names[0] + ' ve ' + names[1] + (you ? ' beğendiniz' : ' beğendi');
+    else if (names.length > 2) txt = names[0] + ', ' + names[1] + ' ve diğerleri' + (you ? ' beğendiniz' : ' beğendi');
+    return { txt: txt, liked: likes.indexOf(v) >= 0, ids: ids };
+  }
+  sendComment(pid) {
+    var txt = (this.state.drafts[pid] || '').trim();
+    if (!txt) return;
+    var d = Object.assign({}, this.state.drafts); d[pid] = '';
+    this.setState({ drafts: d, posts: this.state.posts.map(p => p.id === pid ? Object.assign({}, p, { comments: p.comments.concat([{ who: this.vid(), text: txt }]) }) : p) });
+  }
+  addPost() {
+    var txt = this.state.shareDraft.trim();
+    if (!txt) { this.say('Önce birkaç kelime yaz'); return; }
+    var tag = this.state.shareTag ? this.state.projs[this.state.shareTag].name : '';
+    this.setState({ posts: [{ id: 'p' + Date.now(), author: this.vid(), time: 'Az önce', tag: tag, text: txt, feedback: this.state.shareFeedback, art: null, likes: [], comments: [] }].concat(this.state.posts), shareDraft: '', shareFeedback: false });
+    this.say('Paylaşıldı');
+  }
+  addTask() {
+    var title = this.state.taskDraft.trim();
+    if (!title) { this.say('Görevin bir adı olsun yeter'); return; }
+    var t = { id: 't' + Date.now(), title: title, project: this.state.taskProject || null, assignee: this.state.taskMine ? this.vid() : null, status: 'yapilacak', due: 'Acelesi yok', lock: 'yok', lockRoles: [], lockMembers: [] };
+    this.setState({ tasks: [t].concat(this.state.tasks), modal: null, taskDraft: '', page: 'gorev', projectId: null, profileId: null });
+    this.say(this.state.taskMine ? 'Görev eklendi, sende' : 'Görev havuza eklendi');
+  }
+  addIdea() {
+    var txt = this.state.ideaDraft.trim();
+    if (!txt) { this.say('Fikrini yazmayı unuttun'); return; }
+    this.setState({ ideas: [{ id: 'i' + Date.now(), author: this.vid(), project: null, text: txt, status: 'yeni', likes: [] }].concat(this.state.ideas), ideaDraft: '', ideaFilter: 'tumu' });
+    this.say('Fikir deftere yazıldı');
+  }
+  convertIdea(id) {
+    var i = this.state.ideas.find(x => x.id === id);
+    var t = { id: 't' + Date.now(), title: i.text.length > 52 ? i.text.slice(0, 50) + '…' : i.text, project: i.project, assignee: null, status: 'yapilacak', due: 'Acelesi yok', lock: 'yok', lockRoles: [], lockMembers: [] };
+    this.setState({ tasks: [t].concat(this.state.tasks), ideas: this.state.ideas.map(x => x.id === id ? Object.assign({}, x, { status: 'gorev' }) : x) });
+    this.say('Görev oluşturuldu, havuzda');
+  }
+  nudge(kind) {
+    var tasks = this.state.tasks.map(t => {
+      if (t.id !== 't8') return t;
+      if (kind === 'drop') return Object.assign({}, t, { assignee: null, status: 'yapilacak', stale: false });
+      if (kind === 'time') return Object.assign({}, t, { due: 'Acelesi yok', stale: false });
+      return Object.assign({}, t, { stale: false });
+    });
+    this.setState({ tasks: tasks, nudgeDone: true });
+    this.say(kind === 'drop' ? 'Havuza bırakıldı, sorun değil' : (kind === 'time' ? 'Tamam, acelesi yok' : 'Süper, kolay gelsin'));
+  }
+  setMeta(id, patch) { var m = Object.assign({}, this.state.meta); m[id] = Object.assign({}, m[id], patch); this.setState({ meta: m }); }
+  setProj(pid, patch) { var p = Object.assign({}, this.state.projs); p[pid] = Object.assign({}, p[pid], patch); this.setState({ projs: p }); }
+  openProfile(id) { this.setState({ backTo: this.state.page === 'profil' ? this.state.backTo : this.state.page, page: 'profil', profileId: id, projectId: null, bellOpen: false }); }
+  editProfile() { var p = this.state.profiles[this.vid()]; this.setState({ modal: 'profile', pdraft: Object.assign({}, p, { links: p.links.slice() }), linkLabel: '', linkUrl: '' }); }
+  setDraft(patch) { this.setState({ pdraft: Object.assign({}, this.state.pdraft, patch) }); }
+  pickFile(kind, e) { var f = e.target.files && e.target.files[0]; if (!f) return; var patch = {}; patch[kind] = URL.createObjectURL(f); this.setDraft(patch); }
+  addLink() {
+    var label = this.state.linkLabel.trim(), url = this.state.linkUrl.trim().replace(/^https?:\/\//, '');
+    if (!url) { this.say('Önce link adresini yaz'); return; }
+    if (!label) label = url.split('/')[0];
+    this.setState({ pdraft: Object.assign({}, this.state.pdraft, { links: this.state.pdraft.links.concat([{ label: label, url: url }]) }), linkLabel: '', linkUrl: '' });
+  }
+  saveProfile() { var pr = Object.assign({}, this.state.profiles); pr[this.vid()] = this.state.pdraft; this.setState({ profiles: pr, modal: null, pdraft: null }); this.say('Profilin güncellendi'); }
+  addAnn() {
+    var t = this.state.annTitle.trim();
+    if (!t) { this.say('Duyurunun bir başlığı olsun'); return; }
+    var anns = this.state.anns.map(a => this.state.annPin ? Object.assign({}, a, { pinned: false }) : a);
+    this.setState({ anns: [{ id: 'a' + Date.now(), title: t, body: this.state.annBody.trim(), pinned: this.state.annPin, time: 'Az önce' }].concat(anns), annTitle: '', annBody: '', annPin: false });
+    this.say(this.state.annPin ? 'Duyuru sabitlendi, ekibe bildirim gitti' : 'Duyuru yayınlandı');
+  }
+
+  renderVals() {
+    var s = this.state, v = this.vid(), adm = this.isAdm(), th = this.theme(), P = s.projs;
+    var av = id => { var pf = s.profiles[id]; return { ini: M[id].ini, bg: M[id].bg, name: M[id].name, photo: pf.photo || '', hasPhoto: !!pf.photo, noPhoto: !pf.photo }; };
+    var myAvail = id => id === v ? s.avail : M[id].avail;
+    var pill = active => ({ bg: active ? 'var(--sel-bg)' : 'var(--surface)', fg: active ? 'var(--sel-fg)' : 'var(--text-2)' });
+    var pill2 = active => ({ bg: active ? 'var(--sel-bg)' : 'var(--surface2)', fg: active ? 'var(--sel-fg)' : 'var(--text-2)' });
+    var q = s.search.trim().toLocaleLowerCase('tr');
+    var match = txt => !q || txt.toLocaleLowerCase('tr').indexOf(q) >= 0;
+
+    var taskVM = t => {
+      var mine = t.assignee === v, pool = !t.assignee, can = this.canClaim(t), pend = this.pendingFor(t), locked = pool && !can, st = TS[t.status];
+      var lockHint = '';
+      if (pool && !t.project && t.lock && t.lock !== 'yok') lockHint = t.lock === 'rol' ? 'Sadece ' + (t.lockRoles || []).join(', ').toLocaleLowerCase('tr') : (t.lock === 'kisi' ? 'Belirli kişilere' : 'Yönetici atıyor');
+      else if (locked) lockHint = P[t.project].name + ' ekibine özel';
+      return {
+        id: t.id, title: t.title, due: t.due, blocked: !!t.blocked,
+        projName: t.project ? P[t.project].name : 'Projesiz', projColor: t.project ? 'var(--accent-text)' : 'var(--muted)',
+        statusLabel: st[0], stBg: st[1], stFg: st[2],
+        whoLabel: pool ? 'Havuzda' : (mine ? 'Sende' : M[t.assignee].name),
+        whoIni: pool ? '·' : M[t.assignee].ini, whoBg: pool ? 'var(--chip)' : M[t.assignee].bg,
+        mine: mine && t.status !== 'bitti', showClaim: pool, locked: locked,
+        claimLabel: pend ? 'İstek gönderildi' : (locked ? 'Kilitli' : 'Ben alırım'),
+        claimBg: locked ? 'var(--surface2)' : 'var(--a1)', claimFg: locked ? 'var(--text-3)' : 'var(--a1-ink)',
+        lockHint: lockHint, blockLabel: t.blocked ? 'Çözüldü' : 'Takıldım', nextLabel: NEXT[t.status] || '',
+        claim: () => this.claim(t.id), advance: () => this.advance(t.id), toggleBlock: () => this.toggleBlock(t.id)
+      };
+    };
+
+    var open = s.tasks.filter(t => t.status !== 'bitti');
+    var bende = s.tasks.filter(t => t.assignee === v);
+    var havuz = s.tasks.filter(t => !t.assignee);
+    var scoped = s.scope === 'bende' ? bende : (s.scope === 'havuz' ? havuz : s.tasks);
+    scoped = scoped.filter(t => (!s.projFilter || (s.projFilter === '_none' ? !t.project : t.project === s.projFilter)) && match(t.title));
+    var board = ORDER.map(k => { var cards = scoped.filter(t => t.status === k).map(taskVM); return { label: TS[k][0], dot: TS[k][3], count: cards.length, cards: cards, empty: cards.length === 0 }; });
+
+    var heart = li => ({ heartFill: li.liked ? 'var(--heart)' : 'none', heartStroke: li.liked ? 'var(--heart)' : 'var(--text-2)', heartClass: li.liked ? 'heart on' : 'heart', liked: li.liked ? 'true' : 'false' });
+    var posts = s.posts.map(p => {
+      var li = this.likeInfo(p.likes);
+      return Object.assign({
+        id: p.id, author: av(p.author), time: p.time, tag: p.tag, hasTag: !!p.tag, text: p.text, feedback: p.feedback,
+        artFace: p.art === 'face', artVideo: p.art === 'video', artMood: p.art === 'mood',
+        likers: li.ids.slice(0, 4).map(av), likeText: li.txt || 'İlk kalbi sen bırak',
+        comments: p.comments.map(c => ({ name: M[c.who].name, text: c.text, pinned: !!c.pin, pin: c.pin || '' })),
+        inputId: 'c-' + p.id, draft: s.drafts[p.id] || '',
+        onDraft: e => { var d = Object.assign({}, this.state.drafts); d[p.id] = e.target.value; this.setState({ drafts: d }); },
+        sendComment: () => this.sendComment(p.id), openAuthor: () => this.openProfile(p.author), toggleLike: () => this.toggleLike('post', p.id)
+      }, heart(li));
+    });
+
+    var projects = Object.keys(P).map(pid => {
+      var pr = P[pid], done = pr.ms.filter(m => m[1]).length, cur = pr.ms.find(m => !m[1]), st = PST[pr.status];
+      return { name: pr.name, status: pr.status, stBg: st[0], stFg: st[1], summary: pr.summary, pct: pr.ms.length ? Math.round(done / pr.ms.length * 100) : 0, current: cur ? cur[0] : 'Tamamlandı', members: s.pm[pid].map(av), openCount: open.filter(t => t.project === pid).length, notMember: !adm && s.pm[pid].indexOf(v) < 0, open: () => this.setState({ page: 'proje', projectId: pid }) };
+    });
+
+    var d = {};
+    if (s.page === 'proje' && s.projectId) {
+      var pid = s.projectId, pr = P[pid], firstOpen = pr.ms.findIndex(m => !m[1]), jp = this.joinPending(pid), st2 = PST[pr.status];
+      d = {
+        name: pr.name, status: pr.status, stBg: st2[0], stFg: st2[1], summary: pr.summary, lead: M[pr.lead].name,
+        pct: pr.ms.length ? Math.round(pr.ms.filter(m => m[1]).length / pr.ms.length * 100) : 0,
+        notMember: !adm && s.pm[pid].indexOf(v) < 0,
+        joinLabel: jp ? 'İstek gönderildi' : 'Projeye katılmak istiyorum', joinBg: jp ? 'var(--surface2)' : 'var(--a1)', joinFg: jp ? 'var(--text-3)' : 'var(--a1-ink)', join: () => this.sendJoin(pid),
+        openPano: () => this.setState({ page: 'pano', projectId: null, panoStart: PANO_START[pid] || 'root' }),
+        ms: pr.ms.map((m, i) => ({ title: m[0], done: !!m[1], current: i === firstOpen, notLast: i < pr.ms.length - 1, dotClass: i === firstOpen ? 'pulse' : '', dotBg: m[1] ? 'var(--a1)' : 'var(--surface)', dotBorder: m[1] ? 'var(--a1)' : (i === firstOpen ? 'var(--a2)' : 'var(--line-2)'), lineBg: m[1] ? 'var(--bar)' : 'var(--line-2)', color: m[1] || i === firstOpen ? 'var(--text)' : 'var(--faint)' })),
+        tasks: s.tasks.filter(t => t.project === pid).map(taskVM),
+        members: s.pm[pid].map(id => Object.assign(av(id), { role: this.role(id), open: () => this.openProfile(id) }))
+      };
+    }
+
+    var ideaList = s.ideas.filter(i => (s.ideaFilter === 'tumu' || i.status === s.ideaFilter) && match(i.text)).map(i => {
+      var li = this.likeInfo(i.likes), st = IS[i.status];
+      return Object.assign({ text: i.text, tag: i.project ? P[i.project].name : 'Yeni proje fikri', statusLabel: st[0], stBg: st[1], stFg: st[2], author: av(i.author), likeText: li.txt || 'henüz kalp yok', canConvert: i.status !== 'gorev', canShelve: i.status !== 'simdilik' && i.status !== 'gorev', convert: () => this.convertIdea(i.id), shelve: () => { this.setState({ ideas: this.state.ideas.map(x => x.id === i.id ? Object.assign({}, x, { status: 'simdilik' }) : x) }); this.say('Rafa kalktı, silinmedi'); }, toggleLike: () => this.toggleLike('idea', i.id) }, heart(li));
+    });
+
+    var members = IDS.map(id => {
+      var a = myAvail(id), m = M[id], pf = s.profiles[id];
+      return Object.assign(av(id), { name: m.name + (id === v ? ' (sen)' : ''), role: this.role(id), bio: pf.bio, bannerBg: BN[pf.banner][0], availLabel: a === 'molada' && m.back && id !== v ? 'Molada · ' + m.back : AV[a][0], availColor: AV[a][1], projects: Object.keys(P).filter(k => s.pm[k].indexOf(id) >= 0).map(k => P[k].name), open: () => this.openProfile(id) });
+    });
+
+    var pf = { links: [], projects: [], posts: [] };
+    if (s.page === 'profil' && s.profileId) {
+      var qid = s.profileId, qp = s.profiles[qid], qm = M[qid], qa = myAvail(qid), qMe = qid === v;
+      pf = Object.assign(av(qid), {
+        role: this.role(qid), bannerBg: BN[qp.banner][0], bannerInk: BN[qp.banner][1], bannerImg: qp.bannerImg || '', hasBannerImg: !!qp.bannerImg, noBannerImg: !qp.bannerImg,
+        bio: qp.bio, hasBio: !!qp.bio, noBio: !qp.bio, isMe: qMe,
+        availLabel: qa === 'molada' && qm.back && !qMe ? 'Molada · ' + qm.back + '’ta dönüyor' : AV[qa][0], availColor: AV[qa][1],
+        links: qp.links.map(l => ({ label: l.label, url: l.url, href: 'https://' + l.url })), noLinksMe: qMe && qp.links.length === 0,
+        projects: Object.keys(P).filter(k => s.pm[k].indexOf(qid) >= 0).map(k => P[k].name),
+        doneCount: s.tasks.filter(t => t.assignee === qid && t.status === 'bitti').length, openCount: s.tasks.filter(t => t.assignee === qid && t.status !== 'bitti').length,
+        posts: s.posts.filter(p => p.author === qid).map(p => ({ text: p.text, tag: p.tag || 'Genel', time: p.time })), noPosts: s.posts.filter(p => p.author === qid).length === 0
+      });
+    }
+    var pd = s.pdraft, pe = { links: [], swatches: [], bio: '', bioCount: '0/160' };
+    if (pd) pe = { bannerBg: BN[pd.banner][0], bannerImg: pd.bannerImg || '', hasBannerImg: !!pd.bannerImg, photo: pd.photo || '', hasPhoto: !!pd.photo, noPhoto: !pd.photo, ini: M[v].ini, avBg: M[v].bg, bio: pd.bio, bioCount: pd.bio.length + '/160', links: pd.links.map((l, i) => ({ label: l.label, url: l.url, remove: () => this.setDraft({ links: this.state.pdraft.links.filter((x, j) => j !== i) }) })), swatches: Object.keys(BN).map(k => ({ bg: BN[k][0], label: BN[k][2], ring: pd.banner === k && !pd.bannerImg ? 'var(--text)' : 'transparent', pick: () => this.setDraft({ banner: k, bannerImg: null }) })) };
+
+    // ---- Yönetim ----
+    var RS = { bekliyor: ['Bekliyor', 'var(--a2)', 'var(--a2-ink)'], kabul: ['Kabul edildi', 'var(--a1)', 'var(--a1-ink)'], red: ['Şimdilik olmadı', 'var(--chip)', 'var(--text-3)'] };
+    var pendingReqs = s.requests.filter(r => r.status === 'bekliyor');
+    var reqRows = pendingReqs.concat(s.requests.filter(r => r.status !== 'bekliyor')).map(r => {
+      var task = r.task ? s.tasks.find(t => t.id === r.task) : null;
+      return { name: M[r.who].name, ini: M[r.who].ini, bg: M[r.who].bg, text: r.type === 'proje' ? P[r.project].name + ' projesine katılmak istiyor' : '“' + (task ? task.title : '') + '” görevini almak istiyor', to: r.type === 'proje' ? 'Proje yöneticisi · ' + M[P[r.project].lead].name : 'Yöneticiler', statusLabel: RS[r.status][0], stBg: RS[r.status][1], stFg: RS[r.status][2], pending: r.status === 'bekliyor', accept: () => this.decide(r.id, true), decline: () => this.decide(r.id, false) };
+    });
+    var userRows = IDS.map(id => {
+      var mt = s.meta[id], a = myAvail(id);
+      return { name: M[id].name + (id === v ? ' (sen)' : ''), ini: M[id].ini, bg: M[id].bg, role: mt.role, roleId: 'role-' + id, shareId: 'share-' + id, share: mt.share, projects: Object.keys(P).filter(k => s.pm[k].indexOf(id) >= 0).map(k => P[k].name), availLabel: a === 'molada' && M[id].back ? 'Molada · ' + M[id].back : AV[a][0], availColor: AV[a][1], done: s.tasks.filter(t => t.assignee === id && t.status === 'bitti').length, open: s.tasks.filter(t => t.assignee === id && t.status !== 'bitti').length, adminStr: mt.admin ? 'true' : 'false', swBg: mt.admin ? 'var(--bar)' : 'var(--line-2)', knob: mt.admin ? 23 : 3,
+        onRole: e => { this.setMeta(id, { role: e.target.value }); this.say(M[id].name + ' artık ' + e.target.value); },
+        onShare: e => this.setMeta(id, { share: e.target.value }),
+        toggleAdmin: () => { if (id === v) { this.say('Kendi yönetici yetkini buradan kaldıramazsın'); return; } this.setMeta(id, { admin: !mt.admin }); this.say(mt.admin ? M[id].name + ' artık üye' : M[id].name + ' artık yönetici'); },
+        open2: () => this.openProfile(id) };
+    });
+    var projAdmin = Object.keys(P).map(pid => {
+      var pr = P[pid], done = pr.ms.filter(m => m[1]).length;
+      return { name: pr.name, status: pr.status, lead: pr.lead, statusId: 'st-' + pid, leadId: 'lead-' + pid, msInputId: 'ms-' + pid, pct: pr.ms.length ? Math.round(done / pr.ms.length * 100) : 0,
+        leadOptions: s.pm[pid].map(id => ({ id: id, name: M[id].name })),
+        onStatus: e => { this.setProj(pid, { status: e.target.value }); this.say(pr.name + ': ' + e.target.value); },
+        onLead: e => { this.setProj(pid, { lead: e.target.value }); this.say(M[e.target.value].name + ' artık ' + pr.name + ' yöneticisi'); },
+        members: s.pm[pid].map(id => Object.assign(av(id), { remove: () => { if (id === pr.lead) { this.say('Proje yöneticisini çıkarmadan önce başka birini yönetici yap'); return; } var pm = Object.assign({}, this.state.pm); pm[pid] = pm[pid].filter(x => x !== id); this.setState({ pm: pm }); this.say(M[id].name + ' projeden çıkarıldı'); } })),
+        addable: IDS.filter(id => s.pm[pid].indexOf(id) < 0).map(id => ({ name: M[id].name, add: () => { var pm = Object.assign({}, this.state.pm); pm[pid] = pm[pid].concat([id]); this.setState({ pm: pm }); this.say(M[id].name + ' projeye eklendi'); } })),
+        ms: pr.ms.map((m, i) => ({ title: m[0], done: !!m[1], doneStr: m[1] ? 'true' : 'false', boxBg: m[1] ? 'var(--a1)' : 'transparent', boxBorder: m[1] ? 'var(--bar)' : 'var(--line-2)', color: m[1] ? 'var(--muted)' : 'var(--text)', toggle: () => this.setProj(pid, { ms: pr.ms.map((x, j) => j === i ? [x[0], x[1] ? 0 : 1] : x) }) })),
+        msDraft: s.msDraft[pid] || '',
+        onMsDraft: e => { var md = Object.assign({}, this.state.msDraft); md[pid] = e.target.value; this.setState({ msDraft: md }); },
+        addMs: () => { var t = (this.state.msDraft[pid] || '').trim(); if (!t) return; var md = Object.assign({}, this.state.msDraft); md[pid] = ''; this.setState({ msDraft: md }); this.setProj(pid, { ms: pr.ms.concat([[t, 0]]) }); }
+      };
+    });
+    var LOCKOPTS = [['yok', 'Herkese açık'], ['rol', 'Rol'], ['kisi', 'Kişi'], ['admin', 'Sadece ben atarım']];
+    var lockRows = s.tasks.filter(t => !t.project && t.status !== 'bitti').map(t => {
+      var lk = t.lock || 'yok';
+      var summary = lk === 'yok' ? 'Herkes havuzdan alabilir.' : (lk === 'rol' ? ((t.lockRoles || []).length ? 'Sadece ' + t.lockRoles.join(', ') + ' rolündekiler alabilir.' : 'Henüz rol seçilmedi, şu an kimse alamaz.') : (lk === 'kisi' ? ((t.lockMembers || []).length ? 'Sadece ' + t.lockMembers.map(x => M[x].name).join(', ') + ' alabilir.' : 'Henüz kişi seçilmedi, şu an kimse alamaz.') : 'Havuzda görünür ama sadece sen atayabilirsin. İsteyen istek gönderir.'));
+      return { title: t.title, due: t.due, whoLabel: t.assignee ? M[t.assignee].name + '’da' : 'Havuzda', summary: summary, showRoles: lk === 'rol', showPeople: lk === 'kisi',
+        opts: LOCKOPTS.map(o => Object.assign({ label: o[1], pick: () => this.updTask(t.id, { lock: o[0] }) }, pill(lk === o[0]))),
+        roles: ROLES.filter(r => r !== 'ABN Temsilcisi').map(r => { var on = (t.lockRoles || []).indexOf(r) >= 0; return Object.assign({ label: r, on: on ? 'true' : 'false', toggle: () => this.updTask(t.id, { lockRoles: on ? t.lockRoles.filter(x => x !== r) : (t.lockRoles || []).concat([r]) }) }, on ? { bg: 'var(--a2)', fg: 'var(--a2-ink)' } : { bg: 'var(--surface2)', fg: 'var(--text-2)' }); }),
+        people: IDS.filter(id => id !== 'ruzgar').map(id => { var on = (t.lockMembers || []).indexOf(id) >= 0; return Object.assign({ label: M[id].name, on: on ? 'true' : 'false', toggle: () => this.updTask(t.id, { lockMembers: on ? t.lockMembers.filter(x => x !== id) : (t.lockMembers || []).concat([id]) }) }, on ? { bg: 'var(--a2)', fg: 'var(--a2-ink)' } : { bg: 'var(--surface2)', fg: 'var(--text-2)' }); })
+      };
+    });
+    var annRows = s.anns.map(a => { var conf = s.confirmDel === a.id; return { title: a.title, body: a.body, time: a.time, pinned: a.pinned, ring: a.pinned ? 'var(--bar)' : 'transparent', pinLabel: a.pinned ? 'Sabitlemeyi kaldır' : 'Sabitle',
+      togglePin: () => { this.setState({ anns: this.state.anns.map(x => x.id === a.id ? Object.assign({}, x, { pinned: !a.pinned }) : Object.assign({}, x, { pinned: a.pinned ? x.pinned : false })) }); this.say(a.pinned ? 'Sabitleme kaldırıldı' : 'Akışın üstüne sabitlendi'); },
+      delLabel: conf ? 'Emin misin? Sil' : 'Sil', delBg: conf ? '#E06C6C' : 'var(--chip)', delFg: conf ? '#FFFFFF' : 'var(--text)',
+      del: () => { if (!conf) { this.setState({ confirmDel: a.id }); return; } this.setState({ anns: this.state.anns.filter(x => x.id !== a.id), confirmDel: null }); this.say('Duyuru silindi'); } }; });
+
+    var blocked = open.filter(t => t.blocked), stale = open.filter(t => t.stale && t.assignee);
+    var molada = IDS.filter(id => myAvail(id) === 'molada');
+    var attention = [];
+    blocked.forEach(t => attention.push({ icon: ICON.help, dot: '#F5C77E', text: M[t.assignee].name + ' · ' + t.title, sub: 'Yardım istiyor', btn: 'Çözüldü', btnBg: 'var(--chip)', btnFg: 'var(--text)', act: () => this.toggleBlock(t.id) }));
+    stale.forEach(t => { var asked = !!s.nudged[t.id]; attention.push({ icon: ICON.clock, dot: '#8EE8F5', text: M[t.assignee].name + ' · ' + t.title, sub: asked ? '“Hâlâ sende mi?” sorusu gönderildi' : 'Bir süredir hareketsiz', btn: asked ? 'Soruldu' : 'Nazikçe sor', btnBg: asked ? 'var(--surface2)' : 'var(--chip)', btnFg: asked ? 'var(--muted)' : 'var(--text)', act: () => { if (asked) return; var n = Object.assign({}, this.state.nudged); n[t.id] = true; this.setState({ nudged: n }); this.say(M[t.assignee].name + '’e sadece kendisinin göreceği bir soru gitti'); } }); });
+    if (pendingReqs.length) attention.push({ icon: ICON.inbox, dot: '#C5B5FA', text: pendingReqs.length + ' bekleyen istek', sub: 'Proje katılımı ve görev talepleri', btn: 'İncele', btnBg: 'var(--a2)', btnFg: 'var(--a2-ink)', act: () => this.setState({ adminTab: 'istek' }) });
+    if (havuz.length) attention.push({ icon: ICON.pool, dot: '#E4F68F', text: havuz.length + ' görev havuzda sahibini bekliyor', sub: 'Kilitlerini kontrol etmek isteyebilirsin', btn: 'Kilitler', btnBg: 'var(--chip)', btnFg: 'var(--text)', act: () => this.setState({ adminTab: 'kilit' }) });
+    molada.forEach(id => { var oc = open.filter(t => t.assignee === id).length; attention.push({ icon: ICON.moon, dot: '#F2A7C3', text: M[id].name + ' molada' + (M[id].back ? ' · ' + M[id].back + '’a kadar' : ''), sub: oc ? oc + ' açık görevi var, istersen havuza alabilirsin' : 'Üzerinde açık görev yok', btn: 'Profil', btnBg: 'var(--chip)', btnFg: 'var(--text)', act: () => this.openProfile(id) }); });
+
+    var cntDone = s.tasks.filter(t => t.status === 'bitti').length;
+    var kpis = [
+      { value: Object.keys(P).filter(k => ['Geliştirmede', 'Test'].indexOf(P[k].status) >= 0).length, label: 'Aktif proje', sub: Object.keys(P).length + ' projeden', bg: 'var(--a2)', fg: 'var(--a2-ink)', go: () => this.go('proje') },
+      { value: open.length, label: 'Açık görev', sub: open.filter(t => t.assignee).length + ' tanesi birinde', bg: 'var(--surface)', fg: 'var(--text)', go: () => this.setState({ page: 'gorev', scope: 'tumu', projectId: null, profileId: null }) },
+      { value: havuz.length, label: 'Havuzda', sub: 'Sahibini bekliyor', bg: 'var(--a3)', fg: 'var(--a3-ink)', go: () => this.setState({ page: 'gorev', scope: 'havuz', projectId: null, profileId: null }) },
+      { value: blocked.length, label: 'Yardım bekleyen', sub: blocked.length ? 'Bir göz at' : 'Kimse takılmadı', bg: 'var(--surface)', fg: 'var(--text)', go: () => this.setState({ adminTab: 'genel' }) },
+      { value: cntDone, label: 'Bu hafta biten', sub: 'Emeğinize sağlık', bg: 'var(--a1)', fg: 'var(--a1-ink)', go: () => this.setState({ page: 'gorev', scope: 'tumu', projectId: null, profileId: null }) }
+    ];
+    var dist = ['musait', 'az', 'molada'].map(k => { var c = IDS.filter(id => myAvail(id) === k).length; return { label: AV[k][0], color: AV[k][1], count: c, pct: Math.round(c / IDS.length * 100) }; }).filter(x => x.count > 0);
+
+    var ADMTABS = [['genel', 'Genel bakış', 0], ['istek', 'İstekler', pendingReqs.length], ['uye', 'Üyeler', 0], ['proje', 'Projeler', 0], ['kilit', 'Görev kilitleri', 0], ['duyuru', 'Duyurular', 0]];
+
+    var lt = s.modal === 'lock' ? s.tasks.find(t => t.id === s.modalTask) : null;
+    var lock = { title: '', text: '', task: '', btn: '', btnBg: 'var(--a1)', btnFg: 'var(--a1-ink)' };
+    if (lt) {
+      var lp = this.pendingFor(lt); lock.task = lt.title;
+      if (lt.project) { var ln = M[P[lt.project].lead].name; lock.title = 'Bu görev ' + P[lt.project].name + ' projesine ait'; lock.text = 'Bu projede olmadığın için şu an alamıyorsun. ' + P[lt.project].name + ' projesinde çalışmak istersen proje yöneticisi ' + ln + '’a istek gönderebilirsin.'; lock.btn = lp ? 'İstek gönderildi' : 'Projeye katılmak istiyorum'; }
+      else { lock.title = 'Bu görev şu an kilitli'; lock.text = (lt.lock === 'rol' ? 'Bu görevi sadece ' + (lt.lockRoles || []).join(', ').toLocaleLowerCase('tr') + ' rolündekiler alabiliyor.' : (lt.lock === 'kisi' ? 'Bu görev belirli kişilere ayrıldı.' : 'Bu görevi Rüzgar atıyor.')) + ' Almak istersen Rüzgar’a istek gönderebilirsin.'; lock.btn = lp ? 'İstek gönderildi' : 'Bu görevi almak istiyorum'; }
+      if (lp) { lock.btnBg = 'var(--surface2)'; lock.btnFg = 'var(--text-3)'; }
+    }
+    var at = s.modal === 'ask' ? s.tasks.find(t => t.id === s.modalTask) : null;
+
+    var myProjects = Object.keys(P).filter(k => adm || s.pm[k].indexOf(v) >= 0);
+    var addProjChips = [['', 'Projesiz']].concat(myProjects.map(k => [k, P[k].name])).map(c => Object.assign({ label: c[1], pick: () => this.setState({ taskProject: c[0] }) }, pill2(s.taskProject === c[0])));
+    var shareChips = [['', 'Genel']].concat(myProjects.map(k => [k, P[k].name])).map(c => Object.assign({ label: c[1], pick: () => this.setState({ shareTag: c[0] }) }, pill2(s.shareTag === c[0])));
+    var poolP = pill2(!s.taskMine), mineP = pill2(s.taskMine);
+
+    var staleMine = s.tasks.find(t => t.id === 't8' && t.assignee === v && t.stale);
+    var pinnedAnn = s.anns.find(a => a.pinned);
+    var suggest = havuz.filter(t => this.canClaim(t)).slice(0, 3).map(taskVM);
+    var page = s.page;
+    var titles = { akis: ['Akış', 'Ekipten son paylaşımlar'], gorev: ['Görevler', 'Pano'], proje: ['Projeler', 'Abby’s Nexus'], fikir: ['Fikir Defteri', 'Kaybolmasın diye'], ekip: ['Ekip', IDS.length + ' kişi'], profil: ['Profil', 'Ekip'], pano: ['Panolar', 'Referans, taslak, hikâye akışı'], admin: ['Yönetim paneli', 'Sadece yöneticiler görür'] };
+    var tt = titles[page] || titles.akis;
+    var pageTitle = page === 'proje' && s.projectId ? P[s.projectId].name : (page === 'profil' && s.profileId ? M[s.profileId].name : tt[0]);
+    var crumb = page === 'proje' && s.projectId ? 'Projeler' : tt[1];
+    var nav = (key) => ({ bg: page === key || (key === 'ekip' && page === 'profil' && s.backTo === 'ekip') ? 'var(--nav-pill)' : 'transparent', fg: page === key ? 'var(--accent-text)' : 'var(--text-2)' });
+    var NAV = [['akis', 'Akış', 0], ['gorev', 'Görevler', bende.filter(t => t.status !== 'bitti').length], ['proje', 'Projeler', 0], ['pano', 'Panolar', 0], ['fikir', 'Fikirler', 0], ['ekip', 'Ekip', 0]];
+
+    return {
+      themeClass: th, no: false, isPano: page === 'pano', panoStart: s.panoStart || 'root',
+      themeName: (THEMES.find(t => t[0] === th) || THEMES[0])[1],
+      themeChips: THEMES.map(t => ({ label: t[1], bg: t[2], surface: t[3], a1: t[4], a2: t[5], a3: t[6], pressed: th === t[0] ? 'true' : 'false', ring: th === t[0] ? 'var(--accent-text)' : 'transparent', pick: () => this.setState({ theme: t[0] }) })),
+      navItems: NAV.map(n => Object.assign({ label: n[1], icon: ICON[n[0]], badge: n[2], hasBadge: n[2] > 0, current: page === n[0] ? 'page' : 'false', go: () => this.go(n[0]) }, nav(n[0]))),
+      adminNav: nav('admin'), goAdmin: () => this.go('admin'), hasPending: pendingReqs.length > 0,
+      isAdmin: adm, me: av(v), myAvailLabel: AV[s.avail][0], myAvailColor: AV[s.avail][1],
+      openMyProfile: () => this.openProfile(v),
+      crumb: crumb, pageTitle: pageTitle,
+      search: s.search, onSearch: e => this.setState({ search: e.target.value }),
+      bellOpen: s.bellOpen, bellExpanded: s.bellOpen ? 'true' : 'false', toggleBell: () => this.setState({ bellOpen: !s.bellOpen }),
+      newLabel: page === 'gorev' ? 'Yeni görev' : (page === 'fikir' ? 'Yeni fikir' : (page === 'admin' ? 'Yeni duyuru' : 'Yeni görev')),
+      newAction: () => { if (page === 'fikir') { var el = document.getElementById('idea-input'); if (el) el.focus(); return; } if (page === 'admin') { this.setState({ adminTab: 'duyuru' }); return; } this.setState({ modal: 'add', taskProject: '', taskMine: false }); },
+      feedNotes: adm
+        ? [{ text: 'Deniz, “Demo fragman kurgusu” görevinde yardım istiyor', time: 'Bugün', dot: '#E9A23B' }, { text: 'Selin, “ABN web sitesi metinleri” görevini almak istiyor', time: 'Bugün', dot: '#A794F0' }, { text: 'Mert “PaleMouth logo taslakları” görevini bitirdi', time: '2 gün önce', dot: '#B5D334' }]
+        : [{ text: 'Rüzgar paylaşımına kalp bıraktı', time: 'Bugün', dot: '#E06C9F' }, { text: 'Yeni sabit duyuru: Cumartesi 21:00 sesli toplantı', time: 'Dün', dot: '#B5D334' }, { text: 'Havuza yeni görev düştü: Sorgu mekaniği notları', time: '2 gün önce', dot: '#A794F0' }],
+      isAkis: page === 'akis', isGorev: page === 'gorev', isProje: page === 'proje' && !s.projectId, isDetail: page === 'proje' && !!s.projectId, isFikir: page === 'fikir', isEkip: page === 'ekip', isProfil: page === 'profil', isAdminView: page === 'admin' && adm, isNoAccess: page === 'admin' && !adm,
+      shareDraft: s.shareDraft, onShareInput: e => this.setState({ shareDraft: e.target.value }), shareChips: shareChips,
+      fbPressed: s.shareFeedback ? 'true' : 'false', fbBg: s.shareFeedback ? 'var(--a2)' : 'var(--surface2)', fbFg: s.shareFeedback ? 'var(--a2-ink)' : 'var(--text-2)',
+      toggleFeedback: () => this.setState({ shareFeedback: !s.shareFeedback }), addPost: () => this.addPost(),
+      mediaTap: () => this.say('Bu kısım uygulamada dosya seçiciyle çalışacak'),
+      posts: posts,
+      availChips: [['musait', 'Müsait'], ['az', 'Az vaktim var'], ['molada', 'Molada']].map(c => Object.assign({ label: c[1], dot: AV[c[0]][1], pick: () => { this.setState({ avail: c[0] }); this.say(c[0] === 'molada' ? 'İyi dinlenmeler, burası seni bekler' : 'Durumun güncellendi'); } }, pill2(s.avail === c[0]))),
+      isMolada: s.avail === 'molada',
+      showNudge: !!staleMine && !s.nudgeDone, nudgeTitle: staleMine ? staleMine.title : '',
+      nudgeKeep: () => this.nudge('keep'), nudgeTime: () => this.nudge('time'), nudgeDrop: () => this.nudge('drop'),
+      hasPinned: !!pinnedAnn, pinned: pinnedAnn || { title: '', body: '' },
+      cntDone: cntDone, cntBlocked: blocked.length, cntHavuz: havuz.length,
+      suggest: suggest, noSuggest: suggest.length === 0,
+      scopeTabs: [['bende', 'Bende', bende.length], ['havuz', 'Havuz', havuz.length], ['tumu', 'Tümü', s.tasks.length]].map(c => Object.assign({ label: c[1], count: c[2], pick: () => this.setState({ scope: c[0] }) }, pill(s.scope === c[0]))),
+      projFilters: [['', 'Tüm projeler']].concat(Object.keys(P).map(k => [k, P[k].name])).concat([['_none', 'Projesiz']]).map(c => Object.assign({ label: c[1], pick: () => this.setState({ projFilter: c[0] }) }, pill(s.projFilter === c[0]))),
+      scopeHint: s.scope === 'havuz' ? 'Kilitli olanlar başka bir ekibe ya da role ait' : (s.scope === 'bende' ? 'Durumu butonla bir adım ilerlet' : 'Ekipteki tüm görevler'),
+      board: board,
+      projects: projects, d: d, goProjects: () => this.setState({ projectId: null }),
+      ideas: ideaList, ideaDraft: s.ideaDraft, onIdeaInput: e => this.setState({ ideaDraft: e.target.value }), addIdea: () => this.addIdea(),
+      ideaFilters: [['tumu', 'Tümü'], ['yeni', 'Yeni'], ['konusuluyor', 'Konuşuluyor'], ['gorev', 'Göreve dönüştü'], ['simdilik', 'Şimdilik değil']].map(f => Object.assign({ label: f[1], pick: () => this.setState({ ideaFilter: f[0] }) }, pill(s.ideaFilter === f[0]))),
+      members: members,
+      pf: pf, goBackFromProfile: () => this.setState({ page: s.backTo || 'ekip', profileId: null }), editProfile: () => this.editProfile(),
+      adminTabs: ADMTABS.map(a => Object.assign({ label: a[1], badge: a[2], hasBadge: a[2] > 0, pick: () => this.setState({ adminTab: a[0] }) }, pill(s.adminTab === a[0]))),
+      adm: { genel: s.adminTab === 'genel', istek: s.adminTab === 'istek', uye: s.adminTab === 'uye', proje: s.adminTab === 'proje', kilit: s.adminTab === 'kilit', duyuru: s.adminTab === 'duyuru' },
+      kpis: kpis, attention: attention, noAttention: attention.length === 0, availDist: dist,
+      reqRows: reqRows, noReqs: reqRows.length === 0, userRows: userRows, roleOptions: ROLES, statusOptions: STATUSES, projAdmin: projAdmin, lockRows: lockRows,
+      annTitle: s.annTitle, annBody: s.annBody, annPin: s.annPin, annPinStr: s.annPin ? 'true' : 'false', annPinBox: s.annPin ? 'var(--a2)' : 'transparent',
+      onAnnTitle: e => this.setState({ annTitle: e.target.value }), onAnnBody: e => this.setState({ annBody: e.target.value }), toggleAnnPin: () => this.setState({ annPin: !s.annPin }), addAnn: () => this.addAnn(), annRows: annRows,
+      hasToast: !!s.toast, toast: s.toast,
+      hasModal: !!s.modal, modalLock: s.modal === 'lock', modalAdd: s.modal === 'add', modalAsk: s.modal === 'ask', modalProfile: s.modal === 'profile' && !!pd,
+      closeModal: () => this.setState({ modal: null }), stop: e => e.stopPropagation(),
+      lock: lock, sendRequest: () => this.sendRequest(),
+      taskDraft: s.taskDraft, onTaskInput: e => this.setState({ taskDraft: e.target.value }), addProjChips: addProjChips,
+      setPool: () => this.setState({ taskMine: false }), setMine: () => this.setState({ taskMine: true }),
+      poolBg: poolP.bg, poolFg: poolP.fg, mineBg: mineP.bg, mineFg: mineP.fg, addTask: () => this.addTask(),
+      askTask: at ? at.title : '',
+      askShare: () => this.setState({ modal: null, page: 'akis', projectId: null, profileId: null, shareTag: at && at.project ? at.project : '', shareDraft: at ? at.title + ' bitti! ' : '' }),
+      pe: pe, onPhotoFile: e => this.pickFile('photo', e), onBannerFile: e => this.pickFile('bannerImg', e), removePhoto: () => this.setDraft({ photo: null }),
+      onBio: e => this.setDraft({ bio: e.target.value.slice(0, 160) }), linkLabel: s.linkLabel, linkUrl: s.linkUrl,
+      onLinkLabel: e => this.setState({ linkLabel: e.target.value }), onLinkUrl: e => this.setState({ linkUrl: e.target.value }),
+      addLink: () => this.addLink(), saveProfile: () => this.saveProfile()
+    };
+  }
+}
+</script>
+</body>
+</html>

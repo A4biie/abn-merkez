@@ -1,0 +1,46 @@
+[package]
+name = "abn-launcher"
+# Launcher'ın sürümü (Merkez'in sürümü app.json'da, ayrı takip edilir). "npm run release" ikisini de değil, sadece bunu ve tauri.conf.json'u yükseltir.
+version = "1.0.0"
+description = "ABN Launcher: ABN Merkez ve ABN oyunları"
+authors = ["Abby's Nexus"]
+edition = "2021"
+
+[lib]
+name = "abn_launcher_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri-plugin-process = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-deep-link = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# oyun indirme ve kurulumu (src/games.rs)
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"] }
+futures-util = "0.3"
+sha2 = "0.10"
+crc32fast = "1"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+
+[target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
+tauri-plugin-updater = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
+
+[target.'cfg(windows)'.dependencies]
+# Windows bildirimi + tıklayınca ilgili sayfayı açma
+tauri-winrt-notification = "0.7"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

@@ -1,0 +1,75 @@
+# ABN Launcher · Windows derlemesi
+# "v*" etiketi gelince (npm run release 1.0.1) Windows kurulumunu (.msi ve .exe) derler,
+# güncelleme imzasını atar ve hepsini GitHub Releases'a yükler. Bilgisayarda Rust gerekmez.
+#
+# Gerekli GitHub Secrets (Settings → Secrets and variables → Actions):
+#   TAURI_SIGNING_PRIVATE_KEY           C:\Users\<sen>\.tauri\abn-launcher.key dosyasının içeriği
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  sadece anahtar şifreliyse (abn-launcher.key şifresiz oluşturuldu, eklemene gerek yok)
+#   EXPO_PUBLIC_SUPABASE_URL            .env'deki değer
+#   EXPO_PUBLIC_SUPABASE_ANON_KEY       .env'deki değer (herkese açık "publishable" anahtar)
+
+name: Masaüstü (Windows)
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Paketleri kur
+        run: npm ci
+
+      - name: Güncelleme adresini bu depoya göre ayarla
+        shell: pwsh
+        run: |
+          $f = 'src-tauri/tauri.conf.json'
+          (Get-Content $f -Raw).Replace('__GITHUB_REPO__', '${{ github.repository }}') | Set-Content $f -Encoding utf8NoBOM -NoNewline
+
+      - name: Sürüm notlarını CHANGELOG'dan al
+        id: notes
+        shell: bash
+        run: |
+          {
+            echo 'body<<NOTES_EOF'
+            node scripts/release-notes.mjs "${{ github.ref_name }}"
+            echo 'NOTES_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Derle, imzala, yayınla
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'ABN Launcher ${{ github.ref_name }}'
+          releaseBody: ${{ steps.notes.outputs.body }}
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true
+          updaterJsonPreferNsis: true

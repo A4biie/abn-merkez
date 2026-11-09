@@ -1,0 +1,9 @@
+# Vercel'e yüklenmeyecekler (derleme Vercel'de npm ci ile yapılır)
+node_modules
+dist
+.expo
+.env
+.env*.local
+android
+ios
+supabase/.temp

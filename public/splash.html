@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ABN Launcher</title>
+    <!--
+      ABN Launcher açılış penceresi (TV açılışı).
+      Tek kaynak: design/abn-animasyonlar.html → "Launcher açılışı" (.lwin, .lw-* CSS'i ve "Launcher açılış penceresi" JS bloğu).
+      Keyframe'ler, eğriler, gecikmeler ve yay değerleri oradan birebir alındı; değiştirmeden önce o dosyaya bak.
+      Pencere kutudan 20 px büyük (340×400): yayın taşması ve kapanıştaki %4'lük genişleme kesilmesin diye.
+      Tauri dışında (tarayıcıda) açılırsa senaryo ?senaryo=yok|guncelleme|guncellendi|cevrimdisi ile denenir.
+    -->
+    <style>
+      @font-face { font-family: 'Urbanist'; font-weight: 700; src: url('fonts/Urbanist_700Bold.ttf') format('truetype'); }
+      @font-face { font-family: 'Urbanist'; font-weight: 800; src: url('fonts/Urbanist_800ExtraBold.ttf') format('truetype'); }
+
+      /* Uygulamanın 4 teması (theme/themes.ts ile aynı değerler) */
+      :root, body[data-abn='dark'] {
+        --surface: #1c1c21; --line-2: #3a3a41; --text: #f4f4f5; --text-3: #c9c9d1; --muted: #a1a1aa; --faint: #92929b;
+        --a1: #e4f68f; --a2: #c5b5fa; --a3: #8ee8f5;
+      }
+      body[data-abn='gece'] {
+        --surface: #172a40; --line-2: #3a4b5f; --text: #eef3f8; --text-3: #beccd9; --muted: #9fb0c1; --faint: #93a4b5;
+        --a1: #f04e2a; --a2: #8fa6bc; --a3: #f7a48f;
+      }
+      body[data-abn='light'] {
+        --surface: #ffffff; --line-2: #cfcfd8; --text: #121215; --text-3: #4a4a55; --muted: #5e5e69; --faint: #65656f;
+        --a1: #e4f68f; --a2: #c5b5fa; --a3: #8ee8f5;
+      }
+      body[data-abn='adacayi'] {
+        --surface: #fbf5ec; --line-2: #d0bea6; --text: #2b1f2a; --text-3: #574554; --muted: #685664; --faint: #675663;
+        --a1: #85a2a0; --a2: #8a6281; --a3: #d7ccb6;
+      }
+      :root {
+        --io: cubic-bezier(0.65, 0, 0.35, 1);
+        --out: cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+      body {
+        font-family: 'Urbanist', 'Segoe UI', system-ui, sans-serif;
+        color: var(--text);
+        user-select: none;
+        cursor: default;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ── design/abn-animasyonlar.html: Launcher açılış penceresi ── */
+      .lwin {
+        position: absolute; left: 50%; top: 50%; width: 300px; height: 360px; margin: -180px 0 0 -150px;
+        border-radius: 36px; background: var(--surface); transform: scale(0);
+        box-shadow: inset 0 0 0 1px var(--line-2); overflow: hidden; opacity: 0; will-change: transform;
+      }
+      .lwin.close { animation: lwOff 0.55s linear forwards; }
+      @keyframes lwOff {
+        0% { transform: scale(1, 1); animation-timing-function: cubic-bezier(0.55, 0, 0.8, 0.2); }
+        45% { transform: scale(1.04, 0.012); animation-timing-function: cubic-bezier(0.4, 0, 0.7, 0.2); }
+        78% { transform: scale(0.03, 0.012); opacity: 1; }
+        100% { transform: scale(0, 0); opacity: 0; }
+      }
+      .lw-in {
+        position: absolute; left: 50%; top: 0; width: 300px; height: 360px; margin-left: -150px;
+        display: flex; flex-direction: column; align-items: center; padding: 52px 22px 20px; box-sizing: border-box; opacity: 0;
+      }
+      .lwin.go .lw-in { animation: fadeIn 0.35s 0.9s ease forwards; }
+      .lw-mark { position: relative; width: 110px; height: 107px; }
+      .lw-mark svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+      .lw-stroke path {
+        fill: none; stroke: var(--text); stroke-width: 10; stroke-linejoin: round; stroke-linecap: round;
+        stroke-dasharray: 1; stroke-dashoffset: 1;
+      }
+      .lw-fill { fill: var(--text); clip-path: inset(100% 0 0 0); }
+      .lw-ring {
+        position: absolute; left: 50%; top: 48%; width: 200px; height: 200px; margin: -100px 0 0 -100px;
+        border-radius: 50%; border: 1.5px solid var(--text-3); opacity: 0; transform: scale(0.1); box-sizing: border-box;
+      }
+      .lwin.go .lw-stroke path { animation: spDraw 1.1s 1.1s var(--io) forwards, fadeOut 0.35s 2.85s ease forwards; }
+      .lwin.go .lw-stroke path:nth-child(n + 2) { animation-duration: 0.65s, 0.35s; }
+      .lwin.go .lw-stroke path:nth-child(2) { animation-delay: 1.5s, 2.85s; }
+      .lwin.go .lw-stroke path:nth-child(3) { animation-delay: 1.59s, 2.85s; }
+      .lwin.go .lw-stroke path:nth-child(4) { animation-delay: 1.68s, 2.85s; }
+      .lwin.go .lw-stroke path:nth-child(5) { animation-delay: 1.77s, 2.85s; }
+      .lwin.go .lw-stroke path:nth-child(6) { animation-delay: 1.86s, 2.85s; }
+      .lwin.go .lw-stroke path:nth-child(7) { animation-delay: 1.95s, 2.85s; }
+      .lwin.go .lw-fill { animation: fillUp 0.65s 2.3s cubic-bezier(0.65, 0, 0.25, 1) forwards; }
+      .lwin.go .lw-mark { animation: markBeat 0.5s 3s ease-in-out; }
+      .lwin.go.busy .lw-mark { animation: markBeat 0.5s 3s ease-in-out, lwBusy 2.2s 3.6s ease-in-out infinite; }
+      @keyframes lwBusy { 0%, 24% { transform: none; } 12% { transform: scale(1.045); } }
+      .lwin.go .lw-ring { animation: spRing 1.3s 2.95s ease-out forwards; }
+      .lw-name { margin-top: 18px; font-size: 21px; font-weight: 800; letter-spacing: -0.01em; opacity: 0; }
+      .lwin.go .lw-name { animation: spWord 0.7s 2.9s var(--out) forwards; }
+      .lw-status { margin-top: 16px; height: 44px; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0; }
+      .lwin.go .lw-status { animation: fadeIn 0.5s 1.4s ease forwards; }
+      .lw-msg {
+        font-size: 13px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums;
+        transition: opacity 0.2s ease, transform 0.3s var(--out);
+      }
+      .lw-msg.swap { opacity: 0; transform: translateY(4px); }
+      .lw-bar { width: 150px; height: 4px; border-radius: 4px; background: var(--line-2); overflow: hidden; opacity: 0; transition: opacity 0.25s ease; }
+      .lw-bar.on { opacity: 1; }
+      .lw-bar span {
+        display: block; height: 100%; width: 0; border-radius: 4px;
+        background: linear-gradient(90deg, var(--a2), var(--a1), var(--a3)); transition: width 0.16s linear;
+      }
+      .lw-tip { margin-top: auto; font-size: 11.5px; line-height: 1.45; color: var(--faint); text-align: center; max-width: 240px; opacity: 0; }
+      .lwin.go .lw-tip { animation: fadeIn 0.6s 3.3s ease forwards; }
+
+      @keyframes spDraw { to { stroke-dashoffset: 0; } }
+      @keyframes fadeOut { to { opacity: 0; } }
+      @keyframes fillUp { to { clip-path: inset(0 0 0 0); } }
+      @keyframes markBeat { 0%, 100% { transform: none; } 50% { transform: scale(1.05); } }
+      @keyframes spRing { 0% { opacity: 0.55; transform: scale(0.1); } 100% { opacity: 0; transform: scale(1); } }
+      @keyframes spWord {
+        from { opacity: 0; transform: translateY(14px); letter-spacing: 0.12em; }
+        to { opacity: 1; transform: none; letter-spacing: -0.01em; }
+      }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+      /* "Hareketi azalt": animasyon yok, pencere doğrudan son haliyle görünür. */
+      .reduced .lwin { opacity: 1; transform: none; }
+      .reduced .lw-in, .reduced .lw-name, .reduced .lw-status, .reduced .lw-tip { opacity: 1; }
+      .reduced .lw-stroke { display: none; }
+      .reduced .lw-fill { clip-path: none; }
+      .reduced * { animation: none !important; transition: none !important; }
+    </style>
+  </head>
+  <body>
+    <div class="lwin" id="lwWin" role="img" aria-label="ABN Launcher açılıyor">
+      <div class="lw-in">
+        <div class="lw-mark" aria-hidden="true">
+          <span class="lw-ring"></span>
+          <svg viewBox="160 170 680 662">
+            <path class="lw-fill" fill-rule="evenodd" d="M174 263 L260 263 L334 334 L500 183 L666 334 L740 263 L826 263 L826 690 L760 627 L760 565 L500 818 L240 565 L240 627 L174 690 Z M236 328 L286 377 L236 427 Z M764 328 L714 377 L764 427 Z M475 301 L475 470 L385 383 Z M525 301 L615 383 L525 470 Z M336 427 L476 564 L476 705 L260 497 Z M664 427 L740 497 L524 705 L524 564 Z"></path>
+            <g class="lw-stroke">
+              <path pathLength="1" d="M174 263 L260 263 L334 334 L500 183 L666 334 L740 263 L826 263 L826 690 L760 627 L760 565 L500 818 L240 565 L240 627 L174 690 Z"></path>
+              <path pathLength="1" d="M236 328 L286 377 L236 427 Z"></path>
+              <path pathLength="1" d="M764 328 L714 377 L764 427 Z"></path>
+              <path pathLength="1" d="M475 301 L475 470 L385 383 Z"></path>
+              <path pathLength="1" d="M525 301 L615 383 L525 470 Z"></path>
+              <path pathLength="1" d="M336 427 L476 564 L476 705 L260 497 Z"></path>
+              <path pathLength="1" d="M664 427 L740 497 L524 705 L524 564 Z"></path>
+            </g>
+          </svg>
+        </div>
+        <div class="lw-name">ABN Launcher</div>
+        <div class="lw-status" role="status" aria-live="polite">
+          <div class="lw-msg" id="lwMsg">Güncellemeler kontrol ediliyor…</div>
+          <div class="lw-bar" id="lwBar"><span id="lwBarIn"></span></div>
+        </div>
+        <div class="lw-tip" id="lwTip"></div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var win = document.getElementById('lwWin');
+        var msg = document.getElementById('lwMsg');
+        var bar = document.getElementById('lwBar');
+        var barIn = document.getElementById('lwBarIn');
+        var tip = document.getElementById('lwTip');
+        var T = window.__TAURI__ || null;
+        var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var params = new URLSearchParams(location.search);
+        var T0 = performance.now();
+
+        function store(k, v) {
+          try {
+            if (v === undefined) return localStorage.getItem(k);
+            if (v === null) localStorage.removeItem(k);
+            else localStorage.setItem(k, v);
+          } catch (e) {}
+          return null;
+        }
+
+        // Tema: uygulamanın kaydettiği tema (AsyncStorage → localStorage "abn.theme").
+        var theme = params.get('tema') || store('abn.theme');
+        if (theme && /^(dark|gece|light|adacayi)$/.test(theme)) document.body.setAttribute('data-abn', theme);
+        if (reduced) document.documentElement.classList.add('reduced');
+        // Tarayıcıda denerken şeffaf zemin beyaz görünmesin (Tauri'de pencere şeffaf kalır).
+        if (!T) document.documentElement.style.background = '#2c2c33';
+
+        // İpucu: 12 cümleden rastgele biri (ilk 6'sı animasyon dosyasından).
+        var TIPS = [
+          'Biliyor muydun? Ctrl+Shift+Space ile her yerden fikir yazabilirsin.',
+          'Ctrl+K ile görev, pano ve kişileri tek kutudan bulabilirsin.',
+          'Panoya dosyayı sürükleyip bırakman yeterli.',
+          'Sessiz saatlerde bildirim gelmez. Ayarlardan saatini seç.',
+          'Bir mesajı tek tıkla göreve çevirebilirsin.',
+          'Pencereyi kapatınca launcher tepsiye iner, arkada güncel kalır.',
+          'Takıldığında "Takıldım" demek de ilerlemedir; ekip yardıma gelir.',
+          'Fikir Defteri’nde yarım fikirler de olur. Biri tamamlar.',
+          'Sohbette @ ile birini anınca ona nazik bir bildirim gider.',
+          'Oyunu kapattığında launcher kaldığın yere geri döner.',
+          'Bir panonun içine alt pano açıp düşüncelerini katman katman dizebilirsin.',
+          'Dört tema var; Ayarlar’dan gözüne iyi geleni seç.',
+        ];
+        tip.textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
+
+        // Zamanlayıcı: açılıştan itibaren mutlak ms (dosyadaki at() ile aynı mantık).
+        function elapsed() { return performance.now() - T0; }
+        function at(ms, fn) { setTimeout(fn, Math.max(0, ms - elapsed())); }
+        function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+        function until(ms) { return sleep(Math.max(0, ms - elapsed())); }
+        // Yazı değişimi: dosyadaki say() — .swap ile söner, 180 ms sonra yeni yazı yerine oturur.
+        function say(t) {
+          if (reduced) { msg.textContent = t; return; }
+          msg.classList.add('swap');
+          setTimeout(function () { msg.textContent = t; msg.classList.remove('swap'); }, 180);
+        }
+
+        // ── TV açılışı: dosyadaki morph(), parlama olmadan ──
+        // x yayı: sertlik 260, sönüm 20. y yayı: 0.2 sn sonra, sertlik 130, sönüm 13. 2 ms alt adım.
+        var raf = null;
+        function morph() {
+          cancelAnimationFrame(raf);
+          var sx = 0.02, vx = 0, sy = 0.006, vy = 0, last = performance.now(), t = 0;
+          win.style.opacity = '1';
+          function step(now) {
+            var real = Math.min(0.05, (now - last) / 1000);
+            last = now;
+            var n = Math.max(1, Math.round(real / 0.002)), dt = real / n;
+            for (var k = 0; k < n; k++) {
+              t += dt;
+              vx += (260 * (1 - sx) - 20 * vx) * dt; sx += vx * dt;
+              if (t > 0.2) { vy += (130 * (1 - sy) - 13 * vy) * dt; sy += vy * dt; }
+            }
+            // hacim hissi: dikeyde hızla uzarken yatayda hafifçe incelir
+            var squash = Math.max(-0.06, Math.min(0.06, vy * 0.012));
+            var X = Math.max(0, sx * (1 - squash)), Y = Math.max(0.004, sy);
+            win.style.transform = 'scale(' + X.toFixed(4) + ',' + Y.toFixed(4) + ')';
+            if (t < 1.4 || Math.abs(vx) > 0.01 || Math.abs(vy) > 0.01) raf = requestAnimationFrame(step);
+            else win.style.transform = 'scale(1,1)';
+          }
+          raf = requestAnimationFrame(step);
+        }
+
+        // ── Kapanış: lwOff (0.55 sn); 450. ms'de launcher penceresi appIn ile açılır ──
+        var closing = false;
+        function close() {
+          if (closing) return;
+          closing = true;
+          if (reduced) { finished(); return; }
+          cancelAnimationFrame(raf);
+          win.style.transform = '';
+          win.classList.remove('busy');
+          win.classList.add('close');
+          setTimeout(finished, 450);
+        }
+        function finished() {
+          if (T) {
+            T.core.invoke('splash_finished').catch(function () {});
+          } else if (params.get('dongu') === '1') {
+            setTimeout(function () { location.reload(); }, 2500);
+          }
+        }
+
+        // "Başlatılıyor…" en erken dosyadaki 4100. ms'de, kapanış 800 ms sonra (dosya: 4100 / 4900).
+        function launch(minAt) {
+          var s = Math.max(4100, minAt || 0, elapsed() + 400);
+          at(s, function () { say('Başlatılıyor…'); });
+          at(s + 800, close);
+        }
+
+        function progress(p) {
+          barIn.style.width = p + '%';
+          msg.textContent = 'Güncelleme indiriliyor · %' + Math.round(p);
+        }
+
+        // ── Gerçek güncelleme durumu ──
+        async function realFlow() {
+          var justUpdated = store('abn.launcher.justUpdated');
+          store('abn.launcher.justUpdated', null);
+          if (!navigator.onLine) return offline();
+          var update = null;
+          try {
+            update = await T.updater.check();
+          } catch (e) {
+            // İnternet yoksa çevrimdışı; başka bir hata (ör. henüz sürüm yok) açılışı durdurmaz.
+            return navigator.onLine ? done(justUpdated) : offline();
+          }
+          if (!update) return done(justUpdated);
+          // "Güncellemeleri otomatik indir" kapalıysa sadece haber verilir, launcher kartında "Güncelle" çıkar.
+          if (store('abn.launcher.autoUpdate') === '0') {
+            store('abn.launcher.pendingUpdate', update.version);
+            return done(null);
+          }
+          await until(1900); // durum satırı görünür olsun (1.4 sn + 0.5 sn)
+          say('Güncelleme indiriliyor · %0');
+          bar.classList.add('on');
+          var total = 0, got = 0;
+          var onEvent = function (ev) {
+            if (ev.event === 'Started') total = ev.data.contentLength || 0;
+            else if (ev.event === 'Progress') {
+              got += ev.data.chunkLength || 0;
+              if (total) progress(Math.min(100, (got / total) * 100));
+            } else if (ev.event === 'Finished') progress(100);
+          };
+          try {
+            if (typeof update.download === 'function' && typeof update.install === 'function') {
+              await update.download(onEvent);
+              bar.classList.remove('on');
+              say('Güncelleme kuruluyor…');
+              store('abn.launcher.justUpdated', update.version);
+              await sleep(700);
+              await update.install(); // Windows'ta kurulum başlarken uygulama kapanır
+            } else {
+              await update.downloadAndInstall(onEvent);
+              store('abn.launcher.justUpdated', update.version);
+            }
+            await T.process.relaunch();
+          } catch (e) {
+            store('abn.launcher.justUpdated', null);
+            bar.classList.remove('on');
+            say('Güncelleme şimdi kurulamadı');
+            launch(elapsed() + 1400);
+          }
+        }
+        function done(justUpdated) {
+          if (justUpdated) {
+            at(Math.max(3200, elapsed()), function () { say('Güncellendi · ' + justUpdated); });
+            launch(4100);
+          } else launch();
+        }
+        function offline() {
+          at(Math.max(1900, elapsed()), function () { say('Çevrimdışı · son sürümle açılıyor'); });
+          launch(3300);
+        }
+
+        // ── Tarayıcıda deneme: dosyadaki senaryolar ──
+        function demoFlow() {
+          var s = params.get('senaryo') || 'yok';
+          if (s === 'cevrimdisi') return offline();
+          if (s === 'guncellendi') return done('1.0.1');
+          if (s !== 'guncelleme') return done(null);
+          var iv = null;
+          at(3700, function () {
+            say('Güncelleme indiriliyor · %0');
+            bar.classList.add('on');
+            var p = 0;
+            iv = setInterval(function () {
+              p = Math.min(100, p + 2 + Math.random() * 4);
+              progress(p);
+              if (p >= 100) clearInterval(iv);
+            }, 120);
+          });
+          at(7000, function () { clearInterval(iv); bar.classList.remove('on'); say('Güncelleme kuruluyor…'); });
+          at(8100, function () { say('Güncellendi · 1.0.1'); });
+          at(9000, function () { say('Başlatılıyor…'); });
+          at(9800, close);
+        }
+
+        // Başlat
+        if (!reduced) {
+          win.style.transform = 'scale(0)';
+          void win.offsetWidth;
+          win.classList.add('go', 'busy');
+          morph();
+        }
+        if (T && T.updater) realFlow();
+        else demoFlow();
+      })();
+    </script>
+  </body>
+</html>

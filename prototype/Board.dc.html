@@ -1,0 +1,1362 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>ABN Pano</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="themes.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="app {{ theme }}" style="position: relative; height: {{ height }}; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); color: var(--text); font-family: Urbanist, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.45">
+
+  <!-- Pano listesi -->
+  <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+  <div class="scroll viewin" style="flex-grow: 1; min-height: 0; overflow-y: auto; padding: {{ listPad }}">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px">
+      <div style="flex-grow: 1; min-width: 0">
+        <div style="font-size: 15px; font-weight: 700">{{ listCount }}</div>
+        <div style="font-size: 13.5px; color: var(--muted)">Bir panoya dokun, içine gir.</div>
+      </div>
+      <button onClick="{{ openCreate }}" class="spin" aria-expanded="{{ createExpanded }}" style="flex: none; border: 0; border-radius: 999px; padding: 10px 16px 10px 12px; font-size: 14.5px; font-weight: 800; background: var(--sel-bg); color: var(--sel-fg); display: flex; align-items: center; gap: 8px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Yeni pano</button>
+    </div>
+
+    <sc-if value="{{ creating }}" hint-placeholder-val="{{ false }}">
+      <form onSubmit="{{ createBoard }}" class="pop" style="background: var(--surface); border-radius: 22px; padding: 16px; margin-bottom: 18px; box-shadow: 0 0 0 1px var(--line), var(--shadow); display: flex; flex-direction: column; gap: 12px">
+        <label for="{{ newNameId }}" style="font-size: 13px; font-weight: 700; color: var(--text-2)">Pano adı</label>
+        <input id="{{ newNameId }}" ref="{{ nameRef }}" value="{{ newName }}" onInput="{{ onNewName }}" placeholder="Örn. Ses tasarımı referansları" maxlength="40" style="border: 0; border-radius: 14px; padding: 12px 14px; font: inherit; font-size: 16px; font-weight: 600; background: var(--surface2); color: var(--text); outline-color: var(--a2)">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+          <span style="font-size: 13px; font-weight: 700; color: var(--text-2)">Renk</span>
+          <sc-for list="{{ newTints }}" as="nt" hint-placeholder-count="4">
+            <button type="button" onClick="{{ nt.pick }}" aria-label="{{ nt.label }}" aria-pressed="{{ nt.pressed }}" title="{{ nt.label }}" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line-2); background: {{ nt.bg }}; box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px {{ nt.ring }}"></button>
+          </sc-for>
+          <span style="flex-grow: 1"></span>
+          <button type="button" onClick="{{ cancelCreate }}" style="border: 0; border-radius: 999px; padding: 9px 14px; font-size: 14px; font-weight: 700; background: var(--chip); color: var(--text)">Vazgeç</button>
+          <button type="submit" style="border: 0; border-radius: 999px; padding: 9px 16px; font-size: 14px; font-weight: 800; background: {{ createBg }}; color: {{ createFg }}">Oluştur ve aç</button>
+        </div>
+      </form>
+    </sc-if>
+
+    <div class="stagger" style="display: grid; grid-template-columns: {{ gridCols }}; gap: {{ gridGap }}">
+      <sc-for list="{{ boardList }}" as="bl" hint-placeholder-count="4">
+        <button onClick="{{ bl.open }}" aria-label="{{ bl.aria }}" class="lift" style="text-align: left; border: 0; padding: 0; border-radius: 20px; overflow: hidden; background: var(--surface); color: var(--text); box-shadow: 0 0 0 1px var(--line); display: flex; flex-direction: column; font: inherit">
+          <div aria-hidden="true" style="position: relative; height: {{ prevH }}; background: {{ bl.bg }}; overflow: hidden">
+            <sc-for list="{{ bl.mini }}" as="m" hint-placeholder-count="5">
+              <span style="position: absolute; left: {{ m.x }}; top: {{ m.y }}; width: {{ m.w }}; height: {{ m.h }}; border-radius: {{ m.r }}; background: {{ m.bg }}; opacity: {{ m.op }}; box-shadow: {{ m.sh }}"></span>
+            </sc-for>
+            <sc-if value="{{ bl.empty }}" hint-placeholder-val="{{ false }}">
+              <span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: {{ bl.fg }}; opacity: 0.7">Boş pano</span>
+            </sc-if>
+          </div>
+          <div style="padding: 11px 14px 13px; display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-size: 16px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ bl.title }}</span>
+            <span style="font-size: 13px; color: var(--muted)">{{ bl.meta }}</span>
+          </div>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- Pano tuvali -->
+  <sc-if value="{{ isCanvas }}" hint-placeholder-val="{{ false }}">
+  <div class="viewin" style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column">
+
+
+  <!-- Üst çubuk -->
+  <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: {{ topPad }}; border-bottom: 1px solid var(--line); background: var(--nav)">
+    <nav aria-label="Pano yolu" style="display: flex; align-items: center; gap: 4px; flex-grow: 1; min-width: 0; flex-wrap: wrap">
+      <sc-for list="{{ crumbs }}" as="cr" hint-placeholder-count="2">
+        <span style="display: flex; align-items: center; gap: 4px">
+          <button onClick="{{ cr.go }}" class="tool" style="border: 0; background: none; border-radius: 10px; padding: 5px 8px; font-size: {{ cr.size }}; font-weight: {{ cr.weight }}; color: {{ cr.color }}">{{ cr.label }}</button>
+          <sc-if value="{{ cr.notLast }}" hint-placeholder-val="{{ true }}"><span aria-hidden="true" style="color: var(--faint)">›</span></sc-if>
+        </span>
+      </sc-for>
+    </nav>
+    <sc-if value="{{ showSwatches }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; gap: 6px; align-items: center" aria-label="Kart rengi">
+        <sc-for list="{{ tintChips }}" as="tc" hint-placeholder-count="4">
+          <button onClick="{{ tc.pick }}" aria-label="{{ tc.label }}" title="{{ tc.label }}" style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line-2); background: {{ tc.bg }}; box-shadow: 0 0 0 2px var(--nav), 0 0 0 4px {{ tc.ring }}"></button>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ canDelete }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ del }}" class="spin" style="border: 0; border-radius: 999px; padding: 7px 12px; font-size: 13.5px; font-weight: 700; background: var(--chip); color: var(--text); display: flex; align-items: center; gap: 6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>{{ delLabel }}</button>
+    </sc-if>
+    <div style="display: flex; align-items: center; gap: 2px; background: var(--surface); border-radius: 999px; padding: 3px">
+      <button onClick="{{ zoomOut }}" aria-label="Uzaklaştır" class="tool" style="width: 30px; height: 30px; border-radius: 50%; border: 0; background: none; color: var(--text); font-size: 18px; font-weight: 600">−</button>
+      <span style="min-width: 44px; text-align: center; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums">{{ zoomLabel }}</span>
+      <button onClick="{{ zoomIn }}" aria-label="Yakınlaştır" class="tool" style="width: 30px; height: 30px; border-radius: 50%; border: 0; background: none; color: var(--text); font-size: 18px; font-weight: 600">+</button>
+      <button onClick="{{ fit }}" aria-label="Tüm kartları sığdır" title="Sığdır" class="tool" style="width: 30px; height: 30px; border-radius: 50%; border: 0; background: none; color: var(--text); display: flex; align-items: center; justify-content: center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    </div>
+  </div>
+
+  <sc-if value="{{ hasHint }}" hint-placeholder-val="{{ false }}">
+    <div style="padding: 8px 16px; font-size: 13.5px; font-weight: 600; background: var(--a2); color: var(--a2-ink); display: flex; align-items: center; gap: 10px">
+      <span style="flex-grow: 1">{{ hint }}</span>
+      <button onClick="{{ cancelMode }}" style="border: 0; border-radius: 999px; padding: 4px 10px; font-size: 12.5px; font-weight: 700; background: rgba(0,0,0,0.14); color: inherit">Vazgeç</button>
+    </div>
+  </sc-if>
+
+  <div style="flex-grow: 1; min-height: 0; position: relative">
+
+    <!-- Tuval -->
+    <div ref="{{ vpRef }}" class="bstage {{ camCls }}" onPointerDown="{{ bgDown }}" style="position: absolute; inset: 0; overflow: hidden; touch-action: none; user-select: none; cursor: {{ cursor }}; background-color: var(--bg); background-image: radial-gradient(circle, var(--dot) {{ dotR }}px, transparent {{ dotR2 }}px); background-size: {{ grid }}px {{ grid }}px; background-position: {{ camX }}px {{ camY }}px">
+        <div class="blayer" style="position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; transform: translate({{ camX }}px, {{ camY }}px) scale({{ zoom }}); transform-origin: 0 0">
+
+          <svg ref="{{ trailSvgRef }}" class="ghost" width="1" height="1" style="left: 0px; top: 0px; overflow: visible; filter: none; display: none" aria-hidden="true">
+            <defs>
+              <linearGradient ref="{{ trailGradRef }}" id="{{ gid }}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" style="stop-color: var(--a3); stop-opacity: 0"></stop>
+                <stop offset="0.55" style="stop-color: var(--a2); stop-opacity: 0.12"></stop>
+                <stop offset="1" style="stop-color: var(--a1); stop-opacity: 0.26"></stop>
+              </linearGradient>
+            </defs>
+            <path ref="{{ trailPathRef }}" d="M0 0" fill="url(#{{ gid }})" fill-rule="nonzero" style="filter: blur(2.5px); opacity: 0"></path>
+          </svg>
+          <sc-if value="{{ hasDrop }}" hint-placeholder-val="{{ false }}">
+            <div class="dropglow" style="left: {{ drop.x }}px; top: {{ drop.y }}px; width: {{ drop.w }}px; height: {{ drop.h }}px; background: linear-gradient(120deg, var(--a1), var(--a2), var(--a3))"></div>
+          </sc-if>
+
+          <sc-for list="{{ arrows }}" as="a" hint-placeholder-count="2">
+            <svg width="{{ a.w }}" height="{{ a.h }}" style="position: absolute; z-index: 1; left: {{ a.left }}px; top: {{ a.top }}px; overflow: visible; pointer-events: none" aria-hidden="true">
+              <path class="ahit" d="{{ a.hd }}" fill="none" stroke="transparent" stroke-width="20" onPointerDown="{{ a.pick }}" style="pointer-events: stroke; cursor: pointer"></path>
+              <path d="{{ a.d }}" fill="none" stroke="{{ a.color }}" stroke-width="{{ a.sw }}" stroke-linecap="round" stroke-dasharray="{{ a.dash }}"></path>
+              <polygon points="{{ a.headE }}" fill="{{ a.color }}"></polygon>
+              <polygon points="{{ a.headS }}" fill="{{ a.color }}"></polygon>
+              <circle cx="{{ a.dEx }}" cy="{{ a.dEy }}" r="{{ a.dEr }}" fill="{{ a.color }}"></circle>
+              <circle cx="{{ a.dSx }}" cy="{{ a.dSy }}" r="{{ a.dSr }}" fill="{{ a.color }}"></circle>
+            </svg>
+          </sc-for>
+
+          <sc-for list="{{ cards }}" as="c" hint-placeholder-count="6">
+            <div class="{{ c.cls }}" onPointerDown="{{ c.down }}" onDragStart="{{ noDrag }}" onDoubleClick="{{ c.dbl }}" style="cursor: {{ c.cursor }}; position: absolute; left: {{ c.x }}px; top: {{ c.y }}px; width: {{ c.w }}px; height: {{ c.hpx }}; z-index: {{ c.z }}; box-sizing: border-box; border-radius: 16px; background: {{ c.bg }}; color: {{ c.fg }}; box-shadow: {{ c.shadow }}; transform: {{ c.tf }}">
+              <div class="grip" title="Sürükle" style="height: 22px; display: flex; align-items: center; justify-content: center; cursor: grab; touch-action: none; border-radius: 16px 16px 0 0">
+                <svg width="28" height="8" viewBox="0 0 28 8" fill="currentColor" opacity="0.45" aria-hidden="true"><circle cx="4" cy="2" r="1.6"/><circle cx="10" cy="2" r="1.6"/><circle cx="16" cy="2" r="1.6"/><circle cx="22" cy="2" r="1.6"/><circle cx="4" cy="6.5" r="1.6"/><circle cx="10" cy="6.5" r="1.6"/><circle cx="16" cy="6.5" r="1.6"/><circle cx="22" cy="6.5" r="1.6"/></svg>
+              </div>
+              <sc-if value="{{ c.isFrom }}" hint-placeholder-val="{{ false }}"><span style="position: absolute; top: -12px; left: 12px; font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--a2); color: var(--a2-ink)">Başlangıç</span></sc-if>
+              <sc-if value="{{ c.canLink }}" hint-placeholder-val="{{ true }}">
+                <span class="always lh {{ c.lhCls }}" onPointerDown="{{ c.linkDown }}" title="Sürükleyerek bağla" style="left: 25%; top: 0; width: {{ c.lhS }}px; height: {{ c.lhS }}px; margin: -{{ c.lhH }}px 0 0 -{{ c.lhH }}px; border-width: {{ c.lhB }}px"></span>
+                <span class="always lh {{ c.lhCls }}" onPointerDown="{{ c.linkDown }}" title="Sürükleyerek bağla" style="left: 100%; top: 25%; width: {{ c.lhS }}px; height: {{ c.lhS }}px; margin: -{{ c.lhH }}px 0 0 -{{ c.lhH }}px; border-width: {{ c.lhB }}px"></span>
+                <span class="always lh {{ c.lhCls }}" onPointerDown="{{ c.linkDown }}" title="Sürükleyerek bağla" style="left: 25%; top: 100%; width: {{ c.lhS }}px; height: {{ c.lhS }}px; margin: -{{ c.lhH }}px 0 0 -{{ c.lhH }}px; border-width: {{ c.lhB }}px"></span>
+                <span class="always lh {{ c.lhCls }}" onPointerDown="{{ c.linkDown }}" title="Sürükleyerek bağla" style="left: 0; top: 25%; width: {{ c.lhS }}px; height: {{ c.lhS }}px; margin: -{{ c.lhH }}px 0 0 -{{ c.lhH }}px; border-width: {{ c.lhB }}px"></span>
+                <span class="always lh {{ c.lhCls }}" onPointerDown="{{ c.linkDown }}" title="Sürükleyerek bağla" style="left: 75%; top: 0; width: {{ c.lhS }}px; height: {{ c.lhS }}px; margin: -{{ c.lhH }}px 0 0 -{{ c.lhH }}px; border-width: {{ c.lhB }}px"></span>
+                <span class="always lh {{ c.lhCls }}" onPointerDown="{{ c.linkDown }}" title="Sürükleyerek bağla" style="left: 100%; top: 75%; width: {{ c.lhS }}px; height: {{ c.lhS }}px; margin: -{{ c.lhH }}px 0 0 -{{ c.lhH }}px; border-width: {{ c.lhB }}px"></span>
+                <span class="always lh {{ c.lhCls }}" onPointerDown="{{ c.linkDown }}" title="Sürükleyerek bağla" style="left: 75%; top: 100%; width: {{ c.lhS }}px; height: {{ c.lhS }}px; margin: -{{ c.lhH }}px 0 0 -{{ c.lhH }}px; border-width: {{ c.lhB }}px"></span>
+                <span class="always lh {{ c.lhCls }}" onPointerDown="{{ c.linkDown }}" title="Sürükleyerek bağla" style="left: 0; top: 75%; width: {{ c.lhS }}px; height: {{ c.lhS }}px; margin: -{{ c.lhH }}px 0 0 -{{ c.lhH }}px; border-width: {{ c.lhB }}px"></span>
+              </sc-if>
+
+              <sc-if value="{{ c.isZone }}" hint-placeholder-val="{{ false }}">
+                <div style="position: absolute; inset: 0; border-radius: 16px; background: {{ c.zoneBg }}; opacity: 0.16; pointer-events: none"></div>
+                <div style="position: absolute; inset: 0; border-radius: 16px; border: 2px dashed {{ c.zoneBg }}; pointer-events: none"></div>
+                <input type="text" id="{{ c.fid }}" aria-label="Bölge adı" value="{{ c.text }}" onChange="{{ c.onText }}" style="pointer-events: {{ c.pe }}; position: relative; width: 100%; box-sizing: border-box; border: 0; background: none; color: var(--text); font: inherit; font-size: 18px; font-weight: 800; padding: 0 14px">
+                <span class="always" onPointerDown="{{ c.resizeDown }}" title="Boyutlandır" aria-label="Bölgeyi boyutlandır" style="position: absolute; right: 4px; bottom: 4px; width: 22px; height: 22px; cursor: nwse-resize; touch-action: none; display: flex; align-items: center; justify-content: center; color: var(--muted)">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M13 5 5 13M13 10l-3 3"/></svg></span>
+              </sc-if>
+
+              <sc-if value="{{ c.isSketch }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 0 10px 10px; display: flex; flex-direction: column; gap: 6px">
+                  <svg width="100%" height="200" viewBox="0 0 {{ c.skW }} 200" onPointerDown="{{ c.drawDown }}" style="display: block; border-radius: 10px; background: var(--surface2); pointer-events: {{ c.pe }}; touch-action: none; cursor: crosshair" role="img" aria-label="Çizim">
+                    <path d="{{ c.sketchD }}" fill="none" stroke="var(--text)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                  <div style="display: flex; align-items: center; gap: 8px">
+                    <span style="flex-grow: 1; font-size: 12.5px; color: var(--muted)">{{ c.skHint }}</span>
+                    <sc-if value="{{ c.editingNow }}" hint-placeholder-val="{{ false }}"><button onClick="{{ c.clearSketch }}" style="border: 0; border-radius: 999px; padding: 5px 10px; font-size: 12.5px; font-weight: 700; background: var(--chip); color: var(--text)">Temizle</button></sc-if>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ c.isTable }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 0 10px 10px; display: flex; flex-direction: column; gap: 6px">
+                  <div style="display: grid; grid-template-columns: repeat({{ c.cols }}, minmax(0, 1fr)); border-top: 1px solid var(--line-2); border-left: 1px solid var(--line-2); border-radius: 8px; overflow: hidden">
+                    <sc-for list="{{ c.cells }}" as="cl" hint-placeholder-count="9">
+                      <input type="text" id="{{ cl.id }}" aria-label="Tablo hücresi" value="{{ cl.v }}" onChange="{{ cl.on }}" style="pointer-events: {{ c.pe }}; min-width: 0; box-sizing: border-box; height: 34px; border: 0; border-right: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); background: {{ cl.bg }}; color: inherit; font: inherit; font-size: 13.5px; font-weight: {{ cl.fw }}; padding: 0 8px">
+                    </sc-for>
+                  </div>
+                  <div style="display: flex; gap: 6px">
+                    <button onClick="{{ c.addRow }}" style="border: 0; border-radius: 999px; padding: 5px 10px; font-size: 12.5px; font-weight: 700; background: var(--surface2); color: var(--text)">+ Satır</button>
+                    <button onClick="{{ c.addCol }}" style="border: 0; border-radius: 999px; padding: 5px 10px; font-size: 12.5px; font-weight: 700; background: var(--surface2); color: var(--text)">+ Sütun</button>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ c.isQuote }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 0 16px 14px; display: flex; flex-direction: column; gap: 4px">
+                  <span aria-hidden="true" style="font-size: 46px; line-height: 0.8; height: 26px; font-weight: 800; color: var(--accent-text)">“</span>
+                  <textarea id="{{ c.fid }}" aria-label="Alıntı" value="{{ c.text }}" onChange="{{ c.onText }}" style="pointer-events: {{ c.pe }}; display: block; width: 100%; box-sizing: border-box; height: {{ c.taH }}px; resize: none; overflow: hidden; border: 0; background: none; color: inherit; font: inherit; font-size: 17px; font-style: italic; line-height: 24px; padding: 0"></textarea>
+                  <input type="text" id="{{ c.fid2 }}" aria-label="Kaynak" value="{{ c.author }}" onChange="{{ c.onAuthor }}" placeholder="— Kaynak" style="pointer-events: {{ c.pe }}; border: 0; background: none; color: var(--muted); font: inherit; font-size: 13.5px; font-weight: 600; padding: 0">
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ c.isFile }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px">
+                  <div style="display: flex; gap: 10px; align-items: center">
+                    <span style="width: 44px; height: 52px; border-radius: 10px; background: var(--a3); color: var(--a3-ink); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; box-sizing: border-box; font-size: 10.5px; font-weight: 800; flex: none">{{ c.ext }}</span>
+                    <span style="display: block; flex-grow: 1; min-width: 0"><span style="display: block; font-weight: 700; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ c.text }}</span><span style="display: block; font-size: 12.5px; color: var(--muted)">{{ c.fileInfo }}</span></span>
+                  </div>
+                  <sc-if value="{{ c.noFile }}" hint-placeholder-val="{{ true }}">
+                    <label for="{{ c.fileId }}" style="cursor: pointer; text-align: center; border-radius: 10px; border: 2px dashed var(--line-2); padding: 10px; font-size: 13px; font-weight: 600; color: var(--muted)">Dosya seç</label>
+                    <input id="{{ c.fileId }}" type="file" onChange="{{ c.onAnyFile }}" style="display: none">
+                  </sc-if>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ c.isVideo }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 0 10px 10px; display: flex; flex-direction: column; gap: 6px">
+                  <a draggable="false" href="{{ c.href }}" target="_blank" rel="noopener" aria-label="Videoyu aç" style="position: relative; height: 150px; border-radius: 10px; background: #15151A; display: flex; align-items: center; justify-content: center; text-decoration: none">
+                    <span style="width: 54px; height: 54px; border-radius: 50%; background: var(--a1); color: var(--a1-ink); display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>
+                  </a>
+                  <input type="text" id="{{ c.fid }}" aria-label="Video adı" value="{{ c.text }}" onChange="{{ c.onText }}" style="pointer-events: {{ c.pe }}; border: 0; background: none; color: inherit; font: inherit; font-size: 14.5px; font-weight: 700; padding: 0 4px">
+                  <input type="text" id="{{ c.fid2 }}" aria-label="Video adresi" value="{{ c.url }}" onChange="{{ c.onUrl }}" placeholder="youtube.com/…" style="pointer-events: {{ c.pe }}; border: 0; background: none; color: var(--muted); font: inherit; font-size: 12.5px; padding: 0 4px">
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ c.isHeading }}" hint-placeholder-val="{{ false }}">
+                <input type="text" id="{{ c.fid }}" aria-label="Başlık" value="{{ c.text }}" onChange="{{ c.onText }}" style="pointer-events: {{ c.pe }};width: 100%; box-sizing: border-box; border: 0; background: none; color: var(--text); font: inherit; font-size: 28px; font-weight: 800; letter-spacing: -0.01em; padding: 0 8px 6px">
+              </sc-if>
+
+              <sc-if value="{{ c.isNote }}" hint-placeholder-val="{{ true }}">
+                <textarea id="{{ c.fid }}" aria-label="Not" value="{{ c.text }}" onChange="{{ c.onText }}" placeholder="Bir şey yaz…" style="pointer-events: {{ c.pe }};display: block; width: 100%; box-sizing: border-box; height: {{ c.taH }}px; resize: none; overflow: hidden; border: 0; background: none; color: inherit; font: inherit; font-size: 15px; line-height: 22px; padding: 0 14px 14px"></textarea>
+              </sc-if>
+
+              <sc-if value="{{ c.isTodo }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 0 14px 12px; display: flex; flex-direction: column; gap: 4px">
+                  <input type="text" id="{{ c.fid }}" aria-label="Liste başlığı" value="{{ c.text }}" onChange="{{ c.onText }}" style="pointer-events: {{ c.pe }};border: 0; background: none; color: inherit; font: inherit; font-size: 16px; font-weight: 700; padding: 0 0 4px">
+                  <sc-for list="{{ c.todos }}" as="td" hint-placeholder-count="3">
+                    <div style="display: flex; align-items: center; gap: 8px; min-height: 28px">
+                      <button onClick="{{ td.toggle }}" role="checkbox" aria-checked="{{ td.doneStr }}" aria-label="{{ td.t }}" style="width: 20px; height: 20px; border-radius: 6px; box-sizing: border-box; flex: none; padding: 0; border: 2px solid {{ td.border }}; background: {{ td.box }}; display: flex; align-items: center; justify-content: center">
+                        <sc-if value="{{ td.done }}" hint-placeholder-val="{{ false }}"><svg class="spin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--a1-ink)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></sc-if></button>
+                      <span style="font-size: 14.5px; text-decoration: {{ td.deco }}; opacity: {{ td.op }}">{{ td.t }}</span>
+                    </div>
+                  </sc-for>
+                  <div style="display: flex; gap: 6px; margin-top: 4px">
+                    <input type="text" class="always" id="{{ c.fid2 }}" aria-label="Yeni madde" placeholder="Madde ekle…" value="{{ c.todoDraft }}" onChange="{{ c.onTodoDraft }}" style="flex-grow: 1; min-width: 0; border: 0; border-radius: 10px; background: var(--surface2); color: var(--text); font: inherit; font-size: 13.5px; padding: 7px 10px">
+                    <button onClick="{{ c.addTodo }}" aria-label="Maddeyi ekle" style="border: 0; border-radius: 10px; padding: 0 10px; background: var(--a1); color: var(--a1-ink); font-weight: 800">+</button>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ c.isImage }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 0 10px 10px; display: flex; flex-direction: column; gap: 6px">
+                  <sc-if value="{{ c.hasSrc }}" hint-placeholder-val="{{ false }}"><img draggable="false" src="{{ c.src }}" alt="{{ c.text }}" style="display: block; width: 100%; height: 180px; object-fit: cover; border-radius: 10px"></sc-if>
+                  <sc-if value="{{ c.artFace }}" hint-placeholder-val="{{ false }}">
+                    <div style="height: 180px; border-radius: 10px; background: #C5B5FA; display: flex; align-items: center; justify-content: center; gap: 14px">
+                      <svg width="74" height="90" viewBox="0 0 92 112" fill="none" stroke="#0E0E10" stroke-width="2.6" stroke-linecap="round" role="img" aria-label="Yüz taslağı"><ellipse cx="46" cy="58" rx="34" ry="44"/><circle cx="33" cy="52" r="4"/><circle cx="59" cy="52" r="4"/><path d="M34 80q12 8 24 0"/></svg>
+                      <svg width="74" height="90" viewBox="0 0 92 112" fill="none" stroke="#0E0E10" stroke-width="2.6" stroke-linecap="round" role="img" aria-label="Korku ifadesi taslağı"><ellipse cx="46" cy="58" rx="34" ry="44"/><circle cx="33" cy="50" r="8"/><circle cx="59" cy="50" r="8"/><ellipse cx="46" cy="84" rx="7" ry="10"/></svg>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ c.artMood }}" hint-placeholder-val="{{ false }}">
+                    <div style="height: 180px; border-radius: 10px; overflow: hidden; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px">
+                      <div style="background: #6B4E3D"></div><div style="background: #C9A66B"></div><div style="background: #2F3B3A"></div><div style="background: #8C3B2E"></div><div style="background: #E8D9B5"></div><div style="background: #4A5A6A"></div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ c.empty }}" hint-placeholder-val="{{ false }}">
+                    <label for="{{ c.fileId }}" style="height: 120px; border-radius: 10px; border: 2px dashed var(--line-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; color: var(--muted); font-size: 13.5px; font-weight: 600">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>Görsel seç</label>
+                    <input id="{{ c.fileId }}" type="file" accept="image/*" onChange="{{ c.onFile }}" style="display: none">
+                  </sc-if>
+                  <input type="text" id="{{ c.fid }}" aria-label="Görsel açıklaması" value="{{ c.text }}" onChange="{{ c.onText }}" placeholder="Açıklama…" style="pointer-events: {{ c.pe }};border: 0; background: none; color: inherit; font: inherit; font-size: 13.5px; font-weight: 600; padding: 2px 4px">
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ c.isColor }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 0 14px 12px; display: flex; flex-direction: column; gap: 8px">
+                  <input type="text" id="{{ c.fid }}" aria-label="Palet adı" value="{{ c.text }}" onChange="{{ c.onText }}" style="pointer-events: {{ c.pe }};border: 0; background: none; color: inherit; font: inherit; font-size: 15px; font-weight: 700; padding: 0">
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap">
+                    <sc-for list="{{ c.sw }}" as="s" hint-placeholder-count="4">
+                      <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; position: relative">
+                        <span style="width: 38px; height: 38px; border-radius: 10px; background: {{ s.hex }}; border: 1px solid rgba(0,0,0,0.1)"></span>
+                        <span style="font-size: 10px; font-family: ui-monospace, Menlo, monospace; opacity: 0.8">{{ s.hex }}</span>
+                        <sc-if value="{{ c.selected }}" hint-placeholder-val="{{ false }}"><button onClick="{{ s.remove }}" aria-label="{{ s.hex }} rengini kaldır" style="position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; border: 0; padding: 0; background: var(--sel-bg); color: var(--sel-fg); font-size: 11px; line-height: 18px">×</button></sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <div style="display: flex; gap: 6px; align-items: center">
+                    <input type="color" class="always" id="{{ c.fid2 }}" aria-label="Renk seç" value="{{ c.pick2 }}" onChange="{{ c.onPick }}" style="width: 38px; height: 30px; border: 0; padding: 0; background: none; cursor: pointer">
+                    <button onClick="{{ c.addSw }}" style="border: 0; border-radius: 10px; padding: 6px 10px; font-size: 12.5px; font-weight: 700; background: var(--surface2); color: var(--text)">Renk ekle</button>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ c.isLink }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 0 12px 12px; display: flex; gap: 10px; align-items: flex-start">
+                  <span style="width: 38px; height: 38px; border-radius: 12px; background: var(--a2); color: var(--a2-ink); display: flex; align-items: center; justify-content: center; flex: none">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></span>
+                  <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+                    <input type="text" id="{{ c.fid }}" aria-label="Link adı" value="{{ c.text }}" onChange="{{ c.onText }}" style="pointer-events: {{ c.pe }};border: 0; background: none; color: inherit; font: inherit; font-size: 15px; font-weight: 700; padding: 0">
+                    <input type="text" id="{{ c.fid2 }}" aria-label="Link adresi" value="{{ c.url }}" onChange="{{ c.onUrl }}" placeholder="adres.com" style="pointer-events: {{ c.pe }};border: 0; background: none; color: var(--muted); font: inherit; font-size: 12.5px; padding: 0">
+                    <a draggable="false" href="{{ c.href }}" target="_blank" rel="noopener" style="align-self: flex-start; margin-top: 4px; font-size: 12.5px; font-weight: 700; color: var(--accent-text); text-decoration: none">Aç ↗</a>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ c.isBoard }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 0 14px 14px; display: flex; flex-direction: column; gap: 8px">
+                  <div style="display: flex; align-items: center; gap: 10px">
+                    <span style="width: 40px; height: 40px; border-radius: 12px; background: rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center; flex: none">
+                      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z"/></svg></span>
+                    <input type="text" id="{{ c.fid }}" aria-label="Pano adı" value="{{ c.text }}" onChange="{{ c.onText }}" style="pointer-events: {{ c.pe }};flex-grow: 1; min-width: 0; border: 0; background: none; color: inherit; font: inherit; font-size: 16px; font-weight: 800; padding: 0">
+                  </div>
+                  <div style="display: flex; align-items: center; justify-content: space-between">
+                    <span style="font-size: 13px; font-weight: 600; opacity: 0.8">{{ c.count }}</span>
+                    <button onClick="{{ c.open }}" style="border: 0; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 700; background: rgba(0,0,0,0.14); color: inherit">Aç →</button>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+
+          <sc-if value="{{ arrowSel }}" hint-placeholder-val="{{ false }}">
+            <span class="bh bend" onPointerDown="{{ bendDown }}" onDoubleClick="{{ straighten }}" title="Sürükleyerek eğ" style="left: {{ ah.mx }}px; top: {{ ah.my }}px; width: {{ ah.bs }}px; height: {{ ah.bs }}px; margin: -{{ ah.bh }}px 0 0 -{{ ah.bh }}px; border-width: {{ ah.bw }}px"></span>
+            <span class="bh end" onPointerDown="{{ endDownS }}" title="Ucu başka karta taşı" style="left: {{ ah.sx }}px; top: {{ ah.sy }}px; width: {{ ah.es }}px; height: {{ ah.es }}px; margin: -{{ ah.eh }}px 0 0 -{{ ah.eh }}px; border-width: {{ ah.bw }}px"></span>
+            <span class="bh end" onPointerDown="{{ endDownE }}" title="Ucu başka karta taşı" style="left: {{ ah.ex }}px; top: {{ ah.ey }}px; width: {{ ah.es }}px; height: {{ ah.es }}px; margin: -{{ ah.eh }}px 0 0 -{{ ah.eh }}px; border-width: {{ ah.bw }}px"></span>
+          </sc-if>
+
+          <sc-if value="{{ hasLink }}" hint-placeholder-val="{{ false }}">
+            <svg width="1" height="1" style="position: absolute; z-index: 60; left: 0px; top: 0px; overflow: visible; pointer-events: none; transition: none" aria-hidden="true">
+              <line x1="{{ link.x1 }}" y1="{{ link.y1 }}" x2="{{ link.x2 }}" y2="{{ link.y2 }}" stroke="var(--a2)" stroke-width="{{ link.sw }}" stroke-linecap="round" stroke-dasharray="{{ link.da }}"></line>
+              <circle cx="{{ link.x2 }}" cy="{{ link.y2 }}" r="{{ link.r }}" fill="var(--a2)"></circle>
+            </svg>
+          </sc-if>
+
+          <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="position: absolute; left: 80px; top: 80px; width: 360px; color: var(--muted); font-size: 15px">
+              <div style="font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 6px">Boş pano</div>
+              Araç çubuğundan not, görsel, yapılacaklar listesi ya da başka bir pano ekle. Kartları her yerinden tutup sürükleyebilirsin.
+            </div>
+          </sc-if>
+        </div>
+    </div>
+
+    <!-- Nasıl kullanılır -->
+    <button onClick="{{ toggleHelp }}" aria-label="Nasıl kullanılır" aria-expanded="{{ helpExpanded }}" title="Nasıl kullanılır" class="tool" style="position: absolute; z-index: 22; right: 12px; top: 12px; width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid {{ helpRing }}; background: {{ helpBg }}; color: {{ helpFg }}; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 4px 14px rgba(0,0,0,0.14)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 11v7"/><circle cx="12" cy="6.2" r="0.6" fill="currentColor"/></svg></button>
+    <sc-if value="{{ helpOpen }}" hint-placeholder-val="{{ false }}">
+      <div class="pop scroll" role="dialog" aria-label="Pano nasıl kullanılır" style="position: absolute; z-index: 23; {{ helpPos }}; background: var(--nav); border: 1px solid var(--line); border-radius: 22px; padding: 14px 14px 10px; box-shadow: 0 16px 40px rgba(0,0,0,0.25); overflow-y: auto; transform-origin: top right">
+        <div style="display: flex; align-items: center; margin-bottom: 6px">
+          <span style="font-weight: 800; font-size: 16px; flex-grow: 1">Pano nasıl kullanılır</span>
+          <button onClick="{{ toggleHelp }}" aria-label="Kapat" class="tool" style="width: 28px; height: 28px; border-radius: 50%; border: 0; background: none; color: var(--muted); font-size: 18px; line-height: 1">×</button>
+        </div>
+        <ol class="stagger" style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px">
+          <sc-for list="{{ helpSteps }}" as="hs" hint-placeholder-count="6">
+            <li style="display: flex; gap: 10px; align-items: flex-start; padding: 7px 4px">
+              <span aria-hidden="true" style="flex: none; width: 28px; height: 28px; border-radius: 9px; background: {{ hs.bg }}; color: {{ hs.fg }}; display: flex; align-items: center; justify-content: center">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ hs.icon }}"/></svg></span>
+              <span style="min-width: 0; font-size: 13.5px; line-height: 1.4; color: var(--text-2)"><b style="color: var(--text); font-weight: 800">{{ hs.t }}</b> {{ hs.d }}</span>
+            </li>
+          </sc-for>
+        </ol>
+      </div>
+    </sc-if>
+
+    <!-- Yüzen araç çubuğu -->
+    <div role="toolbar" aria-label="Pano araçları" style="position: absolute; z-index: 20; {{ tbPos }}; display: flex; flex-direction: {{ tbDir }}; align-items: center; gap: 2px; padding: 6px; background: var(--nav); border: 1px solid var(--line); border-radius: 24px; box-shadow: 0 12px 32px rgba(0,0,0,0.2)">
+      <div class="scroll" style="flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; flex-direction: {{ tbDir }}; align-items: center; gap: 2px; overflow: auto; scrollbar-width: none">
+      <sc-for list="{{ tools }}" as="t" hint-placeholder-count="8">
+        <button onClick="{{ t.act }}" class="tool" aria-pressed="{{ t.pressed }}" style="flex: none; width: {{ btnW }}px; border: 0; border-radius: 16px; padding: 6px 2px 5px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; background: {{ t.bg }}; color: {{ t.fg }}">
+          <span style="width: {{ iconS }}px; height: {{ iconS }}px; border-radius: 10px; background: {{ t.iconBg }}; color: {{ t.iconFg }}; display: flex; align-items: center; justify-content: center">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ t.icon }}"/></svg></span>
+          {{ t.label }}</button>
+      </sc-for>
+      </div>
+      <span aria-hidden="true" style="flex: none; {{ sepStyle }}; background: var(--line-2); border-radius: 2px"></span>
+      <button onClick="{{ toggleMore }}" class="tool" aria-expanded="{{ moreExpanded }}" aria-label="Daha fazla araç" style="flex: none; width: {{ btnW }}px; border: 0; border-radius: 16px; padding: 6px 2px 5px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; background: {{ moreBg }}; color: {{ moreFg }}">
+        <span style="width: {{ iconS }}px; height: {{ iconS }}px; border-radius: 10px; background: var(--a1); color: var(--a1-ink); display: flex; align-items: center; justify-content: center">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true" style="transform: rotate({{ moreRot }}deg)"><path d="M12 5v14M5 12h14"/></svg></span>
+        Daha fazla</button>
+    </div>
+
+    <!-- Daha fazla paneli -->
+    <sc-if value="{{ moreOpen }}" hint-placeholder-val="{{ false }}">
+      <div class="pop" role="menu" aria-label="Daha fazla araç" style="position: absolute; z-index: 21; {{ morePos }}; background: var(--nav); border: 1px solid var(--line); border-radius: 24px; padding: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; align-items: center"><span style="font-weight: 800; flex-grow: 1">Daha fazla ekle</span><button onClick="{{ toggleMore }}" aria-label="Kapat" class="tool" style="width: 28px; height: 28px; border-radius: 50%; border: 0; background: none; color: var(--muted); font-size: 18px">×</button></div>
+        <div class="stagger" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+          <sc-for list="{{ moreTools }}" as="t" hint-placeholder-count="6">
+            <button onClick="{{ t.act }}" role="menuitem" class="tool" style="border: 0; border-radius: 16px; padding: 10px 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; background: var(--surface); color: var(--text-2)">
+              <span style="width: 38px; height: 38px; border-radius: 12px; background: {{ t.iconBg }}; color: {{ t.iconFg }}; display: flex; align-items: center; justify-content: center">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ t.icon }}"/></svg></span>
+              {{ t.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- Bağlantı ayarları -->
+    <sc-if value="{{ arrowSel }}" hint-placeholder-val="{{ false }}">
+      <div class="pop" style="position: absolute; z-index: 21; {{ ctxPos }}; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 10px; background: var(--nav); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 12px 32px rgba(0,0,0,0.22)">
+        <div style="display: flex; align-items: center; gap: 6px">
+          <span style="font-size: 12px; font-weight: 700; color: var(--muted)">Baş</span>
+          <div style="display: flex; gap: 2px; background: var(--surface2); border-radius: 999px; padding: 3px">
+            <sc-for list="{{ capS }}" as="cp" hint-placeholder-count="3">
+              <button onClick="{{ cp.pick }}" aria-label="{{ cp.label }}" aria-pressed="{{ cp.pressed }}" title="{{ cp.label }}" style="border: 0; border-radius: 999px; width: 40px; height: 28px; display: flex; align-items: center; justify-content: center; background: {{ cp.bg }}; color: {{ cp.fg }}">
+                <svg width="28" height="14" viewBox="0 0 28 14" aria-hidden="true"><path d="{{ cp.line }}" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"></path><path d="{{ cp.cap }}" fill="currentColor"></path></svg></button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px">
+          <span style="font-size: 12px; font-weight: 700; color: var(--muted)">Uç</span>
+          <div style="display: flex; gap: 2px; background: var(--surface2); border-radius: 999px; padding: 3px">
+            <sc-for list="{{ capE }}" as="cp" hint-placeholder-count="3">
+              <button onClick="{{ cp.pick }}" aria-label="{{ cp.label }}" aria-pressed="{{ cp.pressed }}" title="{{ cp.label }}" style="border: 0; border-radius: 999px; width: 40px; height: 28px; display: flex; align-items: center; justify-content: center; background: {{ cp.bg }}; color: {{ cp.fg }}">
+                <svg width="28" height="14" viewBox="0 0 28 14" aria-hidden="true"><path d="{{ cp.line }}" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"></path><path d="{{ cp.cap }}" fill="currentColor"></path></svg></button>
+            </sc-for>
+          </div>
+        </div>
+        <sc-if value="{{ isBent }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ straighten }}" style="border: 0; border-radius: 999px; height: 34px; padding: 0 12px; font-size: 12.5px; font-weight: 700; background: var(--surface2); color: var(--text)">Düzleştir</button>
+        </sc-if>
+        <sc-if value="{{ isStraight }}" hint-placeholder-val="{{ true }}">
+          <span style="font-size: 12px; color: var(--muted); max-width: 150px; line-height: 1.3">Ortadaki noktayı sürükleyerek eğ</span>
+        </sc-if>
+        <button onClick="{{ toggleDash }}" aria-pressed="{{ dashPressed }}" style="border: 0; border-radius: 999px; height: 34px; padding: 0 12px; font-size: 12.5px; font-weight: 700; background: {{ dashBg }}; color: {{ dashFg }}; display: flex; align-items: center; gap: 6px">
+          <svg width="20" height="8" viewBox="0 0 20 8" aria-hidden="true"><path d="M1 4h4M8 4h4M15 4h4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path></svg>Kesikli</button>
+        <button onClick="{{ flipArrow }}" aria-label="Yönü çevir" title="Yönü çevir" class="tool" style="border: 0; border-radius: 999px; width: 34px; height: 34px; background: var(--surface2); color: var(--text); display: flex; align-items: center; justify-content: center">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h13l-4-4M17 17H4l4 4"/></svg></button>
+        <button onClick="{{ del }}" aria-label="Bağlantıyı sil" title="Sil" class="tool" style="border: 0; border-radius: 999px; width: 34px; height: 34px; background: var(--surface2); color: var(--text); display: flex; align-items: center; justify-content: center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+      </div>
+    </sc-if>
+  </div>
+  </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light","indigo","gul","zeytin","adacayi","tropik","gunbatimi","gece","pudra","noir"],"default":"dark","section":"Görünüm"},"compact":{"editor":"boolean","default":false,"section":"Görünüm"},"startBoard":{"editor":"enum","options":["list","pm","mk","dd","ab","gm"],"default":"list","section":"Görünüm"},"height":{"editor":null,"default":"760px"},"$preview":{"width":1200,"height":760}}'>
+var W = 2400, H = 1600;
+var TINTS = { surface: ['var(--surface)', 'var(--text)', 'Düz'], a1: ['var(--a1)', 'var(--a1-ink)', 'Tema rengi 1'], a2: ['var(--a2)', 'var(--a2-ink)', 'Tema rengi 2'], a3: ['var(--a3)', 'var(--a3-ink)', 'Tema rengi 3'] };
+var TOOLS = [
+  ['note', 'Not', 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5'],
+  ['todo', 'Yapılacak', 'M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2'],
+  ['image', 'Görsel', 'M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM21 16l-5-5-9 9M9 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3'],
+  ['color', 'Renk', 'M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3A4.7 4.7 0 0 0 21 9.7C21 5.9 17 3 12 3zM7.5 11h.01M10 7h.01M15 7h.01'],
+  ['link', 'Link', 'M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7'],
+  ['board', 'Pano', 'M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z'],
+  ['heading', 'Başlık', 'M6 4v16M18 4v16M6 12h12'],
+  ['arrow', 'Bağla', 'M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6M18 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6M8.6 13.6l6.8-3.2']
+];
+var MORE_TOOLS = [
+  ['zone', 'Bölge', 'M4 4h16v16H4zM4 9h16', 'var(--a2)', 'var(--a2-ink)'],
+  ['sketch', 'Çizim', 'M3 17c3-4 5-9 8-9s1 8 4 8 3-5 6-6M4 20h16', 'var(--a1)', 'var(--a1-ink)'],
+  ['table', 'Tablo', 'M3 5h18v14H3zM3 10h18M3 15h18M9 5v14M15 5v14', 'var(--a3)', 'var(--a3-ink)'],
+  ['quote', 'Alıntı', 'M7 7h4v4c0 3-1.5 5-4 6M15 7h4v4c0 3-1.5 5-4 6', 'var(--a2)', 'var(--a2-ink)'],
+  ['file', 'Dosya', 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6', 'var(--a3)', 'var(--a3-ink)'],
+  ['video', 'Video', 'M3 6h13v12H3zM16 10l5-3v10l-5-3', 'var(--a1)', 'var(--a1-ink)']
+];
+var CAP_ICON = {
+  s: { none: ['M3 7H25', ''], dot: ['M9 7H25', 'M2 7a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0'], arrow: ['M10 7H25', 'M2 7L11 2.5V11.5Z'] },
+  e: { none: ['M3 7H25', ''], dot: ['M3 7H19', 'M19 7a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0'], arrow: ['M3 7H18', 'M26 7L17 2.5V11.5Z'] }
+};
+var HELP = [
+  ['Ekle.', 'Alttaki araçlardan kart ekle. Bölge, çizim, tablo gibi diğerleri Daha fazla içinde.', 'Soldaki araçlardan kart ekle. Bölge, çizim, tablo gibi diğerleri Daha fazla içinde.', 'M12 5v14M5 12h14'],
+  ['Taşı.', 'Kartı her yerinden basılı tutup sürükle.', 'Kartı her yerinden tutup sürükle.', 'M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3'],
+  ['Düzenle.', 'Kartı seç, sonra bir kez daha dokunup yazmaya başla.', 'Kartı seç, sonra bir kez daha tıklayıp yazmaya başla.', 'M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4'],
+  ['Gezin.', 'Boş alanı sürükleyerek her yöne git, iki parmakla yakınlaştır.', 'Boş alanı sürükle ya da tekerlekle kaydır. Ctrl + tekerlek yakınlaştırır.', 'M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7'],
+  ['Bağla.', 'Kartın kenarındaki küçük noktalardan birini başka bir karta sürükle.', 'Kartın kenarındaki küçük noktalardan birini başka bir karta sürükle.', 'M5 19L19 5M14 5h5v5'],
+  ['Bağlantıyı düzenle.', 'Bağlantıya dokun: ortadaki noktayla eğ, uçlarını başka karta taşı, menüden ok ya da nokta seç.', 'Bağlantıya tıkla: ortadaki noktayla eğ, uçlarını başka karta taşı, menüden ok ya da nokta seç.', 'M4 18C8 6 16 18 20 6'],
+  ['Pano içinde pano.', 'Pano kartındaki Aç ile içine gir, üstteki Panolar ile listeye dön.', 'Pano kartına çift tıkla ya da Aç de. Üstteki Panolar ile listeye dön.', 'M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z']
+];
+var CAP_LABEL = { none: 'Uç yok', dot: 'Nokta', arrow: 'Ok' };
+function arw(a) { var o = Array.isArray(a) ? { from: a[0], to: a[1], s: 'none', e: 'arrow', dash: false } : a; if (!o.bend) o = Object.assign({}, o, { bend: { x: 0, y: 0 } }); return o; }
+function ctr(it) { return { x: it.x + it.w / 2, y: it.y + hOf(it) / 2 }; }
+// Bağlantı geometrisi: eğri, ortadaki tutamaçtan (h) geçen ikinci dereceden bir Bézier eğrisi
+function geom(A, B, bend) {
+  var ca = ctr(A), cb = ctr(B), mx = (ca.x + cb.x) / 2, my = (ca.y + cb.y) / 2;
+  var hx = mx + bend.x, hy = my + bend.y;
+  var p1 = edge({ x: A.x, y: A.y, w: A.w, h: hOf(A) }, hx, hy), p2 = edge({ x: B.x, y: B.y, w: B.w, h: hOf(B) }, hx, hy);
+  var cx = 2 * hx - (p1[0] + p2[0]) / 2, cy = 2 * hy - (p1[1] + p2[1]) / 2;
+  return { p1: p1, p2: p2, c: [cx, cy], h: [hx, hy], mid: [mx, my] };
+}
+var SEED = {
+  root: { title: 'Tüm panolar', arrows: [], items: [
+    { id: 'h1', type: 'heading', x: 60, y: 40, w: 460, text: 'ABN Panoları' },
+    { id: 'b1', type: 'board', x: 60, y: 130, w: 230, text: 'PaleMouth', board: 'pm', tint: 'a2' },
+    { id: 'b2', type: 'board', x: 320, y: 130, w: 230, text: 'Dedektif Antolojisi', board: 'dd', tint: 'a3' },
+    { id: 'b3', type: 'board', x: 580, y: 130, w: 230, text: 'ABN Genel', board: 'ab', tint: 'a1' },
+    { id: 'b4', type: 'board', x: 840, y: 130, w: 230, text: 'Gümrük Oyunu', board: 'gm', tint: 'surface' },
+    { id: 'n1', type: 'note', x: 60, y: 320, w: 320, text: 'Her projenin bir panosu var. Referans, taslak, hikâye akışı ne varsa buraya.', tint: 'surface' }
+  ] },
+  pm: { title: 'PaleMouth', arrows: [['pn2', 'pn3'], ['pn3', 'pn4'], ['pn4', 'pn5'], { from: 'pn4', to: 'pn6', s: 'dot', e: 'arrow', dash: true, bend: { x: -40, y: 50 } }], items: [
+    { id: 'pz1', type: 'zone', x: 670, y: 84, w: 820, h: 350, text: '', tint: 'a2' },
+    { id: 'ph1', type: 'heading', x: 60, y: 30, w: 300, text: 'Karakterler' },
+    { id: 'pi1', type: 'image', x: 60, y: 100, w: 280, text: 'Ece · yüz ifadeleri, 1. tur', art: 'face' },
+    { id: 'pn1', type: 'note', x: 60, y: 380, w: 280, text: 'Ana karakter sessiz ve gözlemci. Konuşmaktan çok bakıyor.', tint: 'a1' },
+    { id: 'pc1', type: 'color', x: 370, y: 100, w: 270, text: 'PaleMouth paleti', sw: ['#0E1F33', '#2A384C', '#BC4D4B', '#F0B7B8', '#EFEFEF'] },
+    { id: 'pt1', type: 'todo', x: 370, y: 300, w: 270, text: 'Demo için', todos: [{ t: 'Ana menü animasyonu', d: false }, { t: 'Kapı gıcırtısı sesi', d: true }, { t: '2. sahne arka planı', d: false }, { t: 'Fragman müziği', d: false }] },
+    { id: 'ph2', type: 'heading', x: 690, y: 30, w: 320, text: 'Hikâye akışı' },
+    { id: 'pn2', type: 'note', x: 690, y: 100, w: 220, text: '1 · Uyanış\nOyuncu boş bir evde uyanır.', tint: 'surface' },
+    { id: 'pn3', type: 'note', x: 970, y: 100, w: 220, text: '2 · Ayna\nYansıma bir saniye geç tepki veriyor.', tint: 'surface' },
+    { id: 'pn4', type: 'note', x: 1250, y: 100, w: 220, text: '3 · Kapı\nİlk seçim anı: aç ya da bekle.', tint: 'a2' },
+
+    { id: 'pn5', type: 'note', x: 1250, y: 300, w: 220, text: 'Kötü son\nKapıyı açarsan…', tint: 'a3' },
+    { id: 'pn6', type: 'note', x: 970, y: 300, w: 220, text: 'İyi son\nBeklersen sabah olur.', tint: 'surface' },
+    { id: 'pl1', type: 'link', x: 60, y: 530, w: 240, text: 'Ses referansları', url: 'youtube.com/playlist?list=ornek' },
+    { id: 'pb1', type: 'board', x: 690, y: 460, w: 240, text: 'Mekânlar', board: 'mk', tint: 'a3' },
+    { id: 'pi2', type: 'image', x: 970, y: 460, w: 280, text: 'Ev için ışık referansı', art: 'mood' }
+  ] },
+  mk: { title: 'Mekânlar', arrows: [], items: [
+    { id: 'mh1', type: 'heading', x: 60, y: 30, w: 300, text: 'Ev' },
+    { id: 'mi1', type: 'image', x: 60, y: 100, w: 300, text: 'Koridor ışığı', art: 'mood' },
+    { id: 'mn1', type: 'note', x: 400, y: 100, w: 260, text: '70’ler, dar koridorlar, sarı ışık. Duvar kâğıdı soluk.', tint: 'a1' },
+    { id: 'mn2', type: 'note', x: 400, y: 250, w: 260, text: 'Ayna odası: tek pencere, perdeler hep kapalı.', tint: 'surface' }
+  ] },
+  dd: { title: 'Dedektif Antolojisi', arrows: [['dn1', 'dc1']], items: [
+    { id: 'dh1', type: 'heading', x: 60, y: 30, w: 340, text: 'Dedektif Michael' },
+    { id: 'di1', type: 'image', x: 60, y: 100, w: 280, text: '70’ler İstanbul', art: 'mood' },
+    { id: 'dn1', type: 'note', x: 380, y: 100, w: 260, text: 'Alışkanlığı: kalem çevirmek. Sorguda ipucu olarak kullanılabilir.', tint: 'a2' },
+    { id: 'dc1', type: 'color', x: 380, y: 270, w: 270, text: 'Michael paleti', sw: ['#6B4E3D', '#C9A66B', '#2F3B3A', '#8C3B2E', '#E8D9B5'] },
+    { id: 'dh2', type: 'heading', x: 720, y: 30, w: 340, text: 'Dedektif Jessica' },
+    { id: 'dn2', type: 'note', x: 720, y: 100, w: 250, text: 'Henüz fikir aşamasında. Selin taslak yazıyor.', tint: 'a3' }
+  ] },
+  ab: { title: 'ABN Genel', arrows: [], items: [
+    { id: 'an1', type: 'note', x: 60, y: 60, w: 260, text: 'Kasım hedefi: PaleMouth demosu', tint: 'a1' },
+    { id: 'at1', type: 'todo', x: 360, y: 60, w: 270, text: 'Instagram planı', todos: [{ t: 'Haftalık süreç paylaşımı', d: false }, { t: 'Ekip tanıtım videosu', d: false }, { t: 'Logo yenileme', d: true }] },
+    { id: 'al1', type: 'link', x: 670, y: 60, w: 240, text: 'ABN Discord', url: 'discord.gg/ornek' }
+  ] },
+  gm: { title: 'Gümrük Oyunu', arrows: [], items: [
+    { id: 'gn1', type: 'note', x: 60, y: 60, w: 280, text: 'Şimdilik rafta. Fikirler kaybolmasın diye burada.', tint: 'surface' },
+    { id: 'gn2', type: 'note', x: 380, y: 60, w: 260, text: 'Pasaport kontrolüne gelen her yolcunun küçük bir hikâyesi olsun.', tint: 'a2' }
+  ] }
+};
+
+function lines(text, w) {
+  return String(text || '').split('\n').reduce((n, p) => n + Math.max(1, Math.ceil(p.length * 7.6 / Math.max(60, w - 28))), 0);
+}
+function hOf(it) {
+  if (it.type === 'heading') return 60;
+  if (it.type === 'note') return 22 + lines(it.text, it.w) * 22 + 22;
+  if (it.type === 'todo') return 22 + 30 + (it.todos || []).length * 32 + 52;
+  if (it.type === 'image') return 22 + ((it.src || it.art) ? 180 : 120) + 46;
+  if (it.type === 'color') return 22 + 28 + Math.ceil((it.sw || []).length / 5) * 62 + 50;
+  if (it.type === 'link') return 22 + 96;
+  if (it.type === 'board') return 22 + 104;
+  if (it.type === 'zone') return it.h || 300;
+  if (it.type === 'sketch') return 22 + 200 + 6 + 28 + 10;
+  if (it.type === 'table') return 22 + (it.rows || [[]]).length * 34 + 1 + 6 + 28 + 10;
+  if (it.type === 'quote') return 22 + 30 + quoteH(it) + 4 + 20 + 14;
+  if (it.type === 'file') return 22 + 52 + (it.size == null ? 8 + 44 : 0) + 12;
+  if (it.type === 'video') return 22 + 150 + 6 + 24 + 6 + 20 + 10;
+  return 120;
+}
+function quoteH(it) { return String(it.text || '').split('\n').reduce((n, p) => n + Math.max(1, Math.ceil(p.length * 8.4 / Math.max(60, it.w - 32))), 0) * 24 + 6; }
+var TRAIL_N = 12, TRAIL_FOLLOW = 0.38, TRAIL_RETRACT = 0.09, TRAIL_EXTRA = 80;
+function rrect(cx, cy, w, h) {
+  var r = Math.min(16, w / 2, h / 2), x0 = cx - w / 2, y0 = cy - h / 2, x1 = x0 + w, y1 = y0 + h;
+  return [[x0 + r, y0], [x1 - r, y0], [x1, y0 + r], [x1, y1 - r], [x1 - r, y1], [x0 + r, y1], [x0, y1 - r], [x0, y0 + r]];
+}
+function hull2(P) {
+  P = P.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  var cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  var lo = [], up = [];
+  P.forEach(p => { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); });
+  for (var i = P.length - 1; i >= 0; i--) { var p = P[i]; while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  return lo.slice(0, -1).concat(up.slice(0, -1));
+}
+var LIFE = 170;
+function buildComet(raw, now, maxW, gid, maxLen) {
+  var pts = [];
+  raw.forEach(p => { var l = pts[pts.length - 1]; if (!l || Math.hypot(p.x - l.x, p.y - l.y) > 1.5) pts.push({ x: p.x, y: p.y, t: p.t }); else l.t = p.t; });
+  if (pts.length < 2) return null;
+  var hd = pts[pts.length - 1], tl = pts[0];
+  for (var bk = pts.length - 2; bk >= 0; bk--) { if (Math.hypot(hd.x - pts[bk].x, hd.y - pts[bk].y) >= 30) { tl = pts[bk]; break; } }
+  var dl = Math.hypot(hd.x - tl.x, hd.y - tl.y) || 1;
+  var ext = Math.abs((hd.x - tl.x) / dl) * maxW.w / 2 + Math.abs((hd.y - tl.y) / dl) * maxW.h / 2;
+  maxLen = ext + maxLen;
+  var acc = 0, cut = 0;
+  for (var k = pts.length - 1; k > 0; k--) {
+    var seg = Math.hypot(pts[k].x - pts[k - 1].x, pts[k].y - pts[k - 1].y);
+    if (acc + seg > maxLen) {
+      var f = (maxLen - acc) / seg;
+      pts[k - 1] = { x: pts[k].x + (pts[k - 1].x - pts[k].x) * f, y: pts[k].y + (pts[k - 1].y - pts[k].y) * f, t: pts[k - 1].t };
+      cut = k - 1; break;
+    }
+    acc += seg;
+  }
+  pts = pts.slice(cut);
+  if (pts.length < 2) return null;
+  var n = pts.length;
+  if (Math.hypot(pts[n - 1].x - pts[0].x, pts[n - 1].y - pts[0].y) < 4) return null;
+  var cw = maxW.w, ch = maxW.h;
+  // Her örnek noktada kart şeklinde (köşeleri yuvarlatılmış) bir dikdörtgen; ardışık ikisinin zarfı yolu kesintisiz kaplar.
+  var dist = [0];
+  for (var q = 1; q < n; q++) dist.push(dist[q - 1] + Math.hypot(pts[q].x - pts[q - 1].x, pts[q].y - pts[q - 1].y));
+  var total = dist[n - 1], tailLen = Math.max(1, total - ext * 0.85);
+  // Küçük hareketlerde iz görünmez; kart uzaklaştıkça yavaşça belirir.
+  var vis = total - ext;
+  if (vis < 22) return null;
+  var op = Math.round(Math.min(1, (vis - 22) / 60) * 100) / 100;
+  var shapeAt = i => {
+    var age = Math.min(1, Math.max(0, (now - pts[i].t) / LIFE));
+    var fromHead = total - dist[i];
+    var u = Math.min(1, Math.max(0, (fromHead - ext * 0.85) / tailLen));
+    var sc = Math.max(0.03, Math.pow(1 - u, 1.7)) * (1 - 0.08 * age), w = cw * sc, h = ch * sc, r = Math.min(16, w / 2, h / 2);
+    var x0 = pts[i].x - w / 2, y0 = pts[i].y - h / 2, x1 = x0 + w, y1 = y0 + h;
+    return [[x0 + r, y0], [x1 - r, y0], [x1, y0 + r], [x1, y1 - r], [x1 - r, y1], [x0 + r, y1], [x0, y1 - r], [x0, y0 + r]];
+  };
+  var hull = P => {
+    P = P.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    var cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    var lo = [], up = [];
+    P.forEach(p => { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); });
+    P.slice().reverse().forEach(p => { while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); });
+    return lo.slice(0, -1).concat(up.slice(0, -1));
+  };
+  var shapes = pts.map((p, i) => shapeAt(i)), hulls = [];
+  for (var j = 0; j < n - 1; j++) hulls.push(hull(shapes[j].concat(shapes[j + 1])));
+  var all = [].concat.apply([], hulls), pad = 20;
+  var minx = Math.min.apply(null, all.map(p => p[0])) - pad, miny = Math.min.apply(null, all.map(p => p[1])) - pad;
+  var maxx = Math.max.apply(null, all.map(p => p[0])) + pad, maxy = Math.max.apply(null, all.map(p => p[1])) + pad;
+  var fmt = p => (Math.round((p[0] - minx) * 10) / 10) + ' ' + (Math.round((p[1] - miny) * 10) / 10);
+  var d = hulls.map(hp => 'M' + hp.map(fmt).join('L') + 'Z').join('');
+  return { op: op, left: minx, top: miny, w: maxx - minx, h: maxy - miny, gid: gid, x1: pts[0].x - minx, y1: pts[0].y - miny, x2: pts[n - 1].x - minx, y2: pts[n - 1].y - miny, d: d };
+}
+function edge(r, tx, ty) {
+  var cx = r.x + r.w / 2, cy = r.y + r.h / 2, dx = tx - cx, dy = ty - cy;
+  if (!dx && !dy) return [cx, cy];
+  var sx = (r.w / 2 + 8) / Math.abs(dx || 1e-6), sy = (r.h / 2 + 8) / Math.abs(dy || 1e-6), k = Math.min(sx, sy);
+  return [cx + dx * k, cy + dy * k];
+}
+
+function isListStart(id) { return !id || id === 'list' || id === 'root' || !SEED[id]; }
+// Liste kartındaki küçük önizleme: panodaki kartları minik dikdörtgenlere indirger
+var PW = 300, PH = 120;
+function miniMap(board) {
+  var items = (board.items || []).filter(it => it.type !== 'heading' || it.text);
+  if (!items.length) return [];
+  var x0 = Math.min.apply(null, items.map(i => i.x)), y0 = Math.min.apply(null, items.map(i => i.y));
+  var x1 = Math.max.apply(null, items.map(i => i.x + i.w)), y1 = Math.max.apply(null, items.map(i => i.y + hOf(i)));
+  var pad = 14, k = Math.min((PW - pad * 2) / Math.max(1, x1 - x0), (PH - pad * 2) / Math.max(1, y1 - y0), 0.5);
+  var ox = (PW - (x1 - x0) * k) / 2, oy = (PH - (y1 - y0) * k) / 2;
+  var pc = (v, d) => (Math.round(v / d * 1000) / 10) + '%';
+  var order = items.slice().sort((a, b) => (a.type === 'zone' ? 0 : 1) - (b.type === 'zone' ? 0 : 1));
+  return order.map(it => {
+    var h = it.type === 'heading' ? 5 / k : hOf(it), t = TINTS[it.tint];
+    var bg = 'var(--surface)', op = 0.95, sh = '0 1px 2px rgba(0,0,0,0.12)';
+    if (it.type === 'heading') { bg = 'var(--text)'; op = 0.55; sh = 'none'; }
+    else if (it.type === 'zone') { bg = it.tint === 'surface' ? 'var(--text-3)' : (t || TINTS.a2)[0]; op = 0.35; sh = 'none'; }
+    else if ((it.type === 'note' || it.type === 'board') && t && it.tint !== 'surface') bg = t[0];
+    else if (it.type === 'image') bg = 'var(--a3)';
+    return { x: pc(ox + (it.x - x0) * k, PW), y: pc(oy + (it.y - y0) * k, PH), w: pc(Math.max(4, it.w * k), PW), h: pc(Math.max(3, h * k), PH), r: it.type === 'heading' ? '2px' : '4px', bg: bg, op: op, sh: sh };
+  });
+}
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { boards: JSON.parse(JSON.stringify(SEED)), path: this.pathTo(props.startBoard || 'root', SEED), view: isListStart(props.startBoard) ? 'list' : 'canvas', creating: false, newName: '', newTint: 'a2', sel: null, selArrow: null, mode: null, from: null, zoom: props.compact ? 0.6 : 1, camX: 10, camY: 10, panning: false, dragging: null, drafts: {}, picks: {} };
+    this.onMove = this.onMove.bind(this);
+    this.onUp = this.onUp.bind(this);
+    this.onPanMove = this.onPanMove.bind(this);
+    this.onPanUp = this.onPanUp.bind(this);
+    this.onWheel = this.onWheel.bind(this);
+    this.ptrs = {};
+    this.uid = 'comet-' + Math.random().toString(36).slice(2, 8);
+    this.trailTick = this.trailTick.bind(this);
+    ['onLinkMove', 'onLinkUp', 'onRzMove', 'onRzUp', 'onDrawMove', 'onDrawUp', 'onBendMove', 'onBendUp'].forEach(k => { this[k] = this[k].bind(this); });
+    // Bağlama, eğme, boyutlandırma ve çizim de kare başına bir kez çizilir; bırakırken son konum işlenir
+    ['onLinkMove', 'onRzMove', 'onBendMove'].forEach(k => { var f = this[k]; this[k] = e => this.frame(k, () => f(e)); });
+    ['onLinkUp', 'onRzUp', 'onDrawUp', 'onBendUp'].forEach(k => { var f = this[k]; this[k] = e => { this.flushFrame(); f(e); }; });
+  }
+  componentDidUpdate(prev) {
+    if (prev.startBoard !== this.props.startBoard) this.setState({ path: this.pathTo(this.props.startBoard || 'root', this.state.boards), view: isListStart(this.props.startBoard) ? 'list' : 'canvas', creating: false, sel: null, selArrow: null, mode: null, from: null, camX: 10, camY: 10 });
+  }
+  componentWillUnmount() {
+    ['onLinkMove', 'onRzMove', 'onDrawMove', 'onBendMove'].forEach(k => window.removeEventListener('pointermove', this[k]));
+    ['onLinkUp', 'onRzUp', 'onDrawUp', 'onBendUp'].forEach(k => window.removeEventListener('pointerup', this[k]));
+    if (this._raf) cancelAnimationFrame(this._raf);
+    if (this._fr) cancelAnimationFrame(this._fr);
+    clearTimeout(this._camT); clearTimeout(this._swT);
+    clearTimeout(this._dropT);
+    window.removeEventListener('pointermove', this.onMove); window.removeEventListener('pointerup', this.onUp);
+    window.removeEventListener('pointermove', this.onPanMove); window.removeEventListener('pointerup', this.onPanUp); window.removeEventListener('pointercancel', this.onPanUp);
+    if (this.vp) this.vp.removeEventListener('wheel', this.onWheel);
+  }
+  setVp(el) {
+    if (this.vp === el) return;
+    if (this.vp) this.vp.removeEventListener('wheel', this.onWheel);
+    this.vp = el;
+    if (el) el.addEventListener('wheel', this.onWheel, { passive: false });
+  }
+  clampZ(z) { return Math.max(0.25, Math.min(2, z)); }
+  zoomAt(nz, px, py) {
+    var s = this.state, z = s.zoom; nz = this.clampZ(nz);
+    var wx = (px - s.camX) / z, wy = (py - s.camY) / z;
+    this.setState({ zoom: nz, camX: px - wx * nz, camY: py - wy * nz });
+  }
+  onWheel(e) {
+    e.preventDefault();
+    var r = this.vp.getBoundingClientRect();
+    if (this.state.camAnim) this.setState({ camAnim: false });
+    var w = this._wh = this._wh || { dx: 0, dy: 0, dz: 0 };
+    if (e.ctrlKey || e.metaKey) { w.dz += e.deltaY; w.px = e.clientX - r.left; w.py = e.clientY - r.top; }
+    else { w.dx += e.deltaX; w.dy += e.deltaY; }
+    this.frame('wheel', () => {
+      var q = this._wh; this._wh = null; if (!q) return;
+      if (q.dz) this.zoomAt(this.state.zoom * Math.exp(-q.dz * 0.01), q.px, q.py);
+      if (q.dx || q.dy) this.setState({ camX: this.state.camX - q.dx, camY: this.state.camY - q.dy });
+    });
+  }
+  bgDown(e) {
+    var t = e.target;
+    if (t.closest && (t.closest('.bcard') || t.closest('.ahit') || t.closest('.bh'))) return;
+    // Bir parmak karttayken ikinci parmak boş alana değerse: kart bırakılır, iki parmakla yakınlaştırmaya geçilir
+    if (this.drag && this.drag.pid !== e.pointerId) this.dragToPinch();
+    this.addPtr(e);
+  }
+  // Kart sürüklemesini iptal eder (kart yerine döner) ve o parmağı yakınlaştırma için devralır
+  dragToPinch() {
+    var d = this.drag; if (!d) return;
+    this.drag = null;
+    if (this._fq) delete this._fq.drag;
+    window.removeEventListener('pointermove', this.onMove);
+    window.removeEventListener('pointerup', this.onUp);
+    if (d.started) this.setItem(d.id, { x: d.ox, y: d.oy });
+    this.setState({ dragging: null, drop: null, editing: null });
+    this.addPtr({ pointerId: d.pid, clientX: d.cx != null ? d.cx : d.sx, clientY: d.cy != null ? d.cy : d.sy });
+  }
+  addPtr(e) {
+    this.ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (this.state.camAnim) this.setState({ camAnim: false });
+    var ids = Object.keys(this.ptrs);
+    if (ids.length === 1) {
+      this.pan = { sx: e.clientX, sy: e.clientY, ox: this.state.camX, oy: this.state.camY, moved: false };
+      window.addEventListener('pointermove', this.onPanMove);
+      window.addEventListener('pointerup', this.onPanUp);
+      window.addEventListener('pointercancel', this.onPanUp);
+      this.setState({ panning: true });
+    } else if (ids.length === 2) {
+      var a = this.ptrs[ids[0]], b = this.ptrs[ids[1]], r = this.vp.getBoundingClientRect();
+      var mx = (a.x + b.x) / 2 - r.left, my = (a.y + b.y) / 2 - r.top;
+      this.pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: this.state.zoom, wx: (mx - this.state.camX) / this.state.zoom, wy: (my - this.state.camY) / this.state.zoom };
+      if (this.pan) this.pan.moved = true;
+    }
+  }
+  onPanMove(e) {
+    if (!this.ptrs[e.pointerId]) return;
+    this.ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+    var ids = Object.keys(this.ptrs);
+    if (ids.length >= 2 && this.pinch) {
+      var a = this.ptrs[ids[0]], b = this.ptrs[ids[1]], r = this.vp.getBoundingClientRect();
+      var nz = this.clampZ(this.pinch.z0 * Math.hypot(a.x - b.x, a.y - b.y) / this.pinch.d0);
+      var mx = (a.x + b.x) / 2 - r.left, my = (a.y + b.y) / 2 - r.top;
+      var pz = { zoom: nz, camX: mx - this.pinch.wx * nz, camY: my - this.pinch.wy * nz };
+      this.frame('cam', () => this.setState(pz));
+      return;
+    }
+    var p = this.pan; if (!p) return;
+    var dx = e.clientX - p.sx, dy = e.clientY - p.sy;
+    if (Math.abs(dx) + Math.abs(dy) > 3) p.moved = true;
+    var pc = { camX: p.ox + dx, camY: p.oy + dy };
+    this.frame('cam', () => this.setState(pc));
+  }
+  onPanUp(e) {
+    this.flushFrame();
+    delete this.ptrs[e.pointerId];
+    var ids = Object.keys(this.ptrs);
+    if (ids.length < 2) this.pinch = null;
+    if (ids.length === 1) { var q = this.ptrs[ids[0]]; this.pan = { sx: q.x, sy: q.y, ox: this.state.camX, oy: this.state.camY, moved: true }; return; }
+    if (ids.length === 0) {
+      var moved = this.pan && this.pan.moved;
+      this.pan = null;
+      window.removeEventListener('pointermove', this.onPanMove);
+      window.removeEventListener('pointerup', this.onPanUp);
+      window.removeEventListener('pointercancel', this.onPanUp);
+      var patch = { panning: false };
+      if (!moved && (this.state.sel || this.state.selArrow !== null || this.state.editing || this.state.moreOpen || this.state.helpOpen)) { patch.sel = null; patch.selArrow = null; patch.editing = null; patch.moreOpen = false; patch.helpOpen = false; }
+      this.setState(patch);
+    }
+  }
+  fit() {
+    var items = this.state.boards[this.cur()].items, vp = this.vp;
+    if (!vp) return;
+    this.animCam();
+    if (!items.length) { this.setState({ zoom: 1, camX: 10, camY: 10 }); return; }
+    var x0 = Math.min.apply(null, items.map(i => i.x)), y0 = Math.min.apply(null, items.map(i => i.y));
+    var x1 = Math.max.apply(null, items.map(i => i.x + i.w)), y1 = Math.max.apply(null, items.map(i => i.y + hOf(i)));
+    var pad = 40, z = this.clampZ(Math.min((vp.clientWidth - pad * 2) / (x1 - x0), (vp.clientHeight - pad * 2) / (y1 - y0), 1.2));
+    this.setState({ zoom: z, camX: (vp.clientWidth - (x1 - x0) * z) / 2 - x0 * z, camY: (vp.clientHeight - (y1 - y0) * z) / 2 - y0 * z });
+  }
+  pathTo(id, boards) {
+    var parentOf = {};
+    Object.keys(boards).forEach(b => boards[b].items.forEach(it => { if (it.type === 'board' && it.board) parentOf[it.board] = b; }));
+    var path = [id], guard = 0;
+    while (path[0] !== 'root' && parentOf[path[0]] && guard++ < 10) path.unshift(parentOf[path[0]]);
+    if (path[0] !== 'root') path.unshift('root');
+    return boards[id] ? path : ['root'];
+  }
+  cur() { return this.state.path[this.state.path.length - 1]; }
+  setBoard(patch) {
+    var id = this.cur(), b = Object.assign({}, this.state.boards); b[id] = Object.assign({}, b[id], patch);
+    this.setState({ boards: b });
+  }
+  setItem(itemId, patch) {
+    var items = this.state.boards[this.cur()].items.map(it => it.id === itemId ? Object.assign({}, it, patch) : it);
+    this.setBoard({ items: items });
+  }
+  item(itemId) { return this.state.boards[this.cur()].items.find(it => it.id === itemId); }
+
+  pick(itemId) {
+    var s = this.state;
+    if (s.mode === 'arrow') {
+      if (!s.from) { this.setState({ from: itemId, sel: null }); return; }
+      if (s.from !== itemId) {
+        var arrows = s.boards[this.cur()].arrows.concat([{ from: s.from, to: itemId, s: 'none', e: 'arrow', dash: false }]);
+        this.setBoard({ arrows: arrows });
+      }
+      this.setState({ mode: null, from: null });
+      return;
+    }
+    if (s.sel !== itemId || s.selArrow !== null) this.setState({ sel: itemId, selArrow: null });
+  }
+  down(itemId, e) {
+    var s = this.state, t = e.target;
+    // Ekranda zaten bir parmak varsa bu dokunuş kartı oynatmaz, iki parmakla yakınlaştırmaya katılır
+    if (Object.keys(this.ptrs).length) { e.preventDefault(); this.addPtr(e); return; }
+    if (this.drag && this.drag.pid !== e.pointerId) { e.preventDefault(); this.dragToPinch(); this.addPtr(e); return; }
+    if (s.mode === 'arrow') { this.pick(itemId); return; }
+    if (t.closest && t.closest('.always')) {
+      if (s.sel !== itemId) this.setState({ sel: itemId, selArrow: null, editing: null });
+      return;
+    }
+    if (s.editing === itemId && t.closest && t.closest('input, textarea, select')) return;
+    // Buton, bağlantı ve etiketler de sürüklemeyi başlatır; hareket olmazsa normal tıklama çalışır
+    var soft = !!(t.closest && t.closest('button, a, label, select'));
+    if (!soft) e.preventDefault();
+    var it = this.item(itemId);
+    this.drag = { id: itemId, sx: e.clientX, sy: e.clientY, ox: it.x, oy: it.y, pid: e.pointerId, started: false, soft: soft, wasSel: s.sel === itemId && s.editing !== itemId };
+    if (s.sel !== itemId || s.selArrow !== null || (s.editing && s.editing !== itemId)) this.setState({ sel: itemId, selArrow: null, editing: s.editing === itemId ? itemId : null });
+    window.addEventListener('pointermove', this.onMove);
+    window.addEventListener('pointerup', this.onUp);
+  }
+  grab(itemId, e) {
+    e.preventDefault(); e.stopPropagation();
+    if (this.state.mode === 'arrow') { this.pick(itemId); return; }
+    var it = this.item(itemId);
+    this.drag = { id: itemId, sx: e.clientX, sy: e.clientY, ox: it.x, oy: it.y };
+    this.drag.started = true;
+    this.setState({ sel: itemId, selArrow: null, dragging: itemId });
+    window.addEventListener('pointermove', this.onMove);
+    window.addEventListener('pointerup', this.onUp);
+    this.startTrail(itemId);
+  }
+  onMove(e) {
+    var d = this.drag; if (!d || (d.pid != null && e.pointerId != null && e.pointerId !== d.pid)) return;
+    if (d.started === false) {
+      if (Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < (d.soft ? 6 : 4)) return;
+      d.started = true;
+      if (d.soft) this.swallowClick();
+      try { var sel0 = window.getSelection && window.getSelection(); if (sel0) sel0.removeAllRanges(); } catch (x) {}
+      this.setState({ dragging: d.id, editing: null });
+      this.startTrail(d.id);
+    }
+    d.cx = e.clientX; d.cy = e.clientY;
+    this.frame('drag', () => {
+      var dd = this.drag; if (!dd || dd.cx == null) return;
+      var z = this.state.zoom, it = this.item(dd.id); if (!it) return;
+      var nx = Math.round(dd.ox + (dd.cx - dd.sx) / z), ny = Math.round(dd.oy + (dd.cy - dd.sy) / z);
+      if (nx !== it.x || ny !== it.y) this.setItem(dd.id, { x: nx, y: ny });
+    });
+  }
+  // Aynı karede gelen olayları tek çizime indirger
+  frame(key, fn) {
+    this._fq = this._fq || {};
+    var first = !Object.keys(this._fq).length;
+    this._fq[key] = fn;
+    if (first) this._fr = requestAnimationFrame(() => { var q = this._fq; this._fq = {}; this._fr = null; Object.keys(q).forEach(k => q[k]()); });
+  }
+  flushFrame() { if (this._fr) { cancelAnimationFrame(this._fr); this._fr = null; } var q = this._fq || {}; this._fq = {}; Object.keys(q).forEach(k => q[k]()); }
+  swallowClick() {
+    var h = ev => { ev.stopPropagation(); ev.preventDefault(); window.removeEventListener('click', h, true); };
+    window.addEventListener('click', h, true);
+    clearTimeout(this._swT); this._swT = setTimeout(() => window.removeEventListener('click', h, true), 400);
+  }
+  onUp(e) {
+    if (this.drag && this.drag.pid != null && e && e.pointerId != null && e.pointerId !== this.drag.pid) return;
+    this.flushFrame();
+    var d = this.drag;
+    this.drag = null;
+    window.removeEventListener('pointermove', this.onMove);
+    window.removeEventListener('pointerup', this.onUp);
+    if (d && d.started === false) {
+      if (d.wasSel && !d.soft) {
+        this.setState({ editing: d.id });
+        setTimeout(() => { var el = document.getElementById('f-' + d.id); if (el) { el.focus(); try { var L = el.value.length; el.setSelectionRange(L, L); } catch (x) {} } }, 30);
+      }
+      return;
+    }
+    var it = d ? this.item(d.id) : null;
+    var moved = it && Math.hypot(it.x - d.ox, it.y - d.oy) > 40;
+    this.setState({ dragging: null, drop: null });
+    if (moved) {
+      var drop = { x: it.x - 4, y: it.y - 4, w: it.w + 8, h: hOf(it) + 8 };
+      requestAnimationFrame(() => this.setState({ drop: drop }));
+      clearTimeout(this._dropT);
+      this._dropT = setTimeout(() => this.setState({ drop: null }), 700);
+    }
+  }
+  // İz: kartın merkezini yayla takip eden nokta zinciri. Panoyu yeniden çizmeden doğrudan SVG'ye yazılır.
+  startTrail(id) {
+    var it = this.item(id); if (!it) return;
+    var c = { x: it.x + it.w / 2, y: it.y + hOf(it) / 2 };
+    this.tid = id;
+    this.tp = [];
+    for (var i = 0; i < TRAIL_N; i++) this.tp.push({ x: c.x, y: c.y });
+    this.lastT = performance.now();
+    this.tShown = false; this.tOp = 0;
+    if (!this._raf) this._raf = requestAnimationFrame(this.trailTick);
+  }
+  trailTick(now) {
+    var it = this.item(this.tid), tp = this.tp;
+    if (!it || !tp || !this.tPath) { this._raf = null; this.hideTrail(); return; }
+    var dt = Math.min(48, Math.max(1, now - (this.lastT || now))); this.lastT = now;
+    var w = it.w, h = hOf(it);
+    var nx0 = it.x + w / 2, ny0 = it.y + h / 2, headMoved = Math.hypot(nx0 - tp[0].x, ny0 - tp[0].y);
+    tp[0].x = nx0; tp[0].y = ny0;
+    // Kare hızından bağımsız yumuşak takip; kart durunca iz daha yavaş, görünür şekilde kartın içine çekilir
+    var moving = this.drag && headMoved > 0.6;
+    if (moving) {
+      var f = 1 - Math.pow(1 - TRAIL_FOLLOW, dt / 16.7);
+      for (var i = 1; i < tp.length; i++) { tp[i].x += (tp[i - 1].x - tp[i].x) * f; tp[i].y += (tp[i - 1].y - tp[i].y) * f; }
+    } else {
+      // Durunca bütün kuyruk şeklini koruyarak kartın merkezine doğru kayar
+      var g = 1 - Math.pow(1 - TRAIL_RETRACT, dt / 16.7);
+      for (var i2 = 1; i2 < tp.length; i2++) { tp[i2].x += (tp[0].x - tp[i2].x) * g; tp[i2].y += (tp[0].y - tp[i2].y) * g; }
+    }
+    // Yön ve kartın o yöndeki yarı boyu
+    var tail = tp[tp.length - 1], dx = tp[0].x - tail.x, dy = tp[0].y - tail.y, dl = Math.hypot(dx, dy);
+    var ext = dl > 0.01 ? Math.abs(dx / dl) * w / 2 + Math.abs(dy / dl) * h / 2 : Math.min(w, h) / 2;
+    // Uzunluk sınırı
+    var maxLen = ext + TRAIL_EXTRA, acc = 0;
+    for (var j = 1; j < tp.length; j++) {
+      var sx = tp[j].x - tp[j - 1].x, sy = tp[j].y - tp[j - 1].y, sl = Math.hypot(sx, sy);
+      if (acc + sl > maxLen && sl > 0) { var k = Math.max(0, (maxLen - acc) / sl); tp[j].x = tp[j - 1].x + sx * k; tp[j].y = tp[j - 1].y + sy * k; sl = Math.max(0, maxLen - acc); }
+      acc += sl;
+    }
+    var vis = acc - ext;
+    if (!this.drag && acc < 1.5) { this._raf = null; this.hideTrail(); return; }
+    // Küçük hareketlerde hiç görünmez; bir kez göründükten sonra solmaz, kartın içine girerek kaybolur.
+    if (vis > 28) this.tShown = true;
+    this.tOp = this.tShown ? Math.min(1, (this.tOp || 0) + dt / 120) : 0;
+    var op = this.tOp;
+    if (op < 0.01 || vis <= 0) { this.tPath.style.opacity = '0'; this._raf = requestAnimationFrame(this.trailTick); return; }
+    // Şekiller: kart boyunda başlar, kartın kenarından sonra sivrilerek incelir
+    var dist = 0, shapes = [];
+    for (var q = 0; q < tp.length; q++) {
+      if (q > 0) dist += Math.hypot(tp[q].x - tp[q - 1].x, tp[q].y - tp[q - 1].y);
+      var u = Math.min(1, Math.max(0, (dist - ext * 0.85) / Math.max(1, acc - ext * 0.85)));
+      var sc = Math.max(0.03, Math.pow(1 - u, 1.6));
+      shapes.push(rrect(tp[q].x, tp[q].y, w * sc, h * sc));
+    }
+    var d = '';
+    for (var m = 0; m < shapes.length - 1; m++) {
+      var hp = hull2(shapes[m].concat(shapes[m + 1]));
+      d += 'M' + hp.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L') + 'Z';
+    }
+    this.tPath.setAttribute('d', d);
+    this.tPath.style.opacity = op.toFixed(3);
+    if (this.tGrad) { this.tGrad.setAttribute('x1', tail.x.toFixed(1)); this.tGrad.setAttribute('y1', tail.y.toFixed(1)); this.tGrad.setAttribute('x2', tp[0].x.toFixed(1)); this.tGrad.setAttribute('y2', tp[0].y.toFixed(1)); }
+    if (this.tSvg) this.tSvg.style.display = 'block';
+    this._raf = requestAnimationFrame(this.trailTick);
+  }
+  hideTrail() {
+    if (this.tSvg) this.tSvg.style.display = 'none';
+    if (this.tPath) { this.tPath.style.opacity = '0'; this.tPath.setAttribute('d', 'M0 0'); }
+  }
+  spot(w) {
+    var vp = this.vp, s = this.state, z = s.zoom, n = s.boards[this.cur()].items.length;
+    var x = vp ? (vp.clientWidth / 2 - s.camX) / z - w / 2 : 120;
+    var y = vp ? (vp.clientHeight / 3 - s.camY) / z : 120;
+    return { x: Math.round(x + (n % 4) * 18), y: Math.round(y + (n % 4) * 18) };
+  }
+  add(type) {
+    if (type === 'arrow') { this.setState({ mode: this.state.mode === 'arrow' ? null : 'arrow', from: null, sel: null, selArrow: null }); return; }
+    var id = type[0] + Date.now().toString(36);
+    var base = {
+      note: { w: 240, text: '', tint: 'surface' }, todo: { w: 260, text: 'Yapılacaklar', todos: [] }, image: { w: 260, text: '' },
+      color: { w: 270, text: 'Yeni palet', sw: ['#2E2F73', '#6366B0', '#A094C8', '#EBCFE5'] }, link: { w: 240, text: 'Yeni link', url: '' },
+      heading: { w: 320, text: 'Başlık' }, board: { w: 230, text: 'Yeni pano', tint: 'a1' },
+      zone: { w: 460, h: 320, text: 'Yeni bölge', tint: 'a2' }, sketch: { w: 280, text: '', strokes: [] },
+      table: { w: 320, text: '', rows: [['Başlık', 'Başlık', 'Başlık'], ['', '', ''], ['', '', '']] },
+      quote: { w: 280, text: 'Buraya bir alıntı yaz.', author: '' }, file: { w: 260, text: 'Dosya' }, video: { w: 280, text: 'Video', url: '' }
+    }[type];
+    var it = Object.assign({ id: id, type: type }, JSON.parse(JSON.stringify(base)), this.spot(base.w));
+    var boards = Object.assign({}, this.state.boards);
+    if (type === 'board') { var bid = 'p' + Date.now().toString(36); boards[bid] = { title: 'Yeni pano', items: [], arrows: [] }; it.board = bid; }
+    var cid = this.cur();
+    boards[cid] = Object.assign({}, boards[cid], { items: type === 'zone' ? [it].concat(boards[cid].items) : boards[cid].items.concat([it]) });
+    this.setState({ boards: boards, sel: id, selArrow: null, mode: null, from: null, moreOpen: false });
+  }
+  del() {
+    var s = this.state, b = s.boards[this.cur()];
+    if (s.selArrow !== null) { this.setBoard({ arrows: b.arrows.filter((a, i) => i !== s.selArrow) }); this.setState({ selArrow: null }); return; }
+    if (!s.sel) return;
+    this.setBoard({ items: b.items.filter(it => it.id !== s.sel), arrows: b.arrows.filter(a => { var o = arw(a); return o.from !== s.sel && o.to !== s.sel; }) });
+    this.setState({ sel: null });
+  }
+  setArrow(i, patch) {
+    var b = this.state.boards[this.cur()];
+    this.setBoard({ arrows: b.arrows.map((a, j) => j === i ? Object.assign({}, arw(a), patch) : a) });
+  }
+  toWorld(e) {
+    var r = this.vp.getBoundingClientRect(), s = this.state;
+    return { x: (e.clientX - r.left - s.camX) / s.zoom, y: (e.clientY - r.top - s.camY) / s.zoom };
+  }
+  linkLine(id, p) {
+    var it = this.item(id), q = edge({ x: it.x, y: it.y, w: it.w, h: hOf(it) }, p.x, p.y);
+    return { x1: q[0], y1: q[1], x2: p.x, y2: p.y };
+  }
+  hitCard(p, exclude) {
+    var items = this.state.boards[this.cur()].items;
+    var inside = it => p.x >= it.x - 6 && p.x <= it.x + it.w + 6 && p.y >= it.y - 6 && p.y <= it.y + hOf(it) + 6;
+    var cands = items.filter(it => it.id !== exclude && inside(it));
+    return cands.filter(it => it.type !== 'zone').pop() || cands.pop() || null;
+  }
+  startLink(fromId, e, reconn) {
+    this.linking = { from: fromId, reconn: reconn || null };
+    window.addEventListener('pointermove', this.onLinkMove);
+    window.addEventListener('pointerup', this.onLinkUp);
+    this.setState({ linkTemp: this.linkLine(fromId, this.toWorld(e)), linkHover: null, moreOpen: false });
+  }
+  // Başka bir parmak zaten ekrandaysa tutamaçlar devreye girmez, dokunuş yakınlaştırmaya katılır
+  multiTouch(e) {
+    if (!Object.keys(this.ptrs).length && !this.drag) return false;
+    e.stopPropagation(); e.preventDefault();
+    if (this.drag && this.drag.pid !== e.pointerId) this.dragToPinch();
+    this.addPtr(e);
+    return true;
+  }
+  linkDown(id, e) { if (this.multiTouch(e)) return; e.stopPropagation(); e.preventDefault(); this.startLink(id, e, null); }
+  onLinkMove(e) {
+    if (!this.linking) return;
+    var p = this.toWorld(e), hit = this.hitCard(p, this.linking.from);
+    this.setState({ linkTemp: this.linkLine(this.linking.from, p), linkHover: hit ? hit.id : null });
+  }
+  onLinkUp(e) {
+    var L = this.linking; this.linking = null;
+    window.removeEventListener('pointermove', this.onLinkMove);
+    window.removeEventListener('pointerup', this.onLinkUp);
+    if (!L) return;
+    var target = this.hitCard(this.toWorld(e), L.from);
+    if (L.reconn) {
+      if (target) { var p = {}; p[L.reconn.which] = target.id; this.setArrow(L.reconn.i, p); }
+      this.setState({ linkTemp: null, linkHover: null, selArrow: L.reconn.i });
+      return;
+    }
+    if (target) {
+      var arrows = this.state.boards[this.cur()].arrows.concat([{ from: L.from, to: target.id, s: 'none', e: 'arrow', dash: false, bend: { x: 0, y: 0 } }]);
+      this.setBoard({ arrows: arrows });
+      this.setState({ linkTemp: null, linkHover: null, sel: null, selArrow: arrows.length - 1 });
+    } else this.setState({ linkTemp: null, linkHover: null });
+  }
+  endDown(which, e) {
+    if (this.multiTouch(e)) return;
+    e.stopPropagation(); e.preventDefault();
+    var i = this.state.selArrow, a = arw(this.state.boards[this.cur()].arrows[i]);
+    var fixed = which === 'from' ? a.to : a.from;
+    this.startLink(fixed, e, { i: i, which: which });
+  }
+  bendDown(e) {
+    if (this.multiTouch(e)) return;
+    e.stopPropagation(); e.preventDefault();
+    this.bending = { i: this.state.selArrow };
+    window.addEventListener('pointermove', this.onBendMove);
+    window.addEventListener('pointerup', this.onBendUp);
+  }
+  onBendMove(e) {
+    if (!this.bending) return;
+    var i = this.bending.i, b = this.state.boards[this.cur()], a = arw(b.arrows[i]);
+    var A = b.items.find(x => x.id === a.from), B = b.items.find(x => x.id === a.to);
+    if (!A || !B) return;
+    var ca = ctr(A), cb = ctr(B), p = this.toWorld(e);
+    var bx = Math.round(p.x - (ca.x + cb.x) / 2), by = Math.round(p.y - (ca.y + cb.y) / 2);
+    if (Math.hypot(bx, by) < 10) { bx = 0; by = 0; }
+    this.setArrow(i, { bend: { x: bx, y: by } });
+  }
+  onBendUp() { this.bending = null; window.removeEventListener('pointermove', this.onBendMove); window.removeEventListener('pointerup', this.onBendUp); }
+  resizeDown(id, e) {
+    if (this.multiTouch(e)) return;
+    e.stopPropagation(); e.preventDefault();
+    var it = this.item(id);
+    this.rz = { id: id, sx: e.clientX, sy: e.clientY, ow: it.w, oh: it.h || 300 };
+    this.setState({ sel: id, selArrow: null });
+    window.addEventListener('pointermove', this.onRzMove);
+    window.addEventListener('pointerup', this.onRzUp);
+  }
+  onRzMove(e) {
+    var r = this.rz; if (!r) return;
+    var z = this.state.zoom;
+    this.setItem(r.id, { w: Math.max(220, Math.round(r.ow + (e.clientX - r.sx) / z)), h: Math.max(140, Math.round(r.oh + (e.clientY - r.sy) / z)) });
+  }
+  onRzUp() { this.rz = null; window.removeEventListener('pointermove', this.onRzMove); window.removeEventListener('pointerup', this.onRzUp); }
+  drawPt(e) {
+    var d = this.drawing, it = this.item(d.id), r = d.el.getBoundingClientRect();
+    return [Math.round((e.clientX - r.left) * (it.w - 20) / r.width * 10) / 10, Math.round((e.clientY - r.top) * 200 / r.height * 10) / 10];
+  }
+  drawDown(id, e) {
+    if (this.multiTouch(e)) return;
+    e.stopPropagation(); e.preventDefault();
+    this.drawing = { id: id, el: e.currentTarget };
+    var it = this.item(id);
+    this.setItem(id, { strokes: (it.strokes || []).concat([[this.drawPt(e)]]) });
+    window.addEventListener('pointermove', this.onDrawMove);
+    window.addEventListener('pointerup', this.onDrawUp);
+  }
+  onDrawMove(e) {
+    if (!this.drawing) return;
+    var it = this.item(this.drawing.id), st = (it.strokes || []).slice(), last = st[st.length - 1].slice(), p = this.drawPt(e), q = last[last.length - 1];
+    if (Math.hypot(p[0] - q[0], p[1] - q[1]) < 1.5) return;
+    last.push(p); st[st.length - 1] = last;
+    this.setItem(it.id, { strokes: st });
+  }
+  onDrawUp() { this.drawing = null; window.removeEventListener('pointermove', this.onDrawMove); window.removeEventListener('pointerup', this.onDrawUp); }
+  openBoard(bid) {
+    var boards = this.state.boards;
+    if (!boards[bid]) return;
+    var item = boards[this.cur()].items.find(it => it.board === bid);
+    if (item && boards[bid].title !== item.text) { var b2 = Object.assign({}, boards); b2[bid] = Object.assign({}, b2[bid], { title: item.text }); this.setState({ boards: b2 }); }
+    this.setState({ path: this.state.path.concat([bid]), sel: null, selArrow: null, mode: null, from: null, camX: 10, camY: 10 });
+  }
+  openFromList(bid, boards) {
+    this.setState({ view: 'canvas', path: this.pathTo(bid, boards || this.state.boards), creating: false, sel: null, selArrow: null, mode: null, from: null, editing: null, moreOpen: false, zoom: this.props.compact ? 0.6 : 1, camX: 10, camY: 10 });
+  }
+  toList() { this.hideTrail(); this.setState({ view: 'list', path: ['root'], sel: null, selArrow: null, mode: null, from: null, editing: null, moreOpen: false, linkTemp: null, linkHover: null }); }
+  createBoard(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    var name = (this.state.newName || '').trim();
+    if (!name) { if (this.nameEl) this.nameEl.focus(); return; }
+    var n = Date.now().toString(36), bid = 'u' + n, boards = Object.assign({}, this.state.boards);
+    var root = boards.root, cnt = root.items.filter(it => it.type === 'board').length;
+    boards[bid] = { title: name, arrows: [], items: [] };
+    boards.root = Object.assign({}, root, { items: root.items.concat([{ id: 'b' + n, type: 'board', x: 60 + (cnt % 4) * 260, y: 130 + Math.floor(cnt / 4) * 170, w: 230, text: name, board: bid, tint: this.state.newTint }]) });
+    this.setState({ boards: boards, newName: '', newTint: 'a2' });
+    this.openFromList(bid, boards);
+  }
+  animCam() {
+    clearTimeout(this._camT);
+    if (!this.state.camAnim) this.setState({ camAnim: true });
+    this._camT = setTimeout(() => this.setState({ camAnim: false }), 380);
+  }
+  zoomCenter(factor) {
+    this.animCam();
+    var vp = this.vp, w = vp ? vp.clientWidth : 800, h = vp ? vp.clientHeight : 600;
+    this.zoomAt(Math.round(this.state.zoom * factor * 20) / 20, w / 2, h / 2);
+  }
+
+  renderVals() {
+    var s = this.state, compact = !!this.props.compact, cid = this.cur(), board = s.boards[cid];
+    var items = board.items;
+    var cards = items.map((it, idx) => {
+      var sel = s.sel === it.id, tint = TINTS[it.tint] || null, isZone = it.type === 'zone';
+      var bg = 'var(--surface)', fg = 'var(--text)';
+      if (it.type === 'heading' || isZone) { bg = 'transparent'; }
+      else if ((it.type === 'note' || it.type === 'board') && tint) { bg = tint[0]; fg = tint[1]; }
+      var base = (it.type === 'heading' || isZone) ? '0 0 0 0 transparent' : '0 0 0 1px var(--line), 0 4px 14px rgba(0,0,0,0.08)';
+      var shadow = s.linkHover === it.id ? '0 0 0 3px var(--a1), 0 12px 30px rgba(0,0,0,0.18)' : (sel ? (isZone ? '0 0 0 2.5px var(--a2)' : '0 0 0 2.5px var(--a2), 0 12px 30px rgba(0,0,0,0.18)') : (s.from === it.id ? '0 0 0 2.5px var(--a2)' : base));
+      var lz = 1 / s.zoom;
+      var editingNow = s.editing === it.id;
+      var c = {
+        id: it.id, x: it.x, y: it.y, w: it.w, z: isZone ? 0 : (sel || s.dragging === it.id ? 50 : 2 + idx), bg: bg, fg: fg, shadow: shadow,
+        hpx: isZone ? (it.h || 300) + 'px' : 'auto', editingNow: editingNow,
+        canLink: s.mode !== 'arrow' && !s.dragging && !editingNow,
+        lhCls: sel && !s.linkTemp ? 'on' : '', lhS: Math.round(8 * lz * 10) / 10, lhH: Math.round(4 * lz * 10) / 10, lhB: Math.round(1.3 * lz * 10) / 10,
+        linkDown: e => this.linkDown(it.id, e),
+        isZone: isZone, isSketch: it.type === 'sketch', isTable: it.type === 'table', isQuote: it.type === 'quote', isFile: it.type === 'file', isVideo: it.type === 'video',
+        cls: 'bcard' + (sel ? ' sel' : '') + (s.dragging === it.id ? ' dragging' : ''), selected: sel, isFrom: s.from === it.id,
+        tf: s.dragging === it.id ? 'scale(1.035) rotate(-1deg)' : 'none',
+        fid: 'f-' + it.id, fid2: 'g-' + it.id, fileId: 'file-' + it.id,
+        text: it.text || '',
+        isHeading: it.type === 'heading', isNote: it.type === 'note', isTodo: it.type === 'todo', isImage: it.type === 'image', isColor: it.type === 'color', isLink: it.type === 'link', isBoard: it.type === 'board',
+        down: e => this.down(it.id, e),
+        pe: s.editing === it.id ? 'auto' : 'none',
+        cursor: s.editing === it.id ? 'auto' : (s.dragging === it.id ? 'grabbing' : 'grab'),
+        dbl: () => { if (it.type === 'board') this.openBoard(it.board); },
+        onText: e => this.setItem(it.id, { text: e.target.value })
+      };
+      if (it.type === 'note') c.taH = lines(it.text, it.w) * 22 + 8;
+      if (it.type === 'todo') {
+        c.todos = (it.todos || []).map((td, i) => ({ t: td.t, done: td.d, doneStr: td.d ? 'true' : 'false', box: td.d ? 'var(--a1)' : 'transparent', border: td.d ? 'var(--bar)' : 'var(--line-2)', deco: td.d ? 'line-through' : 'none', op: td.d ? 0.6 : 1, toggle: () => this.setItem(it.id, { todos: it.todos.map((x, j) => j === i ? { t: x.t, d: !x.d } : x) }) }));
+        c.todoDraft = s.drafts[it.id] || '';
+        c.onTodoDraft = e => { var d = Object.assign({}, this.state.drafts); d[it.id] = e.target.value; this.setState({ drafts: d }); };
+        c.addTodo = () => { var t = (this.state.drafts[it.id] || '').trim(); if (!t) return; var d = Object.assign({}, this.state.drafts); d[it.id] = ''; this.setState({ drafts: d }); this.setItem(it.id, { todos: (it.todos || []).concat([{ t: t, d: false }]) }); };
+      }
+      if (it.type === 'image') {
+        c.hasSrc = !!it.src; c.src = it.src || ''; c.artFace = !it.src && it.art === 'face'; c.artMood = !it.src && it.art === 'mood'; c.empty = !it.src && !it.art;
+        c.onFile = e => { var f = e.target.files && e.target.files[0]; if (f) this.setItem(it.id, { src: URL.createObjectURL(f), text: it.text || f.name }); };
+      }
+      if (it.type === 'color') {
+        c.sw = (it.sw || []).map((hex, i) => ({ hex: hex, remove: () => this.setItem(it.id, { sw: it.sw.filter((x, j) => j !== i) }) }));
+        c.pick2 = s.picks[it.id] || '#BC4D4B';
+        c.onPick = e => { var p = Object.assign({}, this.state.picks); p[it.id] = e.target.value; this.setState({ picks: p }); };
+        c.addSw = () => this.setItem(it.id, { sw: (it.sw || []).concat([(this.state.picks[it.id] || '#BC4D4B').toUpperCase()]) });
+      }
+      if (it.type === 'link') {
+        c.url = it.url || ''; c.href = it.url ? 'https://' + String(it.url).replace(/^https?:\/\//, '') : '#';
+        c.onUrl = e => this.setItem(it.id, { url: e.target.value });
+      }
+      if (it.type === 'board') {
+        var nb = s.boards[it.board];
+        c.count = nb ? (nb.items.length ? nb.items.length + ' öğe' : 'Boş pano') : '';
+        c.open = () => this.openBoard(it.board);
+      }
+      if (isZone) {
+        c.zoneBg = it.tint === 'surface' ? 'var(--text-3)' : (tint || TINTS.a2)[0];
+        c.resizeDown = e => this.resizeDown(it.id, e);
+      }
+      if (it.type === 'sketch') {
+        c.skW = it.w - 20;
+        c.sketchD = (it.strokes || []).map(st => st.length === 1 ? 'M' + st[0][0] + ' ' + st[0][1] + 'l0.1 0' : 'M' + st.map(p => p[0] + ' ' + p[1]).join('L')).join('') || 'M0 0';
+        c.skHint = editingNow ? 'Parmağınla ya da fareyle çiz' : ((it.strokes || []).length ? '' : 'Çizmek için karta iki kez dokun');
+        c.drawDown = e => this.drawDown(it.id, e);
+        c.clearSketch = () => this.setItem(it.id, { strokes: [] });
+      }
+      if (it.type === 'table') {
+        var rows = it.rows || [['']];
+        c.cols = rows[0].length;
+        c.cells = [];
+        rows.forEach((row, r) => row.forEach((v, k) => c.cells.push({ id: 'c-' + it.id + '-' + r + '-' + k, v: v, bg: r === 0 ? 'var(--surface2)' : 'transparent', fw: r === 0 ? 700 : 400, on: e => { var nr = it.rows.map(x => x.slice()); nr[r][k] = e.target.value; this.setItem(it.id, { rows: nr }); } })));
+        c.addRow = () => this.setItem(it.id, { rows: it.rows.concat([it.rows[0].map(() => '')]) });
+        c.addCol = () => { if (it.rows[0].length >= 6) return; this.setItem(it.id, { rows: it.rows.map((x, r) => x.concat([r === 0 ? 'Başlık' : ''])), w: Math.max(it.w, (it.rows[0].length + 1) * 92) }); };
+      }
+      if (it.type === 'quote') {
+        c.taH = quoteH(it); c.author = it.author || '';
+        c.onAuthor = e => this.setItem(it.id, { author: e.target.value });
+      }
+      if (it.type === 'file') {
+        var nm = it.size == null ? '' : String(it.text || ''), dot = nm.lastIndexOf('.');
+        c.noFile = it.size == null;
+        c.ext = dot > 0 ? nm.slice(dot + 1, dot + 5).toUpperCase() : 'DOSYA';
+        c.fileInfo = c.noFile ? 'Henüz dosya seçilmedi' : (it.size > 1048576 ? (it.size / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(it.size / 1024)) + ' KB');
+        c.onAnyFile = e => { var f = e.target.files && e.target.files[0]; if (f) this.setItem(it.id, { text: f.name, size: f.size, src: URL.createObjectURL(f) }); };
+      }
+      if (it.type === 'video') {
+        c.url = it.url || ''; c.href = it.url ? 'https://' + String(it.url).replace(/^https?:\/\//, '') : '#';
+        c.onUrl = e => this.setItem(it.id, { url: e.target.value });
+      }
+      return c;
+    });
+
+    var rect = it => ({ x: it.x, y: it.y, w: it.w, h: hOf(it) });
+    var r1 = v => Math.round(v * 10) / 10;
+    var selGeom = null;
+    var arrows = board.arrows.map((a0, i) => {
+      var a = arw(a0), A = items.find(x => x.id === a.from), B = items.find(x => x.id === a.to);
+      if (!A || !B) return null;
+      var g = geom(A, B, a.bend), p1 = g.p1, p2 = g.p2, c = g.c;
+      var nrm = (x, y) => { var l = Math.hypot(x, y) || 1; return [x / l, y / l]; };
+      var dE = nrm(p2[0] - c[0], p2[1] - c[1]), dS = nrm(p1[0] - c[0], p1[1] - c[1]);
+      var cut = k => k === 'arrow' ? 11 : (k === 'dot' ? 3 : 0);
+      var minx = Math.min(p1[0], p2[0], c[0]) - 20, miny = Math.min(p1[1], p2[1], c[1]) - 20;
+      var maxx = Math.max(p1[0], p2[0], c[0]) + 20, maxy = Math.max(p1[1], p2[1], c[1]) + 20;
+      var L = (x, y) => r1(x - minx) + ' ' + r1(y - miny);
+      var q1 = [p1[0] - dS[0] * cut(a.s), p1[1] - dS[1] * cut(a.s)], q2 = [p2[0] - dE[0] * cut(a.e), p2[1] - dE[1] * cut(a.e)];
+      var tri = (t, d) => { var tx = t[0] - minx, ty = t[1] - miny, bx = tx - 12 * d[0], by = ty - 12 * d[1]; return [r1(tx) + ',' + r1(ty), r1(bx - 6.5 * d[1]) + ',' + r1(by + 6.5 * d[0]), r1(bx + 6.5 * d[1]) + ',' + r1(by - 6.5 * d[0])].join(' '); };
+      var selA = s.selArrow === i;
+      if (selA) selGeom = { g: g, a: a, i: i };
+      return {
+        left: r1(minx), top: r1(miny), w: r1(maxx - minx), h: r1(maxy - miny),
+        hd: 'M' + L(p1[0], p1[1]) + 'Q' + L(c[0], c[1]) + ' ' + L(p2[0], p2[1]),
+        d: 'M' + L(q1[0], q1[1]) + 'Q' + L(c[0], c[1]) + ' ' + L(q2[0], q2[1]),
+        headE: a.e === 'arrow' ? tri(p2, dE) : '', headS: a.s === 'arrow' ? tri(p1, dS) : '',
+        dEx: r1(p2[0] - minx), dEy: r1(p2[1] - miny), dEr: a.e === 'dot' ? 5 : 0, dSx: r1(p1[0] - minx), dSy: r1(p1[1] - miny), dSr: a.s === 'dot' ? 5 : 0,
+        dash: a.dash ? '8 7' : 'none',
+        color: selA ? 'var(--a2)' : 'var(--muted)', sw: selA ? 3.5 : 2.2,
+        pick: () => this.setState({ selArrow: i, sel: null, editing: null, moreOpen: false })
+      };
+    }).filter(Boolean);
+    var selArr = s.selArrow !== null && board.arrows[s.selArrow] ? arw(board.arrows[s.selArrow]) : null;
+    var zi = 1 / s.zoom;
+    var ah = selGeom ? { mx: r1(selGeom.g.h[0]), my: r1(selGeom.g.h[1]), sx: r1(selGeom.g.p1[0]), sy: r1(selGeom.g.p1[1]), ex: r1(selGeom.g.p2[0]), ey: r1(selGeom.g.p2[1]), bs: r1(24 * zi), bh: r1(12 * zi), es: r1(18 * zi), eh: r1(9 * zi), bw: r1(3 * zi) } : { mx: 0, my: 0, sx: 0, sy: 0, ex: 0, ey: 0, bs: 0, bh: 0, es: 0, eh: 0, bw: 0 };
+    var capOpts = (side, cur) => ['none', 'dot', 'arrow'].map(k => ({ label: (side === 's' ? 'Başlangıç: ' : 'Bitiş: ') + CAP_LABEL[k], line: CAP_ICON[side][k][0], cap: CAP_ICON[side][k][1] || 'M0 0', pressed: cur === k ? 'true' : 'false', bg: cur === k ? 'var(--sel-bg)' : 'transparent', fg: cur === k ? 'var(--sel-fg)' : 'var(--text-2)', pick: () => { var p = {}; p[side] = k; this.setArrow(s.selArrow, p); } }));
+
+    var selItem = s.sel ? items.find(it => it.id === s.sel) : null;
+    var tintable = selItem && (selItem.type === 'note' || selItem.type === 'board' || selItem.type === 'zone');
+    var crumbs = s.path.map((bid, i) => {
+      var last = i === s.path.length - 1;
+      var isRoot = bid === 'root';
+      return { label: isRoot ? 'Panolar' : (s.boards[bid] ? s.boards[bid].title : ''), notLast: !last, size: last ? (compact ? '16px' : '18px') : '14px', weight: last ? '800' : '600', color: last ? 'var(--text)' : 'var(--muted)', go: () => { if (isRoot) this.toList(); else if (!last) this.setState({ path: s.path.slice(0, i + 1), sel: null, selArrow: null, mode: null, from: null }); } };
+    });
+    var tools = TOOLS.map(t => {
+      var on = t[0] === 'arrow' && s.mode === 'arrow';
+      return { label: t[1], icon: t[2], pressed: on ? 'true' : 'false', bg: on ? 'var(--nav-pill)' : 'transparent', fg: on ? 'var(--accent-text)' : 'var(--text-2)', iconBg: on ? 'var(--a2)' : 'var(--surface)', iconFg: on ? 'var(--a2-ink)' : 'var(--text)', act: () => this.add(t[0]) };
+    });
+
+    var rootItems = s.boards.root.items.filter(it => it.type === 'board' && s.boards[it.board]);
+    var boardList = rootItems.map(it => {
+      var b = s.boards[it.board], t = TINTS[it.tint] || TINTS.surface;
+      var subs = b.items.filter(x => x.type === 'board').length, n = b.items.length;
+      var meta = n ? n + ' öğe' + (subs ? ' · ' + subs + ' alt pano' : '') : 'Henüz boş';
+      return { title: b.title, meta: meta, aria: b.title + ' panosunu aç, ' + meta, bg: it.tint === 'surface' || !TINTS[it.tint] ? 'var(--surface2)' : t[0], fg: t[1], mini: miniMap(b), empty: n === 0, open: () => this.openFromList(it.board) };
+    });
+    var canCreate = !!(s.newName || '').trim();
+    var listVals = {
+      isList: s.view === 'list', isCanvas: s.view !== 'list',
+      listPad: compact ? '14px 14px 24px' : '22px 24px 32px',
+      listCount: boardList.length + ' pano',
+      gridCols: compact ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fill, minmax(240px, 1fr))', gridGap: compact ? '12px' : '18px',
+      prevH: compact ? '92px' : '128px',
+      boardList: boardList,
+      creating: !!s.creating, createExpanded: s.creating ? 'true' : 'false',
+      openCreate: () => { this.setState({ creating: !this.state.creating }); setTimeout(() => { if (this.nameEl) this.nameEl.focus(); }, 60); },
+      cancelCreate: () => this.setState({ creating: false, newName: '' }),
+      newNameId: this.uid + '-name', newName: s.newName || '', nameRef: el => { this.nameEl = el; },
+      onNewName: e => this.setState({ newName: e.target.value }),
+      newTints: Object.keys(TINTS).map(k => ({ label: TINTS[k][2], pressed: s.newTint === k ? 'true' : 'false', bg: k === 'surface' ? 'var(--surface2)' : TINTS[k][0], ring: s.newTint === k ? 'var(--text)' : 'transparent', pick: () => this.setState({ newTint: k }) })),
+      createBg: canCreate ? 'var(--sel-bg)' : 'var(--chip)', createFg: canCreate ? 'var(--sel-fg)' : 'var(--muted)',
+      createBoard: e => this.createBoard(e)
+    };
+
+    return Object.assign(listVals, {
+      theme: this.props.theme || 'dark', height: this.props.height || '760px',
+      compact: compact, wide: !compact, topPad: compact ? '8px 10px' : '10px 16px',
+      tbPos: compact ? 'left: 10px; right: 10px; bottom: 14px' : 'left: 12px; top: 12px; max-height: calc(100% - 24px)',
+      tbDir: compact ? 'row' : 'column', btnW: compact ? 58 : 64, iconS: compact ? 32 : 34,
+      sepStyle: compact ? 'width: 2px; height: 36px; margin: 0 4px' : 'width: 36px; height: 2px; margin: 4px 0',
+      moreOpen: !!s.moreOpen, moreExpanded: s.moreOpen ? 'true' : 'false', moreRot: s.moreOpen ? 45 : 0,
+      moreBg: s.moreOpen ? 'var(--nav-pill)' : 'transparent', moreFg: s.moreOpen ? 'var(--accent-text)' : 'var(--text-2)',
+      toggleMore: () => this.setState({ moreOpen: !this.state.moreOpen, helpOpen: false, selArrow: null, mode: null, from: null }),
+      morePos: compact ? 'left: 10px; right: 10px; bottom: 100px' : 'left: 100px; top: 12px; width: 300px',
+      moreTools: MORE_TOOLS.map(t => ({ label: t[1], icon: t[2], iconBg: t[3], iconFg: t[4], act: () => this.add(t[0]) })),
+      arrowSel: !!selArr, ctxPos: compact ? 'left: 10px; right: 10px; bottom: 100px; justify-content: center' : 'left: 100px; top: 12px',
+      capS: selArr ? capOpts('s', selArr.s) : [], capE: selArr ? capOpts('e', selArr.e) : [],
+      dashPressed: selArr && selArr.dash ? 'true' : 'false', dashBg: selArr && selArr.dash ? 'var(--a2)' : 'var(--surface2)', dashFg: selArr && selArr.dash ? 'var(--a2-ink)' : 'var(--text)',
+      toggleDash: () => { if (selArr) this.setArrow(s.selArrow, { dash: !selArr.dash }); },
+      flipArrow: () => { if (selArr) this.setArrow(s.selArrow, { from: selArr.to, to: selArr.from, s: selArr.e, e: selArr.s }); },
+      hasLink: !!s.linkTemp, link: Object.assign({ x1: 0, y1: 0, x2: 0, y2: 0 }, s.linkTemp || {}, { sw: r1(3 * zi), r: r1(7 * zi), da: r1(7 * zi) + ' ' + r1(7 * zi) }),
+      ah: ah, bendDown: e => this.bendDown(e), endDownS: e => this.endDown('from', e), endDownE: e => this.endDown('to', e),
+      straighten: () => { if (s.selArrow !== null) this.setArrow(s.selArrow, { bend: { x: 0, y: 0 } }); },
+      isBent: !!(selArr && (selArr.bend.x || selArr.bend.y)), isStraight: !!(selArr && !selArr.bend.x && !selArr.bend.y),
+      crumbs: crumbs, tools: tools, cards: cards, arrows: arrows, isEmpty: items.length === 0,
+      gid: this.uid,
+      trailSvgRef: el => { this.tSvg = el; }, trailPathRef: el => { this.tPath = el; }, trailGradRef: el => { this.tGrad = el; },
+      hasDrop: !!s.drop, drop: s.drop || { x: 0, y: 0, w: 0, h: 0 },
+      zoom: s.zoom, zoomLabel: Math.round(s.zoom * 100) + '%',
+      camX: Math.round(s.camX * 10) / 10, camY: Math.round(s.camY * 10) / 10,
+      grid: Math.round(26 * s.zoom * 100) / 100, dotR: Math.max(0.7, 1.3 * s.zoom), dotR2: Math.max(1, 1.6 * s.zoom),
+      cursor: s.panning ? 'grabbing' : 'grab', camCls: s.camAnim ? 'camanim' : '', noDrag: e => e.preventDefault(),
+      helpOpen: !!s.helpOpen, helpExpanded: s.helpOpen ? 'true' : 'false',
+      helpBg: s.helpOpen ? 'var(--sel-bg)' : 'var(--nav)', helpFg: s.helpOpen ? 'var(--sel-fg)' : 'var(--text-2)', helpRing: s.helpOpen ? 'var(--sel-bg)' : 'var(--line-2)',
+      toggleHelp: () => this.setState({ helpOpen: !this.state.helpOpen, moreOpen: false }),
+      helpPos: compact ? 'left: 10px; right: 10px; top: 52px; max-height: calc(100% - 150px)' : 'right: 12px; top: 52px; width: 330px; max-height: calc(100% - 64px)',
+      helpSteps: HELP.map((h, i) => ({ t: h[0], d: compact ? h[1] : (h[2] || h[1]), icon: h[3], bg: ['var(--a1)', 'var(--a2)', 'var(--a3)'][i % 3], fg: ['var(--a1-ink)', 'var(--a2-ink)', 'var(--a3-ink)'][i % 3] })),
+      zoomIn: () => this.zoomCenter(1.2), zoomOut: () => this.zoomCenter(1 / 1.2), fit: () => this.fit(),
+      vpRef: el => this.setVp(el),
+      bgDown: e => this.bgDown(e),
+      canDelete: !!s.sel, delLabel: 'Sil', del: () => this.del(),
+      showSwatches: !!tintable,
+      tintChips: Object.keys(TINTS).map(k => ({ label: TINTS[k][2], bg: TINTS[k][0], ring: selItem && selItem.tint === k ? 'var(--text)' : 'transparent', pick: () => this.setItem(s.sel, { tint: k }) })),
+      hasHint: s.mode === 'arrow', hint: s.from ? 'Şimdi bağlanacak ikinci karta dokun.' : 'Bağlamak için önce ilk karta dokun. İpucu: seçili kartın yanındaki oku da sürükleyebilirsin.',
+      cancelMode: () => this.setState({ mode: null, from: null })
+    });
+  }
+}
+</script>
+</body>
+</html>

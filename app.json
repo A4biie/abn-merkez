@@ -1,0 +1,81 @@
+{
+  "expo": {
+    "name": "ABN Merkez",
+    "slug": "abn-merkez",
+    "version": "0.7.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "abnmerkez",
+    "userInterfaceStyle": "dark",
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0E0E10",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.abbysnexus.merkez",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
+    },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/images/favicon.png",
+      "name": "ABN Merkez",
+      "shortName": "ABN Merkez",
+      "description": "Abby's Nexus ekip paneli",
+      "lang": "tr",
+      "themeColor": "#0E0E10",
+      "backgroundColor": "#0E0E10"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0E0E10"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Profil fotoğrafı ve afiş seçebilmen için galerine erişmemiz gerekiyor.",
+          "cameraPermission": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#C5B5FA",
+          "defaultChannel": "varsayilan"
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Sohbete sesli mesaj gönderebilmen için mikrofona erişmemiz gerekiyor."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "f7e99005-52db-463e-8e0f-6c80f6ab76a0"
+      }
+    },
+    "owner": "a4biie"
+  }
+}
