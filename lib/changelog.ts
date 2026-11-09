@@ -166,6 +166,18 @@ export const RELEASES: Release[] = [
 /** ABN Launcher (masaüstü) sürümleri. */
 export const LAUNCHER_RELEASES: Release[] = [
   {
+    "version": "1.2.0",
+    "date": "",
+    "sections": [
+      {
+        "title": "Yeni",
+        "items": [
+          "Merkez 0.9.0 masaüstünde: panoda köşeden boyutlandırma, Ctrl/Shift ile çoklu seçim ve Delete ile silme (5 sn içinde geri alınabilir)."
+        ]
+      }
+    ]
+  },
+  {
     "version": "1.1.0",
     "date": "9 Kasım 2026",
     "sections": [
