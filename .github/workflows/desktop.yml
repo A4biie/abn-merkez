@@ -38,6 +38,14 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
 
+      # Kurulum araçları (NSIS, WiX) bir kez indirilip saklanır. 1.0.1'de GitHub'ın kısa kesintisinde
+      # bu indirme 504 verip derlemeyi düşürmüştü.
+      - name: Kurulum araçlarını önbellekten al
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\tauri
+          key: tauri-bundler-tools-v1
+
       - name: Paketleri kur
         run: npm ci
 
