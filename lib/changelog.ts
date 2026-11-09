@@ -152,6 +152,23 @@ export const RELEASES: Release[] = [
 /** ABN Launcher (masaüstü) sürümleri. */
 export const LAUNCHER_RELEASES: Release[] = [
   {
+    "version": "1.1.0",
+    "date": "9 Kasım 2026",
+    "sections": [
+      {
+        "title": "Yeni",
+        "items": [
+          "Masaüstü bildirimleri: özel tasarım, yanıtlama, 7 bildirim sesi.",
+          "Kartlar temanın renkleri ve ışığıyla geliyor; üzerine gelince süre duruyor, Yanıtla / Okundu / Sessize al (1 saat, 8 saat, bu sohbeti) çıkıyor. Karttan yazıp Enter'la yanıt gönderebilirsin; sağa sürükleyince kapanır.",
+          "Türler: mesaj, @anma (şeritli, ayrı ses), kalp (kapsül), görev ve isteğe cevap, duyuru (kapatana kadar kalır), oylama sonucu.",
+          "Aynı anda en fazla 3 kart; fazlası \"+N bildirim daha\". Aynı sohbetten 10 sn içinde gelen mesajlar tek kartta toplanır.",
+          "Ayarlar > Bildirimler: konum, süre (4/6/10 sn), önizleme, ses seçimi (\"Dinle\" ile), ses seviyesi, türlere göre aç/kapa ve \"Deneme bildirimi gönder\".",
+          "Sessiz saatlerde kart ve ses gelmez."
+        ]
+      }
+    ]
+  },
+  {
     "version": "1.0.5",
     "date": "9 Kasım 2026",
     "sections": [
