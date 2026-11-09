@@ -135,6 +135,18 @@ export const RELEASES: Release[] = [
 /** ABN Launcher (masaüstü) sürümleri. */
 export const LAUNCHER_RELEASES: Release[] = [
   {
+    "version": "1.0.4",
+    "date": "9 Kasım 2026",
+    "sections": [
+      {
+        "title": "Yeni",
+        "items": [
+          "Yeni mor simge: masaüstü kısayolu, görev çubuğu ve tepsi mor logolu koyu simgeyi kullanıyor; kurulum dosyasının köşesinde indirme işareti var."
+        ]
+      }
+    ]
+  },
+  {
     "version": "1.0.3",
     "date": "9 Kasım 2026",
     "sections": [

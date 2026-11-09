@@ -4,6 +4,12 @@ ABN Merkez'in sürümleri. Yeni özellik getiren sürüm 0.x.0, sadece düzeltme
 Uygulama yeni bir sürüme ilk açıldığında "Neler yeni" panelinde o sürümün maddeleri gösterilir
 (`npm run changelog` bu dosyadan `lib/changelog.ts`'i üretir).
 
+## Launcher 1.0.4 · 9 Kasım 2026
+
+### Yeni
+
+- Yeni mor simge: masaüstü kısayolu, görev çubuğu ve tepsi mor logolu koyu simgeyi kullanıyor; kurulum dosyasının köşesinde indirme işareti var.
+
 ## Launcher 1.0.3 · 9 Kasım 2026
 
 ### Düzeltmeler

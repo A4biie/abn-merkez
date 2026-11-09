@@ -98,6 +98,5 @@ await render('public/icons/icon-192.png', 192, { bg: INK, circle: 0.72 });
 await render('public/icons/icon-512.png', 512, { bg: INK, circle: 0.72 });
 await render('public/icons/apple-touch-icon.png', 180, { bg: INK, circle: 0.78 });
 
-// ABN Launcher tepsi simgesi: logo; okunmamış bildirim varsa noktalı.
-await render('src-tauri/icons/tray.png', 32, { circle: 1 });
-await render('src-tauri/icons/tray-dot.png', 32, { circle: 1, dot: hex('#E4F68F') });
+// ABN Launcher simgeleri (src-tauri/icons: icon.ico, installer.ico, tray*.png) artık burada çizilmiyor:
+// mor logo tasarımından (Logo Vektör tuvali) üretildi; değiştirmek için oradaki SVG'den yeniden üret.
