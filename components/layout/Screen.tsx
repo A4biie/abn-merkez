@@ -16,6 +16,7 @@ import { Sheet } from '@/components/ui/Sheet';
 import { Stagger } from '@/components/ui/Stagger';
 import { Txt } from '@/components/ui/Txt';
 import { NOTIFICATION_DOT } from '@/lib/labels';
+import { openProfile } from '@/lib/profileModal';
 import { useNotifications } from '@/lib/queries';
 import { dayLabel } from '@/lib/time';
 import { fontFamily } from '@/theme/fonts';
@@ -182,7 +183,7 @@ function PhoneTopBar() {
       </Press>
       <BellButton size={44} onPress={() => router.navigate('/bildirimler')} />
       <Press
-        onPress={() => router.navigate('/profil')}
+        onPress={() => openProfile('id' in me ? me.id : null)}
         accessibilityLabel="Profilim"
         style={{ borderRadius: 22 }}
       >

@@ -4,6 +4,17 @@ ABN Merkez'in sürümleri. Yeni özellik getiren sürüm 0.x.0, sadece düzeltme
 Uygulama yeni bir sürüme ilk açıldığında "Neler yeni" panelinde o sürümün maddeleri gösterilir
 (`npm run changelog` bu dosyadan `lib/changelog.ts`'i üretir).
 
+## 0.10.0 · 10 Kasım 2026
+
+### Yeni
+
+- Discord tarzı profil: mini kart, tam profil penceresi, canlı önizlemeli düzenleme, durumlar.
+- Sol alttaki kartına tıklayınca mini profil açılır: durum (Müsait, Meşgul, Uzakta, Görünmez), süreli özel durum, Profili düzenle, Tam profili aç.
+- Sohbette, ekipte, görevlerde ve bildirimlerde bir avatara ya da isme tıklayınca tam profil penceresi açılır: Hakkında, Görevler ve Etkinlik sekmeleri, Mesaj gönder.
+- Profili düzenle: avatar ve banner görseli (kırparak), serbest renkler, vurgu rengi, zamirler, çalışma saatleri, 300 karakterlik hakkında. Kaydetmeden kapatmaya çalışınca uyarır.
+- Profil değişiklikleri herkeste sayfa yenilenmeden görünür. Meşgul'deyken masaüstü bildirimleri susar; Görünmez olan kişi gri halkayla görünür.
+- Şifre değiştirme ve çıkış artık Profili düzenle > Hesap'ta.
+
 ## Launcher 1.6.0 · 10 Kasım 2026
 
 ### Yeni

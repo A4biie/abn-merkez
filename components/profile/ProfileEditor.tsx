@@ -20,6 +20,7 @@ import { useMotion } from '@/theme/motion';
 import { useTheme } from '@/theme/ThemeProvider';
 
 import { useShadow } from './MiniProfile';
+import { PasswordForm } from './PasswordForm';
 import { Label, ProfileCard } from './ProfileCard';
 
 const SPRING = 'cubic-bezier(0.2, 1.25, 0.35, 1)';
@@ -95,6 +96,8 @@ function Editor({ profile }: { profile: Profile }) {
   const [base, setBase] = useState(() => fromProfile(profile));
   const [d, setD] = useState(base);
   const [saving, setSaving] = useState(false);
+  const [pw, setPw] = useState(false);
+  const { signOut } = useAuth();
   const [shakeN, setShakeN] = useState(0);
   const [flash, setFlash] = useState<{ n: number; fields: Field[] }>({ n: 0, fields: [] });
   const [crop, setCrop] = useState<{ kind: 'avatar' | 'banner'; src: string } | null>(null);
@@ -408,6 +411,20 @@ function Editor({ profile }: { profile: Profile }) {
                 style={field}
               />
             </Row>
+            <View style={{ gap: 8, paddingTop: 14, marginTop: 8, borderTopWidth: 1, borderColor: colors.line }}>
+              <Label>Hesap</Label>
+              {pw ? (
+                <PasswordForm onClose={() => setPw(false)} />
+              ) : (
+                <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+                  {small('Şifreyi değiştir', () => setPw(true))}
+                  {small('Çıkış yap', () => {
+                    closeEditor();
+                    signOut();
+                  })}
+                </View>
+              )}
+            </View>
           </ScrollView>
           {wide && (
             <View style={{ width: 340, padding: 18, paddingTop: 8, gap: 10, borderLeftWidth: 1, borderColor: colors.line }}>
@@ -433,7 +450,7 @@ function Editor({ profile }: { profile: Profile }) {
               borderRadius: 16,
               backgroundColor: colors.bg,
               boxShadow: `0 0 0 ${shakeN ? 2 : 1}px ${shakeN ? RED : colors.line}, ${shadow}`,
-              animationName: shakeN && !motion.reduced ? shake : barIn,
+              animationName: motion.reduced ? fadeIn : shakeN ? shake : barIn,
               animationDuration: shakeN ? 400 : 220,
               animationTimingFunction: shakeN ? 'ease' : SPRING,
               animationFillMode: 'both',

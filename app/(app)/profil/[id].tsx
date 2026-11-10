@@ -1,9 +1,14 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect } from 'react';
 
-import { ProfileView } from '@/components/profile/ProfileView';
+import { openProfile } from '@/lib/profileModal';
 
-/** Ekipten birinin profili. */
+/** Eski "/profil/<id>" bağlantıları: o kişinin profil penceresini açıp ana sayfaya döner. */
 export default function KisiProfili() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  return <ProfileView id={id} />;
+  useEffect(() => {
+    openProfile(id);
+    router.replace('/');
+  }, [id]);
+  return null;
 }

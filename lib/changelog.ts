@@ -4,6 +4,23 @@ export type Release = { version: string; date: string; sections: { title: string
 
 export const RELEASES: Release[] = [
   {
+    "version": "0.10.0",
+    "date": "10 Kasım 2026",
+    "sections": [
+      {
+        "title": "Yeni",
+        "items": [
+          "Discord tarzı profil: mini kart, tam profil penceresi, canlı önizlemeli düzenleme, durumlar.",
+          "Sol alttaki kartına tıklayınca mini profil açılır: durum (Müsait, Meşgul, Uzakta, Görünmez), süreli özel durum, Profili düzenle, Tam profili aç.",
+          "Sohbette, ekipte, görevlerde ve bildirimlerde bir avatara ya da isme tıklayınca tam profil penceresi açılır: Hakkında, Görevler ve Etkinlik sekmeleri, Mesaj gönder.",
+          "Profili düzenle: avatar ve banner görseli (kırparak), serbest renkler, vurgu rengi, zamirler, çalışma saatleri, 300 karakterlik hakkında. Kaydetmeden kapatmaya çalışınca uyarır.",
+          "Profil değişiklikleri herkeste sayfa yenilenmeden görünür. Meşgul'deyken masaüstü bildirimleri susar; Görünmez olan kişi gri halkayla görünür.",
+          "Şifre değiştirme ve çıkış artık Profili düzenle > Hesap'ta."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.9.0",
     "date": "9 Kasım 2026",
     "sections": [

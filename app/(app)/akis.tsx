@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { openEditor } from '@/lib/profileModal';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
@@ -238,7 +239,7 @@ function TourNote() {
       }}
     >
       <Icon name="ekip" size={18} color={colors['a2-ink']} strokeWidth={2} />
-      <Press onPress={() => router.navigate('/profil')} style={{ flex: 1 }} accessibilityRole="link">
+      <Press onPress={openEditor} style={{ flex: 1 }} accessibilityRole="link">
         <Txt size={14.5} weight={600} color="a2-ink">
           Profilini istediğin zaman tamamlayabilirsin
         </Txt>
