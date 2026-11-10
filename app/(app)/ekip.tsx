@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { openProfile } from '@/lib/profileModal';
 import { View } from 'react-native';
 
 import { Screen } from '@/components/layout/Screen';
@@ -76,7 +76,6 @@ function AvailDot({ color, label }: { color: string; label: string }) {
   );
 }
 
-const openProfile = (id: string) => router.navigate({ pathname: '/profil/[id]', params: { id } });
 
 function PhoneCard({ person }: { person: Profile }) {
   const { team, projects, name, avail, availText } = useMemberInfo(person);

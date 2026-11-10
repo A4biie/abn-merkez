@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { openProfile } from '@/lib/profileModal';
 import { useState } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -171,7 +171,7 @@ export function PostCard({ post, fresh }: { post: Post; fresh?: boolean }) {
       )}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Press
-          onPress={() => router.navigate({ pathname: '/profil/[id]', params: { id: post.author_id } })}
+          onPress={() => openProfile(post.author_id)}
           accessibilityLabel={`${author?.full_name ?? 'Kişi'} profilini aç`}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}
         >

@@ -12,6 +12,7 @@ import { useToast } from '@/components/ui/Toast';
 import { Txt } from '@/components/ui/Txt';
 import { useAuth } from '@/lib/auth';
 import { CS_EMOJIS, CS_EXPIRY, customStatus, expiryDate, STATUS, STATUS_ORDER } from '@/lib/presence';
+import { openProfile } from '@/lib/profileModal';
 import type { PresenceStatus, Profile } from '@/lib/types';
 import { useMotion } from '@/theme/motion';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -137,7 +138,7 @@ export function MiniProfile({
             label="Tam profili aç"
             onPress={() => {
               onClose();
-              router.navigate('/profil');
+              openProfile(profile.id);
             }}
           />
         </View>

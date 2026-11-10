@@ -6,6 +6,7 @@ import { Box } from '@/components/ui/Box';
 import { Icon } from '@/components/ui/Icon';
 import { PendingBadge } from '@/components/ui/PendingBadge';
 import { Press } from '@/components/ui/Press';
+import { openProfile } from '@/lib/profileModal';
 import { Txt } from '@/components/ui/Txt';
 import { previewText, splitMentions, type Message } from '@/lib/chat';
 import { useTeam } from '@/lib/team';
@@ -56,13 +57,19 @@ export function MessageBubble({
       }}
     >
       {!mine && showAuthor && (
-        <View style={{ width: 30 }}>{!grouped && author && <Avatar person={author} size={30} />}</View>
+        <View style={{ width: 30 }}>{!grouped && author && (
+            <Press onPress={() => openProfile(author.id)} accessibilityLabel={author.full_name + ' profili'}>
+              <Avatar person={author} size={30} />
+            </Press>
+          )}</View>
       )}
       <View style={{ maxWidth: '78%', alignItems: mine ? 'flex-end' : 'flex-start', gap: 4 }}>
         {!mine && showAuthor && !grouped && (
-          <Txt size={12.5} weight={700} color="muted" style={{ marginLeft: 4 }}>
-            {author?.full_name ?? 'Eski üye'}
-          </Txt>
+          <Press onPress={() => openProfile(author?.id)} pressScale={1}>
+            <Txt size={12.5} weight={700} color="muted" style={{ marginLeft: 4 }}>
+              {author?.full_name ?? 'Eski üye'}
+            </Txt>
+          </Press>
         )}
         <Press
           onLongPress={deleted ? undefined : onLongPress}

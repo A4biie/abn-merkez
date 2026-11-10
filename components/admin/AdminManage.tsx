@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { openProfile } from '@/lib/profileModal';
 import { useState } from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
 import { EmptyState } from '@/components/EmptyState';
@@ -205,7 +205,7 @@ function MemberRow({ person, widths: W, tasks, onLogin }: { person: Profile; wid
           node: (
             <View style={{ flexDirection: 'row', gap: 6 }}>
               <Button label="Giriş" icon="lock" size="sm" kind="soft" onPress={onLogin} accessibilityLabel={`${person.full_name} giriş bilgisi`} />
-              <Button label="Profil" size="sm" kind="soft" onPress={() => router.navigate({ pathname: '/profil/[id]', params: { id: person.id } })} />
+              <Button label="Profil" size="sm" kind="soft" onPress={() => openProfile(person.id)} />
             </View>
           ),
         },

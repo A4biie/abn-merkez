@@ -3,6 +3,8 @@ import Animated from 'react-native-reanimated';
 
 import { useActions } from '@/components/sheets/ActionsProvider';
 import { Avatar } from '@/components/ui/Avatar';
+import { Press as AvatarPress } from '@/components/ui/Press';
+import { openProfile } from '@/lib/profileModal';
 import { Box } from '@/components/ui/Box';
 import { Button, Card, Chip } from '@/components/ui/Controls';
 import { Txt } from '@/components/ui/Txt';
@@ -135,7 +137,9 @@ export function TaskCard({ task, variant = 'card' }: { task: Task; variant?: Var
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           {assignee ? (
-            <Avatar person={assignee} size={22} />
+            <AvatarPress onPress={() => openProfile(assignee.id)} accessibilityLabel={assignee.full_name + ' profili'}>
+              <Avatar person={assignee} size={22} />
+            </AvatarPress>
           ) : (
             <Box bg="chip" style={{ width: 22, height: 22, borderRadius: 11 }} />
           )}

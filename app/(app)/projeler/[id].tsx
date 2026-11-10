@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { openProfile } from '@/lib/profileModal';
 import { useState } from 'react';
 import { View } from 'react-native';
 
@@ -113,7 +114,7 @@ function MemberList({ v }: { v: ReturnType<typeof useProjectView> }) {
       {v.members.map((m) => (
         <Press
           key={m.id}
-          onPress={() => router.navigate({ pathname: '/profil/[id]', params: { id: m.id } })}
+          onPress={() => openProfile(m.id)}
           hoverBg="hover"
           style={{ borderRadius: 12, padding: 6, flexDirection: 'row', alignItems: 'center', gap: 10 }}
         >

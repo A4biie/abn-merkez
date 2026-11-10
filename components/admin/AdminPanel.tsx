@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { openProfile } from '@/lib/profileModal';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { EmptyState } from '@/components/EmptyState';
@@ -172,7 +173,7 @@ function Overview({ goTab }: { goTab: (t: AdminTab) => void }) {
         text: `${p.full_name} molada${p.availability_until ? ` · ${formatDate(p.availability_until)}’a kadar` : ''}`,
         sub: oc ? `${oc} açık görevi var, istersen havuza alabilirsin` : 'Üzerinde açık görev yok',
         btn: 'Profil',
-        act: () => router.navigate({ pathname: '/profil/[id]', params: { id: p.id } }),
+        act: () => openProfile(p.id),
       };
     }),
   ];

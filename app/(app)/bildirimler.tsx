@@ -7,6 +7,7 @@ import { Screen } from '@/components/layout/Screen';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button, Card, Chip, SectionTitle } from '@/components/ui/Controls';
 import { Press } from '@/components/ui/Press';
+import { openProfile } from '@/lib/profileModal';
 import { ErrorState, SkeletonCards } from '@/components/ui/Feedback';
 import { useToast } from '@/components/ui/Toast';
 import { Txt } from '@/components/ui/Txt';
@@ -66,7 +67,11 @@ export default function Bildirimler() {
             return (
               <Card key={r.id} radius={22} gap={12}>
                 <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-                  {who && <Avatar person={who} size={40} />}
+                  {who && (
+                    <Press onPress={() => openProfile(who.id)} accessibilityLabel={who.full_name + ' profili'}>
+                      <Avatar person={who} size={40} />
+                    </Press>
+                  )}
                   <Txt style={{ flex: 1 }}>{team.requestText(r, taskTitle(r.task_id))}</Txt>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
