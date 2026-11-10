@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { unregisterPush } from './push';
 import { supabase, supabaseConfigError } from './supabase';
 import type { Profile } from './types';
-import { clearQueryCache, invalidate } from './useQuery';
+import { clearQueryCache, invalidate, mutateCache } from './useQuery';
 
 type AuthState = {
   /** İlk oturum kontrolü bitene kadar true; bu sırada açılış ekranı görünür kalır. */
@@ -68,9 +68,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (patch: Partial<Profile>) => {
       if (!userId) return 'Önce giriş yapmalısın.';
       setProfile((p) => (p ? { ...p, ...patch } : p));
+      // Ekip listesi, sohbet ve kartlar da hemen güncellensin (iyimser).
+      mutateCache<Profile[]>('profiles', (prev) => prev?.map((p) => (p.id === userId ? { ...p, ...patch } : p)) ?? []);
       const { error } = await supabase.from('profiles').update(patch).eq('id', userId);
       if (error) {
         await refreshProfile();
+        invalidate('profiles');
         return 'Değişiklik kaydedilemedi. Biraz sonra tekrar dene.';
       }
       invalidate('profiles');

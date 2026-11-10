@@ -6,6 +6,8 @@ import type { ThemeName } from '@/theme/themes';
 export type Availability = 'musait' | 'yogun' | 'ara';
 export type BannerColor = 'lilac' | 'lime' | 'cyan' | 'gece';
 
+export type PresenceStatus = 'online' | 'busy' | 'idle' | 'invisible';
+
 export type ProfileLink = { label: string; url: string };
 
 export type Profile = {
@@ -33,6 +35,15 @@ export type Profile = {
   quiet_start: number | null;
   quiet_end: number | null;
   time_zone: string;
+  /** Anlık durum (0.10.0). Görünmez, başkalarına çevrimdışı görünür. */
+  status?: PresenceStatus;
+  custom_status?: string;
+  custom_status_emoji?: string;
+  custom_status_expires_at?: string | null;
+  pronouns?: string;
+  /** Profil vurgu rengi (#RRGGBB); boşsa temanın a1'i. */
+  accent_color?: string | null;
+  work_hours?: string;
   created_at: string;
   updated_at: string;
 };

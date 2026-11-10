@@ -14,6 +14,7 @@ export function useMe() {
     avatar_url: null as string | null,
     avatar_color: '#C5B5FA',
     availability: 'musait' as Availability,
+    status: 'online' as const,
     is_admin: false,
   };
 }

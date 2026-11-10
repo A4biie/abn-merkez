@@ -1,9 +1,12 @@
 import { router, usePathname } from 'expo-router';
 import { TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
+import { useCallback, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
+import { MiniProfile } from '@/components/profile/MiniProfile';
+import { PresenceAvatar } from '@/components/profile/ProfileCard';
+
 import { ThemeTiles } from '@/components/ThemePicker';
-import { Avatar } from '@/components/ui/Avatar';
 import { Box } from '@/components/ui/Box';
 import { LogoBadge } from '@/components/Logo';
 import { Icon, type IconName } from '@/components/ui/Icon';
@@ -11,7 +14,7 @@ import { Press } from '@/components/ui/Press';
 import { Txt } from '@/components/ui/Txt';
 import { useAuth } from '@/lib/auth';
 import { useChatUnread } from '@/lib/chat';
-import { AVAILABILITY } from '@/lib/labels';
+import { statusLine } from '@/lib/presence';
 import { useTheme } from '@/theme/ThemeProvider';
 import { activeTab, TABS } from './nav';
 import { UnreadDot } from './PhoneTabBar';
@@ -23,7 +26,15 @@ export function Sidebar() {
   const pathname = usePathname();
   const unread = useChatUnread();
   const me = useMe();
-  const avail = AVAILABILITY[me.availability];
+  const { colors } = useTheme();
+  // Mini profil: açık / kapanıyor (0.15 sn animasyon) / kapalı.
+  const [mini, setMini] = useState<'open' | 'closing' | null>(null);
+  const [meH, setMeH] = useState(58);
+  const meRef = useRef<unknown>(null);
+  const closeMini = useCallback(() => {
+    setMini((m) => (m === 'open' ? 'closing' : m));
+    setTimeout(() => setMini((m) => (m === 'closing' ? null : m)), 150);
+  }, []);
   const onAdmin = pathname.startsWith('/yonetim');
   const current = activeTab(pathname);
 
@@ -85,15 +96,19 @@ export function Sidebar() {
 
         <View style={{ flexGrow: 1, minHeight: 24 }} />
         <ThemeTiles />
+      </ScrollView>
 
+      <View ref={meRef as never} style={{ paddingHorizontal: 14, paddingTop: 14, paddingBottom: 22 }}>
         <Press
-          onPress={() => router.navigate('/profil')}
-          bg="surface"
-          hoverBg="hover"
+          onPress={() => (mini === 'open' ? closeMini() : setMini('open'))}
+          onLayout={(e) => setMeH(e.nativeEvent.layout.height)}
+          bg={mini === 'open' ? 'surface2' : 'surface'}
+          hoverBg="surface2"
           pressScale={0.97}
           accessibilityLabel="Profilim"
+          aria-haspopup="dialog"
+          aria-expanded={mini === 'open'}
           style={{
-            marginTop: 14,
             borderRadius: 14,
             padding: 10,
             flexDirection: 'row',
@@ -101,20 +116,18 @@ export function Sidebar() {
             gap: 10,
           }}
         >
-          <Avatar person={me} size={38} />
+          <PresenceAvatar person={me} size={38} isMe ring={mini === 'open' ? colors.surface2 : colors.surface} />
           <View style={{ flex: 1, minWidth: 0 }}>
             <Txt weight={700} numberOfLines={1}>
               {me.full_name}
             </Txt>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: avail.color }} />
-              <Txt size={12.5} color="muted">
-                {avail.label}
-              </Txt>
-            </View>
+            <Txt size={12.5} color="muted" numberOfLines={1}>
+              {statusLine(me)}
+            </Txt>
           </View>
         </Press>
-      </ScrollView>
+      </View>
+      {mini && <MiniProfile closing={mini === 'closing'} bottom={22 + meH + 8} onClose={closeMini} ignore={meRef} />}
     </Box>
   );
 }
