@@ -1,7 +1,7 @@
 [package]
 name = "abn-launcher"
 # Launcher'ın sürümü (Merkez'in sürümü app.json'da, ayrı takip edilir). "npm run release" ikisini de değil, sadece bunu ve tauri.conf.json'u yükseltir.
-version = "1.3.1"
+version = "1.4.0"
 description = "ABN Launcher: ABN Merkez ve ABN oyunları"
 authors = ["Abby's Nexus"]
 edition = "2021"
