@@ -4,12 +4,13 @@ import { View } from 'react-native';
 import { Screen } from '@/components/layout/Screen';
 import { useIsWide } from '@/components/layout/useIsWide';
 import { paint } from '@/components/ui/Controls';
-import { Avatar } from '@/components/ui/Avatar';
+import { PresenceAvatar } from '@/components/profile/ProfileCard';
 import { Box } from '@/components/ui/Box';
 import { ErrorState, SkeletonCards } from '@/components/ui/Feedback';
 import { Press } from '@/components/ui/Press';
 import { Txt } from '@/components/ui/Txt';
 import { availabilityLabel } from '@/components/profile/availability';
+import { useAuth } from '@/lib/auth';
 import { AVAILABILITY, BANNER } from '@/lib/labels';
 import { useProfitShares, useTasks } from '@/lib/queries';
 import { useTeam } from '@/lib/team';
@@ -78,6 +79,8 @@ function AvailDot({ color, label }: { color: string; label: string }) {
 
 
 function PhoneCard({ person }: { person: Profile }) {
+  const { colors } = useTheme();
+  const me = useAuth().profile;
   const { team, projects, name, avail, availText } = useMemberInfo(person);
   const shares = useProfitShares();
   const tasks = useTasks();
@@ -87,7 +90,7 @@ function PhoneCard({ person }: { person: Profile }) {
   return (
     <Box bg="surface" shadow style={{ borderRadius: 24, padding: 16, gap: 12 }}>
       <Press onPress={() => openProfile(person.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <Avatar person={person} size={48} />
+        <PresenceAvatar person={person} size={48} isMe={person.id === me?.id} ring={colors.surface} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Txt size={17} weight={700}>
             {name}
@@ -121,6 +124,7 @@ function PhoneCard({ person }: { person: Profile }) {
 
 function WideCard({ person }: { person: Profile }) {
   const { colors } = useTheme();
+  const me = useAuth().profile;
   const { projects, name, avail, availText } = useMemberInfo(person);
   const banner = BANNER[person.banner_color];
 
@@ -135,7 +139,7 @@ function WideCard({ person }: { person: Profile }) {
       <View style={{ height: 70, backgroundColor: paint(colors, banner.bg) }} />
       <View style={{ paddingHorizontal: 18, paddingBottom: 18, marginTop: -30, gap: 10 }}>
         <View style={{ alignSelf: 'flex-start', borderRadius: 34, borderWidth: 4, borderColor: colors.surface }}>
-          <Avatar person={person} size={52} />
+          <PresenceAvatar person={person} size={52} isMe={person.id === me?.id} ring={colors.surface} />
         </View>
         <View>
           <Txt size={18} weight={700}>

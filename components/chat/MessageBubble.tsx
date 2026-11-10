@@ -1,7 +1,7 @@
 import { Platform, View } from 'react-native';
 
 import { AvatarStack } from '@/components/Social';
-import { Avatar } from '@/components/ui/Avatar';
+import { PresenceAvatar } from '@/components/profile/ProfileCard';
 import { Box } from '@/components/ui/Box';
 import { Icon } from '@/components/ui/Icon';
 import { PendingBadge } from '@/components/ui/PendingBadge';
@@ -59,14 +59,14 @@ export function MessageBubble({
       {!mine && showAuthor && (
         <View style={{ width: 30 }}>{!grouped && author && (
             <Press onPress={() => openProfile(author.id)} accessibilityLabel={author.full_name + ' profili'}>
-              <Avatar person={author} size={30} />
+              <PresenceAvatar person={author} size={30} isMe={false} ring={colors.bg} />
             </Press>
           )}</View>
       )}
       <View style={{ maxWidth: '78%', alignItems: mine ? 'flex-end' : 'flex-start', gap: 4 }}>
         {!mine && showAuthor && !grouped && (
           <Press onPress={() => openProfile(author?.id)} pressScale={1}>
-            <Txt size={12.5} weight={700} color="muted" style={{ marginLeft: 4 }}>
+            <Txt size={12.5} weight={700} color="muted" style={[{ marginLeft: 4 }, author?.accent_color ? { color: author.accent_color } : null]}>
               {author?.full_name ?? 'Eski üye'}
             </Txt>
           </Press>

@@ -64,6 +64,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchProfile]);
 
+  // Profil değişiklikleri canlı (bölüm 4): bir ekip üyesi profilini değiştirince kenar çubuğu, sohbet, ekip listesi
+  // ve açık kart / pencere sayfa yenilenmeden güncellenir.
+  useEffect(() => {
+    if (!userId) return;
+    const ch = supabase
+      .channel(`profiller:${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
+        const row = payload.new as Profile | undefined;
+        if (!row?.id) return invalidate('profiles');
+        mutateCache<Profile[]>('profiles', (prev) => {
+          const list = prev ?? [];
+          return list.some((p) => p.id === row.id) ? list.map((p) => (p.id === row.id ? { ...p, ...row } : p)) : [...list, row];
+        });
+        if (row.id === userId) setProfile((p) => (p ? { ...p, ...row } : p));
+      })
+      .subscribe();
+    return () => {
+      ch.unsubscribe();
+    };
+  }, [userId]);
+
+  // Özel durumun süresi dolunca: ekranda hemen kalkar ve veritabanından da temizlenir.
+  const expiresAt = profile?.custom_status ? profile.custom_status_expires_at : null;
+  useEffect(() => {
+    if (!expiresAt || !userId) return;
+    const clear = () => {
+      setProfile((p) => (p ? { ...p, custom_status: '', custom_status_emoji: '', custom_status_expires_at: null } : p));
+      supabase
+        .from('profiles')
+        .update({ custom_status: '', custom_status_emoji: '', custom_status_expires_at: null })
+        .eq('id', userId)
+        .then(() => invalidate('profiles'));
+    };
+    const ms = new Date(expiresAt).getTime() - Date.now();
+    if (ms <= 0) {
+      clear();
+      return;
+    }
+    const t = setTimeout(clear, Math.min(ms, 2 ** 31 - 1));
+    return () => clearTimeout(t);
+  }, [expiresAt, userId]);
+
   const updateProfile = useCallback(
     async (patch: Partial<Profile>) => {
       if (!userId) return 'Önce giriş yapmalısın.';

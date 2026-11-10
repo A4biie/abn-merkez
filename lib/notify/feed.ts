@@ -17,7 +17,8 @@ import { pushNotice, type NoticeKind } from './store';
 /** Bu tür şu an kart olarak gösterilsin mi? (ayarlar, sessiz mod, sessiz saatler) */
 function allowed(kind: NoticeKind, profile: Profile): boolean {
   const p = getPrefs();
-  if (!p.enabled || quiet || inQuietHours(profile, new Date())) return false;
+  // Meşgul: masaüstü bildirimleri sessiz (bildirim merkezinde yine görünür).
+  if (!p.enabled || quiet || profile.status === 'busy' || inQuietHours(profile, new Date())) return false;
   const key: NotifyTypeKey | null =
     kind === 'mesaj' ? 'mesaj' : kind === 'anma' ? 'anma' : kind === 'kalp' ? 'kalp'
     : kind === 'gorev' || kind === 'istek' ? 'gorev' : kind === 'duyuru' ? 'duyuru' : kind === 'oylama' ? 'oylama' : null;
