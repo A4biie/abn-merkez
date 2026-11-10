@@ -39,7 +39,7 @@ export function Sidebar() {
   const current = activeTab(pathname);
 
   return (
-    <Box bg="nav" border="line" style={{ width: 248, borderWidth: 0, borderRightWidth: 1 }}>
+    <Box bg="nav" border="line" style={{ width: 248, borderWidth: 0, borderRightWidth: 1, zIndex: 20 }}>
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, paddingVertical: 22, paddingHorizontal: 14, gap: 4 }}
         showsVerticalScrollIndicator={false}
