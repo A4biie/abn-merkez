@@ -17,6 +17,30 @@ export function closeProfile() {
   emit();
 }
 
+// Profili düzenle penceresi (bölüm 3).
+let editing = false;
+const editSubs = new Set<() => void>();
+export function openEditor() {
+  current = null;
+  emit();
+  editing = true;
+  editSubs.forEach((f) => f());
+}
+export function closeEditor() {
+  editing = false;
+  editSubs.forEach((f) => f());
+}
+export function useEditorOpen(): boolean {
+  return useSyncExternalStore(
+    (f) => {
+      editSubs.add(f);
+      return () => editSubs.delete(f);
+    },
+    () => editing,
+    () => false,
+  );
+}
+
 export function useProfileModal(): string | null {
   return useSyncExternalStore(
     (f) => {

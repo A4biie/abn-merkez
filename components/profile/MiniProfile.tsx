@@ -2,7 +2,6 @@
 // Arka plan kararmaz. Açılış sol alt köşeden yay eğrisiyle 0.24 sn, kapanış 0.15 sn. Durum ve özel durum
 // yan menüleri (.flyout) kartın sağında açılır.
 
-import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import Animated, { css } from 'react-native-reanimated';
@@ -12,7 +11,7 @@ import { useToast } from '@/components/ui/Toast';
 import { Txt } from '@/components/ui/Txt';
 import { useAuth } from '@/lib/auth';
 import { CS_EMOJIS, CS_EXPIRY, customStatus, expiryDate, STATUS, STATUS_ORDER } from '@/lib/presence';
-import { openProfile } from '@/lib/profileModal';
+import { openEditor, openProfile } from '@/lib/profileModal';
 import type { PresenceStatus, Profile } from '@/lib/types';
 import { useMotion } from '@/theme/motion';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -130,7 +129,7 @@ export function MiniProfile({
             label="Profili düzenle"
             onPress={() => {
               onClose();
-              router.navigate('/profil?duzenle=1');
+              openEditor();
             }}
           />
           <Act

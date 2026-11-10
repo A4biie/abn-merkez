@@ -9,6 +9,7 @@ import { NotificationsLive } from '@/components/layout/NotificationsLive';
 import { PhoneTabBar } from '@/components/layout/PhoneTabBar';
 import { SearchProvider } from '@/components/layout/Search';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { ProfileEditor } from '@/components/profile/ProfileEditor';
 import { ProfileModal } from '@/components/profile/ProfileModal';
 import { useIsWide } from '@/components/layout/useIsWide';
 import { WhatsNew } from '@/components/layout/WhatsNew';
@@ -45,6 +46,7 @@ export default function AppLayout() {
       <NotificationsLive />
       <WhatsNew />
       <ProfileModal />
+      <ProfileEditor />
       <SearchProvider>
         <ActionsProvider>
           <Box bg="bg" style={{ flex: 1, flexDirection: wide ? 'row' : 'column' }}>

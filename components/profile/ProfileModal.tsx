@@ -13,7 +13,7 @@ import { Txt } from '@/components/ui/Txt';
 import { useAuth } from '@/lib/auth';
 import { openDirectRoom } from '@/lib/chat';
 import { customStatus, statusLine } from '@/lib/presence';
-import { closeProfile, useProfileModal } from '@/lib/profileModal';
+import { closeProfile, openEditor, useProfileModal } from '@/lib/profileModal';
 import { useIdeas, useProjects, useTasks } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
 import { useTeam } from '@/lib/team';
@@ -199,8 +199,7 @@ function Modal({ person }: { person: Profile }) {
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, padding: 14, minHeight: 64 }}>
             {isMe ? (
               pill('Profili düzenle', () => {
-                closeProfile();
-                router.navigate('/profil?duzenle=1');
+                openEditor();
               }, true)
             ) : (
               <>

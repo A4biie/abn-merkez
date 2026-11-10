@@ -154,7 +154,9 @@ export function ProfileCard({
         borderRadius: 18,
         backgroundColor: colors.surface,
         overflow: 'hidden',
-        boxShadow: shadow ?? `0 0 0 1px ${colors.line}`,
+        boxShadow: person.accent_color
+          ? `0 0 0 2px ${person.accent_color}${shadow ? ", " + shadow.replace(/^0 0 0 1px [^,]+, /, "") : ""}`
+          : (shadow ?? `0 0 0 1px ${colors.line}`),
       }}
     >
       <View style={[{ height: 80 }, banner]} />
