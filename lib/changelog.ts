@@ -166,6 +166,18 @@ export const RELEASES: Release[] = [
 /** ABN Launcher (masaüstü) sürümleri. */
 export const LAUNCHER_RELEASES: Release[] = [
   {
+    "version": "1.3.0",
+    "date": "10 Kasım 2026",
+    "sections": [
+      {
+        "title": "Yeni",
+        "items": [
+          "Profil bölüm 1: mini profil kartı, durum ve özel durum"
+        ]
+      }
+    ]
+  },
+  {
     "version": "1.2.0",
     "date": "9 Kasım 2026",
     "sections": [
