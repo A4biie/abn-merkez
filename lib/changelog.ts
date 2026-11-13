@@ -183,6 +183,18 @@ export const RELEASES: Release[] = [
 /** ABN Launcher (masaüstü) sürümleri. */
 export const LAUNCHER_RELEASES: Release[] = [
   {
+    "version": "1.14.1",
+    "date": "13 Kasım 2026",
+    "sections": [
+      {
+        "title": "Yeni",
+        "items": [
+          "CI: package-lock npm 10 ile yeniden üretildi (Missing @floating-ui/dom)"
+        ]
+      }
+    ]
+  },
+  {
     "version": "1.14.0",
     "date": "13 Kasım 2026",
     "sections": [

@@ -4,6 +4,12 @@ ABN Merkez'in sürümleri. Yeni özellik getiren sürüm 0.x.0, sadece düzeltme
 Uygulama yeni bir sürüme ilk açıldığında "Neler yeni" panelinde o sürümün maddeleri gösterilir
 (`npm run changelog` bu dosyadan `lib/changelog.ts`'i üretir).
 
+## Launcher 1.14.1 · 13 Kasım 2026
+
+### Yeni
+
+- CI: package-lock npm 10 ile yeniden üretildi (Missing @floating-ui/dom)
+
 ## Launcher 1.14.0 · 13 Kasım 2026
 
 ### Yeni
