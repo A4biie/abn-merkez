@@ -15,6 +15,8 @@ export type LauncherSettings = {
   autoUpdate: boolean;
   /** Oyunların kurulduğu klasör. */
   installDir: string;
+  /** Oyun içinden bug bildirme kısayolu ("F8", "Ctrl+F9"). */
+  bugKey: string;
 };
 
 const KEYS = {
@@ -22,6 +24,7 @@ const KEYS = {
   closeToTray: 'abn.launcher.closeToTray',
   autoUpdate: 'abn.launcher.autoUpdate',
   installDir: 'abn.launcher.installDir',
+  bugKey: 'abn.launcher.bugKey',
 } as const;
 
 const flag = (key: string, fallback: boolean) => {
@@ -34,6 +37,7 @@ const settings = createStore<LauncherSettings>({
   closeToTray: flag(KEYS.closeToTray, true),
   autoUpdate: flag(KEYS.autoUpdate, true),
   installDir: readLocal(KEYS.installDir) || DEFAULT_INSTALL_DIR,
+  bugKey: readLocal(KEYS.bugKey) || 'F8',
 });
 
 export const getSettings = settings.get;
@@ -46,6 +50,7 @@ export async function setSetting<K extends keyof LauncherSettings>(key: K, value
     else await auto.disable();
   }
   if (key === 'closeToTray' && isDesktop) await invoke('set_close_to_tray', { enabled: value });
+  if (key === 'bugKey' && isDesktop) await invoke('set_bug_key', { key: value });
   writeLocal(KEYS[key], typeof value === 'boolean' ? (value ? '1' : '0') : String(value));
   settings.set((s) => ({ ...s, [key]: value }));
 }
@@ -54,6 +59,7 @@ export async function setSetting<K extends keyof LauncherSettings>(key: K, value
 export async function syncSettings() {
   if (!isDesktop) return;
   await invoke('set_close_to_tray', { enabled: settings.get().closeToTray }).catch(() => {});
+  await invoke('set_bug_key', { key: settings.get().bugKey }).catch(() => {});
   try {
     const auto = await import('@tauri-apps/plugin-autostart');
     const on = await auto.isEnabled();

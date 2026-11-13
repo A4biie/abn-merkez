@@ -6,7 +6,8 @@
     "splash",
     "merkez",
     "fikir",
-    "bildirim"
+    "bildirim",
+    "hata"
   ],
   "permissions": [
     "core:default",

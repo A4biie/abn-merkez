@@ -4,7 +4,9 @@
 //!   main    → launcher (ana sayfa, oyunlar, indirmeler, ayarlar)
 //!   merkez  → ABN Merkez (1440×900)
 //!   fikir   → hızlı fikir (Ctrl+Shift+Space)
+//!   hata    → oyun içinden bug bildirme (F8, bugreport.rs)
 
+mod bugreport;
 mod games;
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -324,6 +326,7 @@ pub fn run() {
             ..Default::default()
         })
         .manage(games::Downloads::default())
+        .manage(bugreport::BugState::default())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_dialog::init())
@@ -344,8 +347,13 @@ pub fn run() {
                 handle.plugin(
                     tauri_plugin_global_shortcut::Builder::new()
                         .with_handler(move |app, shortcut, event| {
-                            if shortcut == &idea && event.state() == ShortcutState::Pressed {
+                            if event.state() != ShortcutState::Pressed {
+                                return;
+                            }
+                            if shortcut == &idea {
                                 open_quick_idea(app);
+                            } else if bugreport::is_bug_shortcut(app, shortcut) {
+                                bugreport::on_shortcut(app);
                             }
                         })
                         .build(),
@@ -432,6 +440,10 @@ pub fn run() {
             games::game_uninstall,
             games::game_verify,
             games::game_play,
+            bugreport::set_bug_key,
+            bugreport::bug_info,
+            bugreport::bug_shot,
+            bugreport::bug_close,
         ])
         .run(tauri::generate_context!())
         .expect("ABN Launcher başlatılamadı");

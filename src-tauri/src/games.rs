@@ -379,13 +379,12 @@ pub async fn game_verify(id: String, install_dir: String) -> Result<bool, String
 
 /// Oyunu başlatır; launcher tepsiye iner, oyun kapanınca geri gelir.
 #[tauri::command]
-pub fn game_play(app: AppHandle, id: String, exe: String, install_dir: String) -> Result<(), String> {
+pub fn game_play(app: AppHandle, id: String, exe: String, install_dir: String, name: Option<String>) -> Result<(), String> {
     safe_id(&id)?;
     let reg = read_registry(Path::new(&install_dir));
-    let dir = reg
-        .get(&id)
-        .map(|r| PathBuf::from(&r.dir))
-        .ok_or_else(|| "Oyun kurulu görünmüyor.".to_string())?;
+    let rec = reg.get(&id).ok_or_else(|| "Oyun kurulu görünmüyor.".to_string())?;
+    let dir = PathBuf::from(&rec.dir);
+    let version = rec.version.clone();
     let rel = Path::new(&exe);
     if exe.is_empty() || rel.is_absolute() || exe.contains("..") {
         return Err("Oyunun çalıştırılacak dosyası tanımlı değil.".into());
@@ -401,9 +400,12 @@ pub fn game_play(app: AppHandle, id: String, exe: String, install_dir: String) -
     if let Some(main) = app.get_webview_window("main") {
         let _ = main.hide();
     }
+    // Oyun çalışırken bug kısayolu (F8) dinlenir.
+    crate::bugreport::game_started(&app, id.clone(), name, version);
     let handle = app.clone();
     std::thread::spawn(move || {
         let _ = child.wait();
+        crate::bugreport::game_stopped(&handle);
         let _ = handle.emit("game://exited", serde_json::json!({ "id": id }));
         if let Some(main) = handle.get_webview_window("main") {
             let _ = main.show();

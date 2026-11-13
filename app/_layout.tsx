@@ -11,6 +11,7 @@ import { DesktopAppIn } from '@/components/layout/DesktopAppIn';
 import { LauncherApp } from '@/components/launcher/LauncherApp';
 import { MerkezBridge } from '@/components/launcher/MerkezBridge';
 import { QuickIdea } from '@/components/launcher/QuickIdea';
+import { BugQuick } from '@/components/launcher/BugQuick';
 import { NotifyOverlay } from '@/components/notify/Overlay';
 import { Splash } from '@/components/Splash';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -69,7 +70,7 @@ function RootNavigator() {
   // Masaüstünde açılışı launcher'ın kendi penceresi (public/splash.html) yapar.
   const [splashDone, setSplashDone] = useState(isDesktop || isLauncherWindow || isNotifyWindow);
   // Şeffaf küçük pencereler (hızlı fikir, bildirimler) zemin çizmez.
-  const overlayWindow = isNotifyWindow || windowLabel === 'fikir';
+  const overlayWindow = isNotifyWindow || windowLabel === 'fikir' || windowLabel === 'hata';
   const finishSplash = useCallback(() => setSplashDone(true), []);
 
   // Expo'nun kendi açılış ekranı sadece düz renk; yazı tipleri yüklenince animasyonlu açılış başlar.
@@ -92,6 +93,7 @@ function RootNavigator() {
         </DesktopAppIn>
       )}
       {ready && windowLabel === 'fikir' && <QuickIdea />}
+      {ready && windowLabel === 'hata' && <BugQuick />}
       {ready && isNotifyWindow && <NotifyOverlay />}
       {ready && !isLauncherWindow && !overlayWindow && (
         <DesktopAppIn>

@@ -55,12 +55,12 @@ export const useBugs = () =>
     if (error) throw error;
     return (data ?? []) as Bug[];
   });
-export const useBuilds = () =>
-  useQuery('builds', async () => {
-    const { data, error } = await supabase.from('builds').select('*').order('created_at', { ascending: false });
-    if (error) throw error;
-    return (data ?? []) as Build[];
-  });
+export async function fetchBuilds() {
+  const { data, error } = await supabase.from('builds').select('*').order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as Build[];
+}
+export const useBuilds = () => useQuery('builds', fetchBuilds);
 export const useBugEvents = (bugId: string | null) =>
   useQuery(bugId ? `bugEvents:${bugId}` : null, async () => {
     const { data, error } = await supabase.from('bug_events').select('*').eq('bug_id', bugId!).order('created_at');

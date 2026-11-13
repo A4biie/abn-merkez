@@ -183,7 +183,7 @@ export async function playGame(g: Game) {
   store.set((s) => ({ ...s, playing: g.id }));
   if (launcherDemo) return void setTimeout(() => store.set((s) => ({ ...s, playing: null })), 4000);
   try {
-    await invoke('game_play', { id: g.id, exe: g.exe, installDir: getSettings().installDir });
+    await invoke('game_play', { id: g.id, exe: g.exe, installDir: getSettings().installDir, name: g.ad });
   } catch (e) {
     store.set((s) => ({ ...s, playing: null }));
     throw e;

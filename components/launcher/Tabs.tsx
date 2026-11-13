@@ -1,7 +1,7 @@
 // Launcher sekmeleri: Oyunlar, İndirmeler, Ayarlar.
 
-import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Platform, ScrollView, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { EmptyState } from '@/components/EmptyState';
@@ -513,6 +513,8 @@ export function SettingsTab() {
         </View>
       </View>
 
+      <BugKeySetting />
+
       <NotifySettings />
 
       <View style={{ gap: 12 }}>
@@ -546,5 +548,64 @@ export function SettingsTab() {
         </View>
       </View>
     </ScrollView>
+  );
+}
+
+/** "Bug bildirme kısayolu: F8". Tıklayıp yeni tuşa basınca değişir (F1–F12, istersen Ctrl / Shift / Alt ile). */
+function BugKeySetting() {
+  const { colors } = useTheme();
+  const s = useSettings();
+  const [listening, setListening] = useState(false);
+  const [err, setErr] = useState('');
+  useEffect(() => {
+    if (!listening || Platform.OS !== 'web') return;
+    const down = (e: KeyboardEvent) => {
+      e.preventDefault();
+      if (e.key === 'Escape') return setListening(false);
+      if (!/^F([1-9]|1[0-2])$/.test(e.key)) return setErr('F1–F12 arasında bir tuş seç (Ctrl, Shift, Alt ile de olur).');
+      const key = [e.ctrlKey && 'Ctrl', e.shiftKey && 'Shift', e.altKey && 'Alt', e.key].filter(Boolean).join('+');
+      setListening(false);
+      setErr('');
+      setSetting('bugKey', key).catch(() => setErr('Bu tuş kullanılamıyor.'));
+    };
+    window.addEventListener('keydown', down, true);
+    return () => window.removeEventListener('keydown', down, true);
+  }, [listening]);
+  return (
+    <View style={{ backgroundColor: colors.surface, borderRadius: 22, padding: 20, gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Txt size={17} weight={800}>
+            Bug bildirme kısayolu
+          </Txt>
+          <Txt size={13.5} color="muted">
+            {`Launcher'dan açtığın bir oyunda bu tuşa basınca ekran görüntüsü alınır ve "Ne oldu?" penceresi açılır.`}
+          </Txt>
+        </View>
+        <Press
+          onPress={() => {
+            setErr('');
+            setListening((l) => !l);
+          }}
+          style={{
+            paddingVertical: 8,
+            paddingHorizontal: 14,
+            borderRadius: 12,
+            backgroundColor: listening ? colors.a1 : colors.chip,
+            minWidth: 90,
+            alignItems: 'center',
+          }}
+        >
+          <Txt size={14} weight={800} color={listening ? 'a1-ink' : undefined} style={{ fontFamily: 'JetBrains Mono, ui-monospace, monospace' }}>
+            {listening ? 'Tuşa bas…' : s.bugKey}
+          </Txt>
+        </Press>
+      </View>
+      {err ? (
+        <Txt size={12.5} color="warn-text">
+          {err}
+        </Txt>
+      ) : null}
+    </View>
   );
 }
