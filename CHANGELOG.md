@@ -4,6 +4,12 @@ ABN Merkez'in sürümleri. Yeni özellik getiren sürüm 0.x.0, sadece düzeltme
 Uygulama yeni bir sürüme ilk açıldığında "Neler yeni" panelinde o sürümün maddeleri gösterilir
 (`npm run changelog` bu dosyadan `lib/changelog.ts`'i üretir).
 
+## Launcher 1.8.0 · 13 Kasım 2026
+
+### Yeni
+
+- 0.11 bölüm 1: Ctrl+K komut paleti
+
 ## Launcher 1.7.0 · 10 Kasım 2026
 
 ### Yeni
