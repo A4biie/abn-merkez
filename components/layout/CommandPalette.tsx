@@ -15,6 +15,7 @@ import { TASK_STATUS } from '@/lib/labels';
 import { closePalette, fold, togglePalette, usePaletteOpen } from '@/lib/palette';
 import { openProfile } from '@/lib/profileModal';
 import { useProfiles, useTasks } from '@/lib/queries';
+import { ancestry, useWiki } from '@/lib/wiki';
 import { THEMES, type ThemeName } from '@/theme/themes';
 import { useMotion } from '@/theme/motion';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -76,6 +77,7 @@ function Palette({ closing }: { closing: boolean }) {
   const { openAddTask } = useActions();
   const tasks = useTasks();
   const people = useProfiles();
+  const wiki = useWiki();
   const { width } = useWindowDimensions();
   const full = width < 700;
   const [q, setQ] = useState('');
@@ -116,8 +118,16 @@ function Palette({ closing }: { closing: boolean }) {
       });
     for (const p of people.data ?? [])
       it.push({ group: 'Kişiler', icon: '👤', label: p.full_name || '@' + p.username, info: 'Profil', run: () => openProfile(p.id) });
+    for (const w of wiki.data ?? [])
+      it.push({
+        group: 'Wiki',
+        icon: '📖',
+        label: w.title,
+        info: ancestry(wiki.data ?? [], w.id).length > 1 ? ancestry(wiki.data ?? [], w.id)[0].title : 'Sayfa',
+        run: () => router.navigate({ pathname: '/wiki', params: { sayfa: w.id } }),
+      });
     return it;
-  }, [tasks.data, people.data, theme, setTheme, openAddTask, say]);
+  }, [wiki.data, tasks.data, people.data, theme, setTheme, openAddTask, say]);
 
   const s = fold(dq.trim());
   const results = useMemo(

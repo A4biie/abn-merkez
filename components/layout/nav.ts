@@ -2,7 +2,7 @@ import type { Href } from 'expo-router';
 
 import type { IconName } from '@/components/ui/Icon';
 
-export type TabName = 'akis' | 'sohbet' | 'gorevler' | 'projeler' | 'panolar' | 'fikirler' | 'ekip';
+export type TabName = 'akis' | 'sohbet' | 'gorevler' | 'projeler' | 'panolar' | 'fikirler' | 'wiki' | 'ekip';
 export type HiddenRoute = 'index' | 'bildirimler' | 'profil' | 'yonetim' | 'ozet';
 
 /**
@@ -18,6 +18,8 @@ export const TABS: {
   title: string;
   crumb: string;
   phone?: false;
+  /** Yan menüde adın yanında rozet ("YENİ"). */
+  badge?: string;
 }[] = [
   { name: 'akis', href: '/akis', label: 'Akış', icon: 'akis', title: 'Akış', crumb: 'Ekipten son paylaşımlar' },
   { name: 'sohbet', href: '/sohbet', label: 'Sohbet', icon: 'sohbet', title: 'Sohbet', crumb: 'Genel, projeler ve özel mesajlar' },
@@ -32,6 +34,7 @@ export const TABS: {
     crumb: 'Referans, taslak, hikâye akışı',
   },
   { name: 'fikirler', href: '/fikirler', label: 'Fikirler', icon: 'fikir', title: 'Fikir Defteri', crumb: 'Kaybolmasın diye', phone: false },
+  { name: 'wiki', href: '/wiki', label: 'Wiki', icon: 'note', title: 'Wiki', crumb: 'Ekip bilgisi', phone: false, badge: 'YENİ' },
   { name: 'ekip', href: '/ekip', label: 'Ekip', icon: 'ekip', title: 'Ekip', crumb: 'Ekip' },
 ];
 

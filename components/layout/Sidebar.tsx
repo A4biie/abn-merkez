@@ -75,6 +75,7 @@ export function Sidebar() {
               icon={t.icon}
               active={current === t.name}
               dot={t.name === 'sohbet' && unread}
+              badge={t.badge}
             />
           </TabTrigger>
         ))}
@@ -136,10 +137,10 @@ export function Sidebar() {
   );
 }
 
-type NavItemProps = TabTriggerSlotProps & { label: string; icon: IconName; active: boolean; dot?: boolean };
+type NavItemProps = TabTriggerSlotProps & { label: string; icon: IconName; active: boolean; dot?: boolean; badge?: string };
 
 // Seçili durum adresten hesaplanır (active); TabTrigger'ın isFocused'ı menü dışı kullanımda gelmiyor.
-function NavItem({ label, icon, active, dot, isFocused: _isFocused, ...rest }: NavItemProps) {
+function NavItem({ label, icon, active, dot, badge, isFocused: _isFocused, ...rest }: NavItemProps) {
   const { colors } = useTheme();
   return (
     <Press
@@ -166,6 +167,13 @@ function NavItem({ label, icon, active, dot, isFocused: _isFocused, ...rest }: N
       <Txt weight={600} color={active ? 'accent-text' : 'text-2'} style={{ flex: 1 }}>
         {label}
       </Txt>
+      {badge ? (
+        <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 999, backgroundColor: colors.a1 }}>
+          <Txt size={10} weight={800} color="a1-ink" style={{ letterSpacing: 0.4 }}>
+            {badge}
+          </Txt>
+        </View>
+      ) : null}
     </Press>
   );
 }
