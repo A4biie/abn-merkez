@@ -13,6 +13,7 @@ import { Icon, type IconName } from '@/components/ui/Icon';
 import { Press } from '@/components/ui/Press';
 import { Txt } from '@/components/ui/Txt';
 import { useAuth } from '@/lib/auth';
+import { useBugs } from '@/lib/bugs';
 import { useChatUnread } from '@/lib/chat';
 import { statusLine } from '@/lib/presence';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -27,6 +28,9 @@ export function Sidebar() {
   const { profile } = useAuth();
   const pathname = usePathname();
   const unread = useChatUnread();
+  // Açık kritik bug sayısı (kırmızı rozet).
+  const bugs = useBugs();
+  const critOpen = (bugs.data ?? []).filter((b) => b.severity === 'kritik' && b.status !== 'kapandi').length;
   const me = useMe();
   const { colors } = useTheme();
   // Mini profil: açık / kapanıyor (0.15 sn animasyon) / kapalı.
@@ -76,6 +80,7 @@ export function Sidebar() {
               active={current === t.name}
               dot={t.name === 'sohbet' && unread}
               badge={t.badge}
+              count={t.name === 'buglar' ? critOpen : undefined}
             />
           </TabTrigger>
         ))}
@@ -137,10 +142,10 @@ export function Sidebar() {
   );
 }
 
-type NavItemProps = TabTriggerSlotProps & { label: string; icon: IconName; active: boolean; dot?: boolean; badge?: string };
+type NavItemProps = TabTriggerSlotProps & { label: string; icon: IconName; active: boolean; dot?: boolean; badge?: string; count?: number };
 
 // Seçili durum adresten hesaplanır (active); TabTrigger'ın isFocused'ı menü dışı kullanımda gelmiyor.
-function NavItem({ label, icon, active, dot, badge, isFocused: _isFocused, ...rest }: NavItemProps) {
+function NavItem({ label, icon, active, dot, badge, count, isFocused: _isFocused, ...rest }: NavItemProps) {
   const { colors } = useTheme();
   return (
     <Press
@@ -167,6 +172,13 @@ function NavItem({ label, icon, active, dot, badge, isFocused: _isFocused, ...re
       <Txt weight={600} color={active ? 'accent-text' : 'text-2'} style={{ flex: 1 }}>
         {label}
       </Txt>
+      {count ? (
+        <View style={{ minWidth: 20, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 999, backgroundColor: '#ED4245', alignItems: 'center' }}>
+          <Txt size={11} weight={800} style={{ color: '#fff' }}>
+            {count}
+          </Txt>
+        </View>
+      ) : null}
       {badge ? (
         <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 999, backgroundColor: colors.a1 }}>
           <Txt size={10} weight={800} color="a1-ink" style={{ letterSpacing: 0.4 }}>

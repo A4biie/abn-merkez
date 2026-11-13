@@ -61,6 +61,10 @@ export function MessageActions({
     onClose();
     conv.toIdea();
   }
+  function toBug() {
+    onClose();
+    conv.toBug();
+  }
 
   if (mode === 'board') return <AddToBoard message={message} projectId={projectId} onClose={onClose} />;
 
@@ -95,6 +99,7 @@ export function MessageActions({
       <Row icon="heart" label={liked ? 'Kalbini geri al' : 'Kalp bırak'} onPress={heart} />
       {!!message.body && <Row icon="gorev" label="Göreve çevir" onPress={toTask} />}
       {!!message.body && <Row icon="fikir" label="Fikre çevir" onPress={toIdea} />}
+      {!!message.body && <Row icon="alert" label="Bug olarak bildir" onPress={toBug} />}
       {!!message.body && <Row icon="note" label="Panoya not olarak ekle" onPress={() => setMode('board')} />}
       {mine && !!message.body && (
         <Row

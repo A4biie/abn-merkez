@@ -17,6 +17,7 @@ import { openProfile } from '@/lib/profileModal';
 import { useProfiles, useTasks } from '@/lib/queries';
 import { ancestry, useWiki } from '@/lib/wiki';
 import { useFiles } from '@/lib/files';
+import { code, openBugForm, SEV, useBugs } from '@/lib/bugs';
 import { THEMES, type ThemeName } from '@/theme/themes';
 import { useMotion } from '@/theme/motion';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -80,6 +81,7 @@ function Palette({ closing }: { closing: boolean }) {
   const people = useProfiles();
   const wiki = useWiki();
   const files = useFiles();
+  const bugs = useBugs();
   const { width } = useWindowDimensions();
   const full = width < 700;
   const [q, setQ] = useState('');
@@ -95,6 +97,7 @@ function Palette({ closing }: { closing: boolean }) {
     const it: PaletteItem[] = [
       { group: 'İşlemler', icon: '➕', label: 'Yeni görev', info: 'Görev', run: () => openAddTask() },
       { group: 'İşlemler', icon: '💡', label: 'Yeni fikir', info: 'Fikir', run: () => router.navigate({ pathname: '/fikirler', params: { yeni: '1' } }) },
+      { group: 'İşlemler', icon: '🐞', label: 'Bug bildir', info: 'Bug', run: () => openBugForm() },
       {
         group: 'İşlemler',
         icon: '🎨',
@@ -118,6 +121,14 @@ function Palette({ closing }: { closing: boolean }) {
         info: TASK_STATUS[t.status].label,
         run: () => router.navigate({ pathname: '/gorevler', params: { sekme: 'tumu', vurgu: t.id } }),
       });
+    for (const b of bugs.data ?? [])
+      it.push({
+        group: 'Buglar',
+        icon: '🐞',
+        label: code(b) + ' ' + b.title,
+        info: SEV[b.severity].label,
+        run: () => router.navigate({ pathname: '/buglar', params: { bug: b.id } }),
+      });
     for (const p of people.data ?? [])
       it.push({ group: 'Kişiler', icon: '👤', label: p.full_name || '@' + p.username, info: 'Profil', run: () => openProfile(p.id) });
     for (const w of wiki.data ?? [])
@@ -137,7 +148,7 @@ function Palette({ closing }: { closing: boolean }) {
         run: () => router.navigate({ pathname: '/dosyalar', params: { q: f.name } }),
       });
     return it;
-  }, [files.data, wiki.data, tasks.data, people.data, theme, setTheme, openAddTask, say]);
+  }, [bugs.data, files.data, wiki.data, tasks.data, people.data, theme, setTheme, openAddTask, say]);
 
   const s = fold(dq.trim());
   const results = useMemo(

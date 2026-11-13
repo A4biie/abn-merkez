@@ -3,6 +3,7 @@ import { TabList, Tabs, TabSlot, TabTrigger } from 'expo-router/ui';
 import { Platform } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { BugForm } from '@/components/bugs/BugForm';
 import { ConvertTaskModal } from '@/components/chat/ConvertTaskModal';
 import { CommandPalette } from '@/components/layout/CommandPalette';
 import { ConnectionCapsule } from '@/components/layout/ConnectionCapsule';
@@ -70,6 +71,7 @@ export default function AppLayout() {
           </Box>
           <CommandPalette />
           <ConvertTaskModal />
+          <BugForm />
         </ActionsProvider>
       </SearchProvider>
     </Tabs>

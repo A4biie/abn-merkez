@@ -190,7 +190,7 @@ export type Announcement = {
 };
 
 export type NotificationKind =
-  'yorum' | 'kalp' | 'istek_cevap' | 'istek' | 'duyuru' | 'gorev_atama' | 'yardim' | 'soru' | 'diger';
+  'yorum' | 'kalp' | 'istek_cevap' | 'istek' | 'duyuru' | 'gorev_atama' | 'yardim' | 'soru' | 'bug' | 'diger';
 
 export type AppNotification = {
   id: string;

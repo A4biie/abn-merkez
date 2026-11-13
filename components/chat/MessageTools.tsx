@@ -10,6 +10,7 @@ import { Press } from '@/components/ui/Press';
 import { useToast } from '@/components/ui/Toast';
 import { Txt } from '@/components/ui/Txt';
 import type { Message } from '@/lib/chat';
+import { code, openBugForm, useBugs } from '@/lib/bugs';
 import { ideaFromMessage, openConvertTask } from '@/lib/convert';
 import { useIdeas, useTasks } from '@/lib/queries';
 import { useTeam } from '@/lib/team';
@@ -32,6 +33,7 @@ export function useConvert(message: Message, projectId: string | null) {
   const say = useToast();
   return {
     toTask: () => openConvertTask(message, projectId),
+    toBug: () => openBugForm({ message, projectId }),
     toIdea: async () => {
       const err = await ideaFromMessage(message, team.meId, projectId);
       say(err ? 'Fikir eklenemedi' : "Fikir Defteri'ne eklendi");
@@ -92,6 +94,7 @@ export function MessageMenu({ x, y, message, projectId, onClose }: { x: number; 
   const items = [
     { k: 't', icon: '☑', label: 'Göreve çevir', run: c.toTask },
     { k: 'f', icon: '💡', label: 'Fikre çevir', run: c.toIdea },
+    { k: 'b', icon: '🐞', label: 'Bug olarak bildir', run: c.toBug },
   ];
   const run = (f: () => void) => {
     onClose();
@@ -199,7 +202,11 @@ export function MessageLinks({ messageId, align }: { messageId: string; align: '
   const motion = useMotion();
   const tasks = useTasks();
   const ideas = useIdeas();
+  const bugs = useBugs();
   const linked = [
+    ...(bugs.data ?? [])
+      .filter((b) => b.source_message_id === messageId)
+      .map((b) => ({ id: 'b' + b.id, label: '🐞 ' + code(b) + ' açıldı', go: () => router.navigate({ pathname: '/buglar', params: { bug: b.id } }) })),
     ...(tasks.data ?? [])
       .filter((t) => t.source_message_id === messageId)
       .map((t) => ({ id: 't' + t.id, label: '☑ Görev: ' + t.title, go: () => goTask(t.id) })),

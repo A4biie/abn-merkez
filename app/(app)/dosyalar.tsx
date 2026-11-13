@@ -207,6 +207,7 @@ function Preview({ f, onClose }: { f: FileRow; onClose: () => void }) {
     if (f.source === 'sohbet' && f.source_id) router.navigate({ pathname: '/sohbet/[id]', params: { id: f.source_id } });
     else if (f.source === 'pano' && f.source_id) router.navigate({ pathname: '/panolar', params: { pano: f.source_id } });
     else if (f.source === 'wiki' && f.source_id) router.navigate({ pathname: '/wiki', params: { sayfa: f.source_id } });
+    else if (f.source === 'bug' && f.source_id) router.navigate({ pathname: '/buglar', params: { bug: f.source_id } });
   };
   const download = async () => {
     const u = await fileUrl(f, true);
@@ -296,7 +297,7 @@ function Preview({ f, onClose }: { f: FileRow; onClose: () => void }) {
           {confirm ? (
             <View style={{ gap: 8 }}>
               <Txt size={13.5} weight={700}>
-                Dosya silinsin mi? Kaynağından da silinir ({f.source === 'sohbet' ? 'mesajın eki kalkar' : f.source === 'pano' ? 'pano kartı silinir' : 'wiki sayfasında görünmez'}). Geri alınamaz.
+                Dosya silinsin mi? Kaynağından da silinir ({f.source === 'sohbet' ? 'mesajın eki kalkar' : f.source === 'pano' ? 'pano kartı silinir' : f.source === 'bug' ? 'bug kaydındaki ek kalkar' : 'wiki sayfasında görünmez'}). Geri alınamaz.
               </Txt>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 {pill('Vazgeç', () => setConfirm(false))}

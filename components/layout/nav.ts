@@ -2,7 +2,7 @@ import type { Href } from 'expo-router';
 
 import type { IconName } from '@/components/ui/Icon';
 
-export type TabName = 'akis' | 'sohbet' | 'gorevler' | 'projeler' | 'panolar' | 'fikirler' | 'wiki' | 'dosyalar' | 'ekip';
+export type TabName = 'akis' | 'sohbet' | 'gorevler' | 'buglar' | 'projeler' | 'panolar' | 'fikirler' | 'wiki' | 'dosyalar' | 'ekip';
 export type HiddenRoute = 'index' | 'bildirimler' | 'profil' | 'yonetim' | 'ozet';
 
 /**
@@ -24,6 +24,7 @@ export const TABS: {
   { name: 'akis', href: '/akis', label: 'Akış', icon: 'akis', title: 'Akış', crumb: 'Ekipten son paylaşımlar' },
   { name: 'sohbet', href: '/sohbet', label: 'Sohbet', icon: 'sohbet', title: 'Sohbet', crumb: 'Genel, projeler ve özel mesajlar' },
   { name: 'gorevler', href: '/gorevler', label: 'Görevler', icon: 'gorev', title: 'Görevler', crumb: 'Pano' },
+  { name: 'buglar', href: '/buglar', label: 'Buglar', icon: 'alert', title: 'Buglar', crumb: 'Bug takibi', phone: false },
   { name: 'projeler', href: '/projeler', label: 'Projeler', icon: 'proje', title: 'Projeler', crumb: 'Abby’s Nexus' },
   {
     name: 'panolar',

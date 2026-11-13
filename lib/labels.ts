@@ -68,6 +68,7 @@ export const NOTIFICATION_DOT: Record<NotificationKind, string> = {
   duyuru: '#B5D334',
   gorev_atama: '#A794F0',
   soru: '#3FC3D6',
+  bug: '#ED4245',
   diger: '#B5D334',
 };
 

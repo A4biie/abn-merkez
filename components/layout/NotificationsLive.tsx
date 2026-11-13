@@ -36,6 +36,9 @@ export function NotificationsLive() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => invalidate('tasks'))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'ideas' }, () => invalidate('ideas'))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'wiki_pages' }, () => invalidate('wiki'))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bugs' }, () => invalidate('bugs'))
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bug_events' }, (p) => invalidate('bugEvents:' + (p.new as { bug_id?: string }).bug_id))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'builds' }, () => invalidate('builds'))
       .subscribe();
     registerForPush(userId).catch(() => {});
     return () => {
