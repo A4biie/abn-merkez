@@ -2,7 +2,7 @@ import type { Href } from 'expo-router';
 
 import type { IconName } from '@/components/ui/Icon';
 
-export type TabName = 'akis' | 'sohbet' | 'gorevler' | 'projeler' | 'panolar' | 'fikirler' | 'wiki' | 'ekip';
+export type TabName = 'akis' | 'sohbet' | 'gorevler' | 'projeler' | 'panolar' | 'fikirler' | 'wiki' | 'dosyalar' | 'ekip';
 export type HiddenRoute = 'index' | 'bildirimler' | 'profil' | 'yonetim' | 'ozet';
 
 /**
@@ -35,6 +35,7 @@ export const TABS: {
   },
   { name: 'fikirler', href: '/fikirler', label: 'Fikirler', icon: 'fikir', title: 'Fikir Defteri', crumb: 'Kaybolmasın diye', phone: false },
   { name: 'wiki', href: '/wiki', label: 'Wiki', icon: 'note', title: 'Wiki', crumb: 'Ekip bilgisi', phone: false, badge: 'YENİ' },
+  { name: 'dosyalar', href: '/dosyalar', label: 'Dosyalar', icon: 'file', title: 'Dosyalar', crumb: 'Bütün yüklenenler', phone: false, badge: 'YENİ' },
   { name: 'ekip', href: '/ekip', label: 'Ekip', icon: 'ekip', title: 'Ekip', crumb: 'Ekip' },
 ];
 

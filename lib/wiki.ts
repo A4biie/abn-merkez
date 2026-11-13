@@ -105,8 +105,14 @@ export async function restoreRevision(pageId: string, revId: string) {
 }
 
 export async function uploadWikiImage(pageId: string, file: File) {
-  const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const path = `${pageId}/${Date.now()}.${ext}`;
+  // Dosyalar sayfasında görünsün diye özgün ad korunur (Türkçe karakter ve boşluk atılır).
+  const safe = file.name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/ı/g, 'i')
+    .replace(/[^A-Za-z0-9._-]+/g, '_')
+    .slice(-80) || 'gorsel.png';
+  const path = `${pageId}/${Date.now()}-${safe}`;
   const { error } = await supabase.storage.from('wiki-files').upload(path, file, { contentType: file.type });
   if (error) throw error;
   return path;
