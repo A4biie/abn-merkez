@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { useActions } from '@/components/sheets/ActionsProvider';
 import { Button, Pill } from '@/components/ui/Controls';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { Press } from '@/components/ui/Press';
@@ -13,12 +12,14 @@ import { friendlyError } from '@/lib/errors';
 import { useTeam } from '@/lib/team';
 import { useTheme } from '@/theme/ThemeProvider';
 
-type Mode = 'menu' | 'board' | 'confirmDelete';
-
 /**
  * Mesaja uzun basınca açılan panelin içi. Proje odasında "Göreve çevir" ve "Panoya not
  * olarak ekle" o projeyi seçili getirir.
  */
+import { useConvert } from './MessageTools';
+
+type Mode = 'menu' | 'board' | 'confirmDelete';
+
 export function MessageActions({
   message,
   projectId,
@@ -34,7 +35,6 @@ export function MessageActions({
 }) {
   const say = useToast();
   const team = useTeam();
-  const actions = useActions();
   const [mode, setMode] = useState<Mode>('menu');
   const mine = message.author_id === team.meId;
   const liked = message.message_hearts.some((h) => h.user_id === team.meId);
@@ -52,9 +52,14 @@ export function MessageActions({
     say(error ? friendlyError(error) : 'Mesaj silindi');
   }
 
+  const conv = useConvert(message, projectId);
   function toTask() {
     onClose();
-    actions.openAddTask({ title: message.body.slice(0, 140), projectId });
+    conv.toTask();
+  }
+  function toIdea() {
+    onClose();
+    conv.toIdea();
   }
 
   if (mode === 'board') return <AddToBoard message={message} projectId={projectId} onClose={onClose} />;
@@ -89,6 +94,7 @@ export function MessageActions({
       />
       <Row icon="heart" label={liked ? 'Kalbini geri al' : 'Kalp bırak'} onPress={heart} />
       {!!message.body && <Row icon="gorev" label="Göreve çevir" onPress={toTask} />}
+      {!!message.body && <Row icon="fikir" label="Fikre çevir" onPress={toIdea} />}
       {!!message.body && <Row icon="note" label="Panoya not olarak ekle" onPress={() => setMode('board')} />}
       {mine && !!message.body && (
         <Row

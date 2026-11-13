@@ -94,6 +94,9 @@ export type Task = {
   updated_at: string;
   /** Kanban sütun içi sıra (küçük üstte). */
   position: number;
+  /** Sohbetten çevrildiyse kaynak mesaj ve mesajı yazan (0.11). */
+  source_message_id?: string | null;
+  source_author_id?: string | null;
 };
 
 export type RequestKind = 'proje' | 'gorev';
@@ -173,6 +176,8 @@ export type Idea = {
   status: IdeaStatus;
   created_at: string;
   hearts: { user_id: string }[];
+  source_message_id?: string | null;
+  source_author_id?: string | null;
 };
 
 export type Announcement = {

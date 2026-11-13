@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
 
 import { AvatarStack } from '@/components/Social';
@@ -12,6 +13,7 @@ import { previewText, splitMentions, type Message } from '@/lib/chat';
 import { useTeam } from '@/lib/team';
 import { useTheme } from '@/theme/ThemeProvider';
 import { StoredImage, VoiceMessage } from './Attachments';
+import { HoverBar, MessageLinks, MessageMenu, useConvert } from './MessageTools';
 
 function clock(iso: string) {
   return new Date(iso).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
@@ -28,6 +30,8 @@ export function MessageBubble({
   showAuthor,
   onLongPress,
   onToggleHeart,
+  onReply,
+  projectId = null,
 }: {
   message: Message;
   replied?: Message;
@@ -35,6 +39,8 @@ export function MessageBubble({
   showAuthor: boolean;
   onLongPress: () => void;
   onToggleHeart: () => void;
+  onReply?: () => void;
+  projectId?: string | null;
 }) {
   const { colors } = useTheme();
   const team = useTeam();
@@ -44,6 +50,23 @@ export function MessageBubble({
   const ink = mine ? colors['a2-ink'] : colors.text;
   const likers = message.message_hearts.map((h) => team.person(h.user_id)).filter((p) => !!p);
   const liked = message.message_hearts.some((h) => h.user_id === team.meId);
+  const [hover, setHover] = useState(false);
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  const conv = useConvert(message, projectId);
+  const col = useRef<unknown>(null);
+  const canAct = Platform.OS === 'web' && !deleted && !!message.body;
+  // Sağ tık: dönüştürme menüsü.
+  useEffect(() => {
+    const el = col.current as HTMLElement | null;
+    if (!canAct || !el) return;
+    const ctx = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setMenu({ x: e.clientX, y: e.clientY });
+    };
+    el.addEventListener('contextmenu', ctx);
+    return () => el.removeEventListener('contextmenu', ctx);
+  }, [canAct]);
   const usernames = new Set([...team.people.values()].map((p) => p.username));
 
   return (
@@ -63,7 +86,20 @@ export function MessageBubble({
             </Press>
           )}</View>
       )}
-      <View style={{ maxWidth: '78%', alignItems: mine ? 'flex-end' : 'flex-start', gap: 4 }}>
+      <View
+        ref={col as never}
+        style={{ maxWidth: '78%', alignItems: mine ? 'flex-end' : 'flex-start', gap: 4, position: 'relative' }}
+        {...({ onMouseEnter: () => setHover(true), onMouseLeave: () => setHover(false) } as object)}
+      >
+        {canAct && (hover || menu) && (
+          <HoverBar
+            onHeart={onToggleHeart}
+            onReply={() => onReply?.()}
+            onTask={conv.toTask}
+            onMore={(x, y) => setMenu({ x, y })}
+          />
+        )}
+        {menu && <MessageMenu x={menu.x} y={menu.y} message={message} projectId={projectId} onClose={() => setMenu(null)} />}
         {!mine && showAuthor && !grouped && (
           <Press onPress={() => openProfile(author?.id)} pressScale={1}>
             <Txt size={12.5} weight={700} color="muted" style={[{ marginLeft: 4 }, author?.accent_color ? { color: author.accent_color } : null]}>
@@ -162,6 +198,7 @@ export function MessageBubble({
             </Box>
           </Press>
         )}
+        {!deleted && <MessageLinks messageId={message.id} align={mine ? 'flex-end' : 'flex-start'} />}
       </View>
     </View>
   );

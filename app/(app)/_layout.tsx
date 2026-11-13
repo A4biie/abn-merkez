@@ -3,6 +3,7 @@ import { TabList, Tabs, TabSlot, TabTrigger } from 'expo-router/ui';
 import { Platform } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { ConvertTaskModal } from '@/components/chat/ConvertTaskModal';
 import { CommandPalette } from '@/components/layout/CommandPalette';
 import { ConnectionCapsule } from '@/components/layout/ConnectionCapsule';
 import { HIDDEN_ROUTES, TABS } from '@/components/layout/nav';
@@ -68,6 +69,7 @@ export default function AppLayout() {
             <ConnectionCapsule />
           </Box>
           <CommandPalette />
+          <ConvertTaskModal />
         </ActionsProvider>
       </SearchProvider>
     </Tabs>

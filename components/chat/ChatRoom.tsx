@@ -182,6 +182,11 @@ export function ChatRoom({ roomId }: { roomId: string }) {
                     showAuthor={room?.kind !== 'ozel'}
                     onLongPress={() => setMenuFor(item)}
                     onToggleHeart={() => heart(item)}
+                    onReply={() => {
+                      setEditing(null);
+                      setReplyTo(item);
+                    }}
+                    projectId={room?.project_id ?? null}
                   />
                 </View>
               );

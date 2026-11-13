@@ -150,6 +150,11 @@ export function TaskCard({ task, variant = 'card' }: { task: Task; variant?: Var
             {task.due_label}
           </Txt>
         </View>
+        {task.source_message_id && (
+          <Txt size={11.5} weight={700} color="muted">
+            💬 sohbetten · {team.nameOf(task.source_author_id)}
+          </Txt>
+        )}
         {task.needs_help && (
           <Txt size={12.5} weight={600} color="warn-text">
             Yardım istiyor
