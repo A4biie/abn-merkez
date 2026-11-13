@@ -92,6 +92,8 @@ export type Task = {
   status_changed_at: string;
   created_at: string;
   updated_at: string;
+  /** Kanban sütun içi sıra (küçük üstte). */
+  position: number;
 };
 
 export type RequestKind = 'proje' | 'gorev';

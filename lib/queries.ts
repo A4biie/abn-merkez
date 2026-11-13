@@ -53,7 +53,7 @@ export async function fetchProjects() {
 }
 
 export async function fetchTasks() {
-  return must<Task[]>(await supabase.from('tasks').select('*').order('created_at', { ascending: false }));
+  return must<Task[]>(await supabase.from('tasks').select('*').order('position').order('created_at', { ascending: false }));
 }
 
 export async function fetchRequests() {
@@ -239,6 +239,14 @@ async function updateTask(taskId: string, patch: Partial<Task>) {
   return error;
 }
 
+/** Kanban'da sürükle bırak: sütun (durum) ve sütun içi sıra. Havuza geri bırakılan görev sahipsiz kalır. */
+export function moveTask(task: Task, status: TaskStatus, position: number) {
+  const patch: Partial<Task> = { status, position };
+  if (status === 'havuz') Object.assign(patch, { assignee_id: null, needs_help: false });
+  if (status === 'bitti') patch.needs_help = false;
+  return updateTask(task.id, patch);
+}
+
 export function advanceTask(task: Task) {
   const next: TaskStatus = task.status === 'bende' ? 'incelemede' : 'bitti';
   return updateTask(task.id, { status: next, needs_help: next === 'bitti' ? false : task.needs_help });
@@ -256,12 +264,13 @@ export function answerNudge(task: Task, answer: 'keep' | 'time' | 'drop') {
   return updateTask(task.id, { status_changed_at: now });
 }
 
-export async function addTask(input: { title: string; projectId: string | null; mine: boolean; userId: string }) {
+export async function addTask(input: { title: string; projectId: string | null; mine: boolean; userId: string; status?: TaskStatus }) {
+  const status: TaskStatus = input.status && input.status !== 'havuz' ? input.status : input.mine ? 'bende' : 'havuz';
   const { error } = await supabase.from('tasks').insert({
     title: input.title,
     project_id: input.projectId,
-    status: input.mine ? 'bende' : 'havuz',
-    assignee_id: input.mine ? input.userId : null,
+    status,
+    assignee_id: status !== 'havuz' ? input.userId : null,
     created_by: input.userId,
   });
   invalidate('tasks');

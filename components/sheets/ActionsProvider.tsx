@@ -14,7 +14,7 @@ import { markFinished } from '@/lib/celebrate';
 import { friendlyError } from '@/lib/errors';
 import { addTask, advanceTask, claimTask, sendRequest, setNeedsHelp } from '@/lib/queries';
 import { useTeam } from '@/lib/team';
-import type { ClaimResult, Task } from '@/lib/types';
+import type { ClaimResult, Task, TaskStatus } from '@/lib/types';
 import { useTheme } from '@/theme/ThemeProvider';
 import { ShareForm, type ShareDraft } from './ShareForm';
 
@@ -26,7 +26,7 @@ type Actions = {
   openAddTask: (draft?: TaskDraft) => void;
 };
 
-export type TaskDraft = { title?: string; projectId?: string | null };
+export type TaskDraft = { title?: string; projectId?: string | null; status?: TaskStatus };
 
 const ActionsContext = createContext<Actions | null>(null);
 
@@ -214,7 +214,7 @@ function AddTaskSheet({ initial, onClose }: { initial?: TaskDraft; onClose: () =
   const team = useTeam();
   const [title, setTitle] = useState(initial?.title ?? '');
   const [projectId, setProjectId] = useState<string | null>(initial?.projectId ?? null);
-  const [mine, setMine] = useState(false);
+  const [mine, setMine] = useState(!!initial?.status && initial.status !== 'havuz');
   const [busy, setBusy] = useState(false);
 
   const myProjects = team.projects.filter((p) => team.isAdmin || p.members.includes(team.meId));
@@ -226,7 +226,7 @@ function AddTaskSheet({ initial, onClose }: { initial?: TaskDraft; onClose: () =
       return;
     }
     setBusy(true);
-    const error = await addTask({ title: t, projectId, mine, userId: team.meId });
+    const error = await addTask({ title: t, projectId, mine, userId: team.meId, status: mine ? initial?.status : 'havuz' });
     setBusy(false);
     if (error) {
       say(friendlyError(error));

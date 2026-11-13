@@ -32,7 +32,7 @@ export const PROJECT_STATUS: Record<ProjectStatus, ChipColors> = {
 // Prototipteki yapilacak/devam/inceleme/bitti → havuz/bende/incelemede/bitti.
 export const TASK_STATUS: Record<TaskStatus, ChipColors & { dot: string; next?: string }> = {
   havuz: { label: 'Yapılacak', bg: 'chip', fg: 'text-2', dot: '#A1A1AA' },
-  bende: { label: 'Devam ediyor', bg: 'a2', fg: 'a2-ink', dot: '#A794F0', next: 'İncelemeye gönder' },
+  bende: { label: 'Yapılıyor', bg: 'a2', fg: 'a2-ink', dot: '#A794F0', next: 'İncelemeye gönder' },
   incelemede: { label: 'İncelemede', bg: 'a3', fg: 'a3-ink', dot: '#3FC3D6', next: 'Bitir' },
   bitti: { label: 'Bitti', bg: 'a1', fg: 'a1-ink', dot: '#B5D334' },
 };

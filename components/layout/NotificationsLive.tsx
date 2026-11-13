@@ -33,6 +33,7 @@ export function NotificationsLive() {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'message_hearts' }, () => invalidate('messages'))
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'polls' }, () => invalidate('polls', 'feed'))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => invalidate('tasks'))
       .subscribe();
     registerForPush(userId).catch(() => {});
     return () => {
