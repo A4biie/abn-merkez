@@ -4,6 +4,24 @@ export type Release = { version: string; date: string; sections: { title: string
 
 export const RELEASES: Release[] = [
   {
+    "version": "0.11.0",
+    "date": "13 Kasım 2026",
+    "sections": [
+      {
+        "title": "Yeni",
+        "items": [
+          "Ctrl+K (Mac'te Cmd+K) her ekrandan açılan komut paleti: işlemler, sayfalar, görevler, buglar, kişiler, wiki ve dosyalar arasında arama. Türkçe harflere duyarsız (\"kapi\" yazınca \"kapı\" bulunur), ↑↓ ile seç, Enter ile aç. Sonuç yoksa o adla görev oluşturur. Yan menünün en üstünde \"Ara… Ctrl K\" kutusu.",
+          "Görevler'de Kanban / Liste geçişi (seçim hatırlanır). Kartlar sütunlar arasında ve sütun içinde sürükle bırakla taşınır, sıra kaydedilir; bırakınca kart yaylanarak oturur, \"Bitti\"ye bırakınca kutlama bildirimi. Her sütunun başında \"+\" ile o sütuna görev ekleme. Telefonda basılı tutup sürükle.",
+          "Sohbette mesajın üstüne gelince araç çubuğu (😊 ↩ ☑ ⋯); sağ tık ya da ⋯ menüsünde Göreve çevir (T), Fikre çevir (F), Bug olarak bildir (B), Metni kopyala. Dönüşümden sonra mesajın altında herkesin gördüğü bağlantı çipi; sohbetten gelen görev kartında \"💬 sohbetten · kişi\".",
+          "Wiki: sayfa ağacı (sürükleyip sıralama ve taşıma), yerinde düzenleme (başlık, liste, kalın / italik, görsel, renk kutucukları, bilgi kutusu), sayfa geçmişi ve geri yükleme. Aynı anda başkası düzenliyorsa uyarı; kimsenin yazdığı silinmez.",
+          "Dosyalar: sohbet, pano, wiki ve buglara yüklenen bütün dosyalar tek yerde. Arama, tür filtreleri, önizleme (görsel, ses, video), \"Kaynağa git\", indirme; yükleyen ya da yönetici silebilir.",
+          "Buglar: \"Çıkışa hazır mı?\" kartı, Yeni / Atandı / Düzeltildi / Test et / Kapandı sütunları, önem renkleri, sağdan açılan detay paneli (adımlar, ekran görüntüsü, geçmiş, duruma göre butonlar). Bug numaraları proje başına (B-1, B-2…), yeni build kaydı, atanınca / test istenince / yeniden açılınca bildirim. Açık kritik bug sayısı yan menüde kırmızı rozet.",
+          "Launcher'dan açılan oyunda F8: ekran görüntüsü, oyunun sürümü ve bilgisayar bilgisiyle küçük \"Ne oldu?\" penceresi. Tuş Launcher Ayarlar'dan değiştirilebilir."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.10.0",
     "date": "10 Kasım 2026",
     "sections": [
