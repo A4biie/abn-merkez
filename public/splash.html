@@ -210,15 +210,17 @@
         tip.textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
 
         // Zamanlayıcı: açılıştan itibaren mutlak ms (dosyadaki at() ile aynı mantık).
-        function elapsed() { return performance.now() - T0; }
-        function at(ms, fn) { setTimeout(fn, Math.max(0, ms - elapsed())); }
-        function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+        // 1.15.2: açılış çok uzundu (en az ~5,4 sn). Tasarımdaki zamanlama korunur ama SPEED kat hızlı oynar.
+        var SPEED = 2.2;
+        function elapsed() { return (performance.now() - T0) * SPEED; }
+        function at(ms, fn) { setTimeout(fn, Math.max(0, (ms - elapsed()) / SPEED)); }
+        function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms / SPEED); }); }
         function until(ms) { return sleep(Math.max(0, ms - elapsed())); }
         // Yazı değişimi: dosyadaki say() — .swap ile söner, 180 ms sonra yeni yazı yerine oturur.
         function say(t) {
           if (reduced) { msg.textContent = t; return; }
           msg.classList.add('swap');
-          setTimeout(function () { msg.textContent = t; msg.classList.remove('swap'); }, 180);
+          setTimeout(function () { msg.textContent = t; msg.classList.remove('swap'); }, 180 / SPEED);
         }
 
         // ── TV açılışı: dosyadaki morph(), parlama olmadan ──
@@ -229,7 +231,7 @@
           var sx = 0.02, vx = 0, sy = 0.006, vy = 0, last = performance.now(), t = 0;
           win.style.opacity = '1';
           function step(now) {
-            var real = Math.min(0.05, (now - last) / 1000);
+            var real = Math.min(0.05, ((now - last) / 1000) * SPEED);
             last = now;
             var n = Math.max(1, Math.round(real / 0.002)), dt = real / n;
             for (var k = 0; k < n; k++) {
@@ -247,6 +249,13 @@
           raf = requestAnimationFrame(step);
         }
 
+        function speedUp() {
+          if (!document.getAnimations) return;
+          document.getAnimations().forEach(function (a) { a.playbackRate = SPEED; });
+        }
+        // Sonradan eklenen sınıflar (close, swap) yeni animasyon başlatır; onları da yakala.
+        new MutationObserver(speedUp).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
+
         // ── Kapanış: lwOff (0.55 sn); 450. ms'de launcher penceresi appIn ile açılır ──
         var closing = false;
         function close() {
@@ -257,7 +266,7 @@
           win.style.transform = '';
           win.classList.remove('busy');
           win.classList.add('close');
-          setTimeout(finished, 450);
+          setTimeout(finished, 450 / SPEED);
         }
         function finished() {
           if (T) {
@@ -286,7 +295,12 @@
           if (!navigator.onLine) return offline();
           var update = null;
           try {
-            update = await T.updater.check();
+            // Ağ yavaşsa açılışı bekletme: 2,5 sn içinde cevap gelmezse launcher açılır, denetim arkada sürer.
+            update = await Promise.race([
+              T.updater.check(),
+              new Promise(function (r) { setTimeout(function () { r('slow'); }, 2500); }),
+            ]);
+            if (update === 'slow') return done(null);
           } catch (e) {
             // İnternet yoksa çevrimdışı; başka bir hata (ör. henüz sürüm yok) açılışı durdurmaz.
             return navigator.onLine ? done(justUpdated) : offline();
@@ -367,6 +381,7 @@
           win.style.transform = 'scale(0)';
           void win.offsetWidth;
           win.classList.add('go', 'busy');
+          speedUp();
           morph();
         }
         if (T && T.updater) realFlow();
