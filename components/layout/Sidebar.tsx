@@ -18,6 +18,8 @@ import { statusLine } from '@/lib/presence';
 import { useTheme } from '@/theme/ThemeProvider';
 import { activeTab, TABS } from './nav';
 import { UnreadDot } from './PhoneTabBar';
+import { Kbd } from './CommandPalette';
+import { openPalette } from '@/lib/palette';
 import { useMe } from './useMe';
 
 /** Desktop.dc.html'deki sol menü: sekmeler, yönetim bağlantısı, tema kutucukları, kullanıcı kartı. */
@@ -63,6 +65,8 @@ export function Sidebar() {
             </Txt>
           </View>
         </View>
+
+        <SearchButton />
 
         {TABS.map((t) => (
           <TabTrigger key={t.name} name={t.name} href={t.href} asChild>
@@ -162,6 +166,37 @@ function NavItem({ label, icon, active, dot, isFocused: _isFocused, ...rest }: N
       <Txt weight={600} color={active ? 'accent-text' : 'text-2'} style={{ flex: 1 }}>
         {label}
       </Txt>
+    </Press>
+  );
+}
+
+/** Yan menünün en üstündeki "Ara… Ctrl K" kutusu: komut paletini açar. */
+function SearchButton() {
+  const { colors } = useTheme();
+  const [hover, setHover] = useState(false);
+  return (
+    <Press
+      onPress={openPalette}
+      onHoverIn={() => setHover(true)}
+      onHoverOut={() => setHover(false)}
+      accessibilityLabel="Ara (Ctrl K)"
+      pressScale={1}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        paddingVertical: 9,
+        paddingHorizontal: 10,
+        marginBottom: 8,
+        borderRadius: 10,
+        backgroundColor: hover ? colors.surface2 : colors.surface,
+      }}
+    >
+      <Icon name="search" size={15} color={colors.muted} strokeWidth={2} />
+      <Txt size={14} weight={600} color="muted" style={{ flex: 1 }}>
+        Ara…
+      </Txt>
+      <Kbd>{typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? '⌘ K' : 'Ctrl K'}</Kbd>
     </Press>
   );
 }

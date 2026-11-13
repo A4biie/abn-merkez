@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useRef, useState, type ComponentRef } from 'react';
+import { useLocalSearchParams , router } from 'expo-router';
+import { useRef, useState, type ComponentRef, useEffect } from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
 
 import { EmptyState } from '@/components/EmptyState';
@@ -36,6 +36,11 @@ export default function Fikirler() {
   const [filter, setFilter] = useState<IdeaStatus | 'tumu'>('tumu');
   const [saving, setSaving] = useState(false);
   const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
+  // Ctrl+K > Yeni fikir: yazma kutusuna odaklan.
+  const { yeni } = useLocalSearchParams<{ yeni?: string }>();
+  useEffect(() => {
+    if (yeni) setTimeout(() => inputRef.current?.focus(), 50);
+  }, [yeni]);
 
   const list = (ideas.data ?? []).filter((i) => (filter === 'tumu' || i.status === filter) && matches(i.body, query));
 

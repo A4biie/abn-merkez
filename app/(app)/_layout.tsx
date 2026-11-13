@@ -3,6 +3,7 @@ import { TabList, Tabs, TabSlot, TabTrigger } from 'expo-router/ui';
 import { Platform } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { CommandPalette } from '@/components/layout/CommandPalette';
 import { ConnectionCapsule } from '@/components/layout/ConnectionCapsule';
 import { HIDDEN_ROUTES, TABS } from '@/components/layout/nav';
 import { NotificationsLive } from '@/components/layout/NotificationsLive';
@@ -66,6 +67,7 @@ export default function AppLayout() {
             {!wide && <PhoneTabBar />}
             <ConnectionCapsule />
           </Box>
+          <CommandPalette />
         </ActionsProvider>
       </SearchProvider>
     </Tabs>

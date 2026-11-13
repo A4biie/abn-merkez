@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ABN Profil Prototipi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Düzen: üstte kısa açıklama + tema seçici, altında masaüstü uygulama penceresi (sidebar + sohbet + ekip). Profil katmanları pencerenin içinde açılır. */
+:root{
+  --display:"Urbanist",ui-rounded,"Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --spring:cubic-bezier(.2,1.25,.35,1);
+  --on:#3BA55D;--busy:#ED4245;--idle:#F0A92E;--off:#80848E;
+  /* uygulama teması JS ile değişiyor; varsayılan Noir Işık */
+  --bg:#000;--surface:#121212;--surface2:#1D1D1D;--chip:#272727;--line:#1C1C1C;--nav:#0A0A0A;
+  --text:#EFEFEF;--text2:#E0E0E0;--muted:#A3A3A3;--a1:#F0B7B8;--a1ink:#1A0A0A;--a2:#BC4D4B;--a2ink:#fff;
+  --glow:radial-gradient(90% 55% at 50% -12%,rgba(188,77,75,.30),transparent 70%);
+  --btn:linear-gradient(180deg,#CB5755,#AE4442);
+  --scrim:rgba(0,0,0,.62);--shadow:0 24px 60px rgba(0,0,0,.55);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--display);font-size:14px;line-height:1.45;transition:background .3s}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--a1);outline-offset:2px}
+
+.page{padding-block:28px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.intro{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.intro h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+.intro p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctrls .lab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-right:2px}
+.tbtn{padding:7px 12px;border-radius:999px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);font-weight:700;font-size:13px}
+.tbtn[aria-pressed="true"]{background:var(--text);color:var(--bg)}
+.sim{padding:7px 12px;border-radius:999px;background:var(--chip);font-weight:700;font-size:13px}
+
+.scroller{overflow-x:auto;border-radius:16px}
+.win{position:relative;min-width:980px;height:660px;border-radius:14px;overflow:hidden;background:var(--bg);box-shadow:0 0 0 1px var(--line),var(--shadow);display:grid;grid-template-columns:248px 1fr 240px;grid-template-rows:30px 1fr}
+.titlebar{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--nav);font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)}
+.titlebar .wc{margin-left:auto;display:flex;gap:18px;letter-spacing:.1em}
+
+/* sidebar */
+.side{background:var(--nav);display:flex;flex-direction:column;padding:14px;gap:4px;border-right:1px solid var(--line);position:relative;--ring:var(--nav)}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 6px 16px}
+.brand .lg{width:38px;height:38px;border-radius:50%;background:var(--text);display:grid;place-items:center}
+.brand b{display:block;font-size:16px;font-weight:800}.brand small{color:var(--muted);font-size:12px}
+.nav{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;font-weight:700;color:var(--text2)}
+.nav svg{width:18px;height:18px;flex:none}
+.nav.on{background:color-mix(in srgb,var(--a2) 28%,transparent);color:var(--text)}
+.me{margin-top:auto;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:var(--surface);text-align:left;transition:background .15s;width:100%;--ring:var(--surface)}
+.me:hover,.me[aria-expanded="true"]{background:var(--surface2);--ring:var(--surface2)}
+.me .nm{font-weight:800;font-size:14px;display:block}
+.me .st{font-size:12px;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.me .gear{margin-left:auto;color:var(--muted)}
+
+/* avatar */
+.av{--s:40px;position:relative;width:var(--s);height:var(--s);border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;font-size:calc(var(--s)*.42);color:#fff;background-size:cover;background-position:center}
+.av .dot{position:absolute;right:-2px;bottom:-2px;width:calc(var(--s)*.32);height:calc(var(--s)*.32);min-width:10px;min-height:10px;border-radius:50%;box-shadow:0 0 0 calc(max(2.5px,var(--s)*.06)) var(--ring,var(--surface));transition:background .25s}
+.dot.online{background:var(--on)}.dot.busy{background:var(--busy)}.dot.idle{background:var(--idle)}.dot.invisible{background:var(--ring,var(--surface));box-shadow:0 0 0 calc(max(2.5px,var(--s)*.06)) var(--ring,var(--surface)),inset 0 0 0 calc(max(2.5px,var(--s)*.07)) var(--off)}
+
+/* main chat */
+.main{position:relative;display:flex;flex-direction:column;min-width:0;background:var(--bg);background-image:var(--glow)}
+.mh{padding:18px 28px 14px;border-bottom:1px solid var(--line)}
+.mh small{color:var(--muted)}.mh h2{margin:0;font-size:24px;font-weight:800}
+.msgs{flex:1;overflow:auto;padding:18px 28px;display:flex;flex-direction:column;gap:16px}
+.msg{display:flex;gap:12px;align-items:flex-start;--ring:var(--bg)}
+.msg .who{font-weight:800;cursor:pointer}.msg .who:hover{text-decoration:underline}
+.msg .tm{color:var(--muted);font-size:12px;margin-left:6px;font-weight:600}
+.msg p{margin:2px 0 0;color:var(--text2)}
+.msg .avb{border-radius:50%}
+.compose{margin:0 28px 20px;padding:12px 16px;border-radius:14px;background:var(--surface);color:var(--muted)}
+.mention{color:var(--a1);background:color-mix(in srgb,var(--a1) 14%,transparent);padding:0 4px;border-radius:5px;font-weight:700}
+
+/* team list */
+.team{background:var(--nav);border-left:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:2px;--ring:var(--nav)}
+.team h3{margin:0 8px 8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mem{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;text-align:left;width:100%}
+.mem:hover{background:var(--surface);--ring:var(--surface)}
+.mem b{display:block;font-weight:700}.mem span{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.flash{animation:flash 1.2s ease}
+@keyframes flash{0%,100%{background:transparent}25%{background:color-mix(in srgb,var(--a1) 22%,transparent)}}
+
+/* profile card (mini + preview) */
+.pcard{width:300px;border-radius:18px;background:var(--surface);overflow:hidden;box-shadow:0 0 0 1px var(--line),var(--shadow),inset 0 0 0 2px color-mix(in srgb,var(--acc) 0%,transparent);--ring:var(--surface);position:relative}
+.pcard .bn{height:80px;background-size:cover;background-position:center}
+.pcard .avwrap{position:absolute;left:16px;top:38px;border-radius:50%;padding:5px;background:var(--surface)}
+.pcard .body{padding:44px 16px 14px;display:flex;flex-direction:column;gap:10px}
+.pname{font-size:19px;font-weight:800;line-height:1.15;word-break:break-word}
+.phandle{color:var(--muted);font-size:13px;font-weight:600}
+.cstat{display:flex;gap:8px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--surface2);font-weight:600;font-size:13px}
+.inner{border-radius:14px;background:var(--surface2);padding:12px;display:flex;flex-direction:column;gap:10px}
+.lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.bio{margin:0;color:var(--text2);font-size:13.5px;white-space:pre-wrap;word-break:break-word}
+.roles{display:flex;flex-wrap:wrap;gap:6px}
+.role{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;background:var(--chip);font-size:12px;font-weight:700}
+.role i{width:8px;height:8px;border-radius:50%}
+.acts{display:flex;flex-direction:column;gap:2px}
+.act{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;font-weight:700;font-size:13.5px;text-align:left;width:100%;position:relative}
+.act:hover,.act[aria-expanded="true"]{background:color-mix(in srgb,var(--acc) 22%,transparent)}
+.act .chev{margin-left:auto;color:var(--muted)}
+.act .sd{width:10px;height:10px;border-radius:50%}
+hr.sep{border:0;height:1px;background:var(--line);margin:2px 0;width:100%}
+
+/* mini popover */
+.mini{position:absolute;left:14px;bottom:80px;z-index:30;transform-origin:bottom left;animation:miniIn .24s var(--spring) both}
+.mini.out{animation:miniOut .15s ease forwards}
+@keyframes miniIn{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes miniOut{to{opacity:0;transform:translateY(4px) scale(.98)}}
+.flyout{position:absolute;left:calc(100% + 8px);bottom:0;width:220px;padding:6px;border-radius:14px;background:var(--surface);box-shadow:0 0 0 1px var(--line),var(--shadow);animation:flyIn .18s var(--spring) both;z-index:31}
+@keyframes flyIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.flyout .act small{display:block;font-weight:600;color:var(--muted);font-size:11.5px}
+.csform{display:flex;flex-direction:column;gap:10px;padding:4px 2px}
+.emo{display:flex;gap:4px;flex-wrap:wrap}
+.emo button{width:34px;height:34px;border-radius:10px;background:var(--surface2);font-size:17px}
+.emo button[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--a1)}
+.field{width:100%;padding:9px 11px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);outline:none}
+.field:focus{border-color:color-mix(in srgb,var(--a1) 60%,transparent)}
+.row{display:flex;gap:8px}
+.btn{padding:9px 14px;border-radius:999px;font-weight:800;font-size:13px;background:var(--chip)}
+.btn.pri{background:var(--a2);background-image:var(--btn);color:var(--a2ink)}
+
+/* scrim + modal */
+.scrim{position:absolute;inset:30px 0 0 0;z-index:40;background:var(--scrim);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:grid;place-items:center;animation:fade .2s ease both;padding:20px}
+.scrim.out{animation:fadeOut .18s ease forwards}
+@keyframes fade{from{opacity:0}}@keyframes fadeOut{to{opacity:0}}
+.modal{width:640px;max-height:min(85%,600px);border-radius:20px;background:var(--surface);box-shadow:0 0 0 1px var(--line),var(--shadow);overflow:hidden;display:flex;flex-direction:column;animation:modalIn .3s var(--spring) both;--ring:var(--surface);position:relative}
+.scrim.out .modal{animation:modalOut .18s ease forwards}
+@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes modalOut{to{opacity:0;transform:translateY(8px) scale(.97)}}
+.modal>.bn{height:160px;flex:none;background-size:cover;background-position:center;position:relative}
+.xbtn{position:absolute;right:12px;top:12px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;display:grid;place-items:center;z-index:2}
+.mtop{display:flex;align-items:flex-end;gap:16px;padding:0 24px;margin-top:-52px;position:relative}
+.mtop .avwrap{border-radius:50%;padding:6px;background:var(--surface)}
+.mtop .btns{margin-left:auto;display:flex;gap:8px;padding-bottom:6px}
+.mid{padding:12px 24px 0;display:flex;flex-direction:column;gap:8px}
+.mid .pname{font-size:24px}
+.tabs{display:flex;gap:4px;padding:14px 24px 0;border-bottom:1px solid var(--line)}
+.tab{padding:9px 12px;font-weight:800;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--text);border-color:var(--acc)}
+.tpane{overflow:auto;padding:18px 24px 24px;display:flex;flex-direction:column;gap:14px;min-height:0}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kv div{border-radius:12px;background:var(--surface2);padding:10px 12px}
+.kv b{display:block;font-size:14px}
+.li{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--surface2)}
+.li .tag{margin-left:auto;font-size:11.5px;font-weight:800;padding:3px 8px;border-radius:999px;background:var(--chip);color:var(--muted)}
+.li .ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:color-mix(in srgb,var(--acc) 22%,transparent);flex:none;font-size:14px}
+
+/* edit modal */
+.edit{width:860px;max-height:min(92%,620px);display:grid;grid-template-columns:minmax(0,1fr) 332px;grid-template-rows:auto 1fr;overflow:hidden}
+.edit .eh{grid-column:1/-1;display:flex;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}
+.edit .eh h3{margin:0;font-size:19px;font-weight:800}
+.edit .eh .xbtn{position:static;margin-left:auto;background:var(--chip);color:var(--text)}
+.form{overflow:auto;padding:18px 22px 90px;display:flex;flex-direction:column;gap:18px;min-height:0}
+.fg{display:flex;flex-direction:column;gap:8px}
+.sw{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sw button{width:30px;height:30px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.sw button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--text)}
+.sw input[type=color]{width:30px;height:30px;border:0;padding:0;border-radius:50%;background:none;cursor:pointer}
+.up{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:var(--chip);font-weight:800;font-size:12.5px;cursor:pointer}
+.up input{display:none}
+.count{font-family:var(--mono);font-size:11px;color:var(--muted);align-self:flex-end}
+.prev{background:var(--surface2);border-left:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:10px;align-items:center;overflow:auto}
+.prev .lbl{align-self:flex-start}
+.prev .pcard{box-shadow:0 0 0 1px var(--line),0 12px 30px rgba(0,0,0,.3)}
+.bar{position:absolute;left:22px;right:354px;bottom:16px;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 16px;border-radius:14px;background:var(--nav);box-shadow:0 0 0 1px var(--line),0 10px 30px rgba(0,0,0,.45);font-weight:700;animation:barIn .3s var(--spring) both;z-index:3}
+.bar span{margin-right:auto}
+.bar .reset{color:var(--muted);font-weight:800;padding:8px 10px}
+.bar.shake{animation:shake .45s ease;box-shadow:0 0 0 2px var(--busy),0 10px 30px rgba(0,0,0,.45)}
+@keyframes barIn{from{opacity:0;transform:translateY(16px)}}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+
+.toast{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:60;padding:10px 16px;border-radius:999px;background:var(--text);color:var(--bg);font-weight:800;animation:toast 2.2s ease forwards;pointer-events:none}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,10px)}10%,85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+
+.hint{color:var(--muted);font-size:13px}
+.hint kbd{font-family:var(--mono);font-size:11px;padding:1px 6px;border-radius:6px;background:var(--chip)}
+
+@media (prefers-reduced-motion:reduce){
+  .mini,.flyout,.modal,.bar{animation:fade .15s ease both!important}
+  .mini.out,.scrim.out .modal{animation:fadeOut .12s ease forwards!important}
+  .bar.shake{animation:none}
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="intro">
+    <div>
+      <h1>Profil prototipi</h1>
+      <p>Sol alttaki profil kartına tıkla: küçük kart üstte açılır. "Tam profili aç" ya da sohbetteki bir isme tıklamak büyük pencereyi açar, arkası kararır. "Profili düzenle"de yaptığın her değişiklik sağdaki önizlemede ve kaydedince uygulamanın her yerinde görünür.</p>
+    </div>
+    <div class="ctrls">
+      <span class="lab">Tema</span>
+      <div class="ctrls" id="themes"></div>
+      <button class="sim" id="simBtn" type="button">Selin profilini değiştirsin ↻</button>
+    </div>
+  </div>
+  <div class="scroller">
+    <div class="win" id="win">
+      <div class="titlebar">
+        <svg width="14" height="14" viewBox="160 170 680 662" aria-hidden="true"><path id="lgPathSmall" fill="var(--a1)" fill-rule="evenodd"/></svg>
+        ABN Merkez <span class="wc"><span>–</span><span>▢</span><span>✕</span></span>
+      </div>
+      <aside class="side">
+        <div class="brand">
+          <div class="lg"><svg width="24" height="24" viewBox="160 170 680 662" aria-hidden="true"><path id="lgPath" fill="var(--bg)" fill-rule="evenodd"/></svg></div>
+          <div><b>ABN Merkez</b><small>Abby's Nexus</small></div>
+        </div>
+        <div id="navs"></div>
+        <button class="me" id="meBtn" type="button" aria-haspopup="dialog" aria-expanded="false"></button>
+      </aside>
+      <section class="main">
+        <div class="mh"><small>Sohbet</small><h2># genel</h2></div>
+        <div class="msgs" id="msgs"></div>
+        <div class="compose"># genel kanalına yaz…</div>
+      </section>
+      <aside class="team"><h3>Ekip · çevrimiçi</h3><div id="team"></div></aside>
+      <div id="layer"></div>
+    </div>
+  </div>
+  <p class="hint">Kısayollar: <kbd>Esc</kbd> açık katmanı kapatır. Düzenlerken kaydetmeden kapatmaya çalışırsan alt çubuk sallanır.</p>
+</div>
+
+<script>
+(function(){
+  var LOGO = 'M174 263 L260 263 L334 334 L500 183 L666 334 L740 263 L826 263 L826 690 L760 627 L760 565 L500 818 L240 565 L240 627 L174 690 Z M236 328 L286 377 L236 427 Z M764 328 L714 377 L764 427 Z M475 301 L475 470 L385 383 Z M525 301 L615 383 L525 470 Z M336 427 L476 564 L476 705 L260 497 Z M664 427 L740 497 L524 705 L524 564 Z';
+  document.getElementById('lgPath').setAttribute('d', LOGO);
+  document.getElementById('lgPathSmall').setAttribute('d', LOGO);
+
+  var THEMES = {
+    noirisik:{name:'Noir Işık',dark:1,bg:'#000000',surface:'#121212',surface2:'#1D1D1D',chip:'#272727',line:'#1C1C1C',nav:'#0A0A0A',text:'#EFEFEF',text2:'#E0E0E0',muted:'#A3A3A3',a1:'#F0B7B8',a1ink:'#1A0A0A',a2:'#BC4D4B',a2ink:'#FFFFFF',glow:'radial-gradient(90% 55% at 50% -12%,rgba(188,77,75,.30),transparent 70%)',btn:'linear-gradient(180deg,#CB5755,#AE4442)',scrim:'rgba(0,0,0,.62)'},
+    geceyarisi:{name:'Gece Yarısı',dark:1,bg:'#13121D',surface:'#1F1D31',surface2:'#29273E',chip:'#2E2B45',line:'#2A2840',nav:'#15142A',text:'#F2F0FA',text2:'#E0DDF0',muted:'#A8A4C2',a1:'#BBA9FF',a1ink:'#16102E',a2:'#82D3EA',a2ink:'#08222B',glow:'radial-gradient(90% 55% at 50% -12%,rgba(187,169,255,.22),transparent 70%)',btn:'linear-gradient(180deg,#9ADDF0,#6FC6E0)',scrim:'rgba(8,7,16,.62)'},
+    okyanus:{name:'Okyanus',dark:1,bg:'#0C1B24',surface:'#15303A',surface2:'#1D3A45',chip:'#22414C',line:'#1E3943',nav:'#0A1921',text:'#EAF6F6',text2:'#D3E8E9',muted:'#94B4B8',a1:'#7FE3C4',a1ink:'#062218',a2:'#90C6FF',a2ink:'#081B30',glow:'radial-gradient(90% 55% at 50% -12%,rgba(127,227,196,.18),transparent 70%)',btn:'linear-gradient(180deg,#A4D1FF,#7FB9F5)',scrim:'rgba(4,12,16,.62)'},
+    nane:{name:'Nane',dark:0,bg:'#F2F7F3',surface:'#FFFFFF',surface2:'#EBF3EE',chip:'#DFEDE5',line:'#DCE9E1',nav:'#FFFFFF',text:'#17231D',text2:'#2A3A32',muted:'#526459',a1:'#2E7A5A',a1ink:'#FFFFFF',a2:'#17231D',a2ink:'#FFFFFF',glow:'radial-gradient(90% 55% at 50% -12%,rgba(127,214,166,.35),transparent 70%)',btn:'linear-gradient(180deg,#2A3A32,#17231D)',scrim:'rgba(20,35,28,.38)'}
+  };
+  var theme = 'noirisik';
+  try { var t = localStorage.getItem('abnProfTheme'); if (t && THEMES[t]) theme = t; } catch(e){}
+  function applyTheme(){
+    var T = THEMES[theme], r = document.documentElement.style;
+    ['bg','surface','surface2','chip','line','nav','text','text2','muted','a1','a1ink','a2','a2ink','glow','btn','scrim'].forEach(function(k){ r.setProperty('--'+k, T[k]); });
+    r.setProperty('--shadow', T.dark ? '0 24px 60px rgba(0,0,0,.55)' : '0 20px 50px rgba(20,50,35,.16)');
+    r.setProperty('color-scheme', T.dark ? 'dark' : 'light');
+    document.getElementById('themes').innerHTML = Object.keys(THEMES).map(function(k){ return '<button type="button" class="tbtn" data-t="'+k+'" aria-pressed="'+(k===theme)+'">'+THEMES[k].name+'</button>'; }).join('');
+  }
+  document.getElementById('themes').addEventListener('click', function(e){
+    var b = e.target.closest('[data-t]'); if (!b) return; theme = b.dataset.t;
+    try { localStorage.setItem('abnProfTheme', theme); } catch(e){}
+    applyTheme(); renderAll();
+  });
+
+  var STATUS = {online:{n:'Müsait',c:'var(--on)'},busy:{n:'Meşgul',c:'var(--busy)',d:'Bildirimler sessize alınır'},idle:{n:'Uzakta',c:'var(--idle)'},invisible:{n:'Görünmez',c:'var(--off)',d:'Başkalarına çevrimdışı görünürsün'}};
+  var ROLEC = {kurucu:'#BC4D4B',tasarim:'#F0B7B8',ses:'#82D3EA',kod:'#7FE3C4',senaryo:'#F5D690'};
+
+  var users = {
+    ruzgar:{id:'ruzgar',name:'Rüzgar',handle:'ruzgar',pronouns:'',status:'online',cs:{e:'🎨',t:'Palemouth bölüm 3\'ü çiziyorum'},bio:'ABN\'nin kurucusu. Oyun, animasyon ve bol kahve.\nDM açık, fikir atın.',roles:[['Kurucu','kurucu'],['Tasarım','tasarim']],since:'Mart 2025',hours:'14:00 – 02:00',avColor:'#BC4D4B',avImg:'',bnColor:'#BC4D4B',bnImg:'',acc:'#F0B7B8',
+      tasks:[['Bölüm 3 storyboard','Bugün'],['Launcher ikon seti','Cuma'],['ABN logo animasyonu','Bitti']],act:[['💡','Fikir ekledi: "Tren sahnesinde ışık patlaması"','2 sa'],['🖼️','Panolar\'a 3 görsel ekledi','dün'],['✅','"Tema seçici" görevini bitirdi','2 gün']]},
+    selin:{id:'selin',name:'Selin',handle:'selin.ses',pronouns:'o/ona',status:'online',cs:{e:'🎧',t:'Ambiyans kaydı'},bio:'Ses tasarımı ve müzik. Gece çalışırım.',roles:[['Ses','ses']],since:'Nisan 2025',hours:'20:00 – 04:00',avColor:'#3F7FA0',avImg:'',bnColor:'#2B5E78',bnImg:'',acc:'#82D3EA',
+      tasks:[['Bölüm 2 ambiyans','Yarın'],['Menü müziği','Hafta sonu']],act:[['🖼️','Panolar\'a ses dosyası ekledi','1 sa'],['💬','#genel\'de 14 mesaj','bugün']]},
+    ismet:{id:'ismet',name:'İsmet',handle:'ismetdev',pronouns:'',status:'busy',cs:{e:'💻',t:'Build 0.8.1'},bio:'Unity ve Tauri. Bug görürsem uyuyamam.',roles:[['Programlama','kod']],since:'Mart 2025',hours:'10:00 – 19:00',avColor:'#3E8C6E',avImg:'',bnColor:'#24533F',bnImg:'',acc:'#7FE3C4',
+      tasks:[['Bildirim penceresi','Bugün'],['Pano sürükleme bug\'ı','Yarın']],act:[['✅','"Video yükleme" görevini bitirdi','3 sa'],['📦','Build 0.8.1\'i yükledi','4 sa']]},
+    deniz:{id:'deniz',name:'Deniz',handle:'deniz.yazar',pronouns:'',status:'idle',cs:null,bio:'Senaryo ve diyalog. Karakterleri ben konuştururum.',roles:[['Senaryo','senaryo']],since:'Haziran 2025',hours:'',avColor:'#A08A3E',avImg:'',bnColor:'#6E5E28',bnImg:'',acc:'#F5D690',
+      tasks:[['Bölüm 3 diyalogları','Pazartesi']],act:[['💡','Fikir ekledi: "Anlatıcı ikinci tekil konuşsun"','dün']]}
+  };
+  var ME = 'ruzgar';
+  var MSGS = [
+    ['selin','20:12','Ambiyans sesleri hazır, panoya attım 🎧'],
+    ['ismet','20:18','Build 0.8.1 çıktı, launcher\'dan güncelleyin. Pano sürükleme düzeldi.'],
+    ['ruzgar','20:21','<span class="mention">@Selin</span> efsane olmuş. Bölüm 3 storyboard\'u akşama hazır.'],
+    ['deniz','20:30','Diyalog taslağını fikirlere ekledim, bakarsınız.'],
+    ['selin','20:33','Rüzgar profiline bi bak, yeni banner yakışır 👀']
+  ];
+
+  function esc(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function avatar(u, size, dot){
+    var bg = u.avImg ? 'background-image:url('+u.avImg+')' : 'background:'+u.avColor;
+    return '<span class="av" style="--s:'+size+'px;'+bg+'">'+(u.avImg?'':esc((u.name||'?').charAt(0).toLocaleUpperCase('tr')))+(dot===false?'':'<span class="dot '+u.status+'" title="'+STATUS[u.status].n+'"></span>')+'</span>';
+  }
+  function banner(u){ return u.bnImg ? 'background-image:url('+u.bnImg+')' : 'background:linear-gradient(160deg,'+u.bnColor+','+shade(u.bnColor,-28)+')'; }
+  function shade(hex, p){
+    var n = parseInt(hex.slice(1),16), r=n>>16, g=n>>8&255, b=n&255, f=p<0?0:255, t=Math.abs(p)/100;
+    r=Math.round((f-r)*t+r); g=Math.round((f-g)*t+g); b=Math.round((f-b)*t+b);
+    return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+  }
+  function statusLine(u){ return u.cs ? u.cs.e+' '+u.cs.t : STATUS[u.status].n; }
+  function rolesHTML(u){ return '<div class="roles">'+u.roles.map(function(r){ return '<span class="role"><i style="background:'+ROLEC[r[1]]+'"></i>'+esc(r[0])+'</span>'; }).join('')+'</div>'; }
+  function handleLine(u){ return '<div class="phandle">@'+esc(u.handle)+(u.pronouns?' · '+esc(u.pronouns):'')+'</div>'; }
+
+  // Mini kart ve düzenleme önizlemesi aynı kart şablonunu kullanıyor
+  function cardHTML(u, withActs){
+    var h = '<div class="pcard" style="--acc:'+u.acc+'"><div class="bn" style="'+banner(u)+'"></div><div class="avwrap">'+avatar(u,72)+'</div><div class="body">'+
+      '<div><div class="pname">'+esc(u.name)+'</div>'+handleLine(u)+'</div>'+
+      (u.cs?'<div class="cstat"><span>'+esc(u.cs.e)+'</span><span>'+esc(u.cs.t)+'</span></div>':'')+
+      '<div class="inner">'+(u.bio?'<div><div class="lbl">Hakkında</div><p class="bio">'+esc(u.bio)+'</p></div>':'')+'<div><div class="lbl">Roller</div>'+rolesHTML(u)+'</div></div>';
+    if (withActs) {
+      var s = STATUS[u.status];
+      h += '<div class="inner acts" style="padding:6px">'+
+        '<button type="button" class="act" id="actStatus" aria-haspopup="menu" aria-expanded="false"><span class="sd" style="background:'+s.c+'"></span>'+s.n+'<span class="chev">›</span></button>'+
+        '<button type="button" class="act" id="actCS"><span>😀</span>'+(u.cs?'Özel durumu değiştir':'Özel durum ayarla')+'</button>'+
+        '<hr class="sep">'+
+        '<button type="button" class="act" id="actEdit"><span>✏️</span>Profili düzenle</button>'+
+        '<button type="button" class="act" id="actFull"><span>⤢</span>Tam profili aç</button>'+
+      '</div>';
+    }
+    return h + '</div></div>';
+  }
+
+  // ---------- ana ekran ----------
+  var NAV = [['Akış','M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z'],['Sohbet','M4 5h16v11H8l-4 4z',1],['Görevler','M4 4h16v16H4zM8 12l3 3 5-6'],['Projeler','M3 6h7l2 2h9v11H3z'],['Panolar','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'],['Fikirler','M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z'],['Ekip','M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M17 11a3 3 0 1 0 0-6M22 21a6 6 0 0 0-4-5.6']];
+  document.getElementById('navs').innerHTML = NAV.map(function(n){ return '<div class="nav'+(n[2]?' on':'')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="'+n[1]+'"/></svg>'+n[0]+'</div>'; }).join('');
+
+  function renderAll(){
+    var me = users[ME];
+    document.getElementById('meBtn').innerHTML = avatar(me,40)+'<span style="min-width:0"><span class="nm">'+esc(me.name)+'</span><span class="st">'+esc(statusLine(me))+'</span></span><span class="gear">⚙</span>';
+    document.getElementById('msgs').innerHTML = MSGS.map(function(m){
+      var u = users[m[0]];
+      return '<div class="msg" data-u="'+u.id+'"><button type="button" class="avb" data-open="'+u.id+'" aria-label="'+esc(u.name)+' profili">'+avatar(u,40,false)+'</button><div style="min-width:0"><span class="who" data-open="'+u.id+'" style="color:'+u.acc+'">'+esc(u.name)+'</span><span class="tm">'+m[1]+'</span><p>'+m[2]+'</p></div></div>';
+    }).join('');
+    document.getElementById('team').innerHTML = Object.keys(users).map(function(k){
+      var u = users[k]; if (u.status==='invisible' && k!==ME) return '';
+      return '<button type="button" class="mem" data-open="'+k+'" data-u="'+k+'">'+avatar(u,34)+'<span style="min-width:0"><b>'+esc(u.name)+'</b><span>'+esc(statusLine(u))+'</span></span></button>';
+    }).join('');
+    if (open === 'mini') refreshMini();
+    if (open === 'full') renderFull(true);
+  }
+
+  // ---------- katmanlar ----------
+  var layer = document.getElementById('layer'), meBtn = document.getElementById('meBtn'), win = document.getElementById('win');
+  var open = null, fullId = null, fullTab = 'hak', draft = null, flyout = null;
+
+  function closeLayer(cb){
+    var el = layer.firstElementChild;
+    if (!el) { open = null; cb && cb(); return; }
+    var mini = el.classList.contains('mini');
+    el.classList.add('out');
+    meBtn.setAttribute('aria-expanded','false');
+    var cur = open; open = null;
+    setTimeout(function(){ if (layer.firstElementChild === el) layer.innerHTML = ''; cb && cb(); if (cur==='mini') meBtn.focus(); }, mini ? 150 : 180);
+  }
+
+  // mini kart
+  function openMini(){
+    open = 'mini'; flyout = null;
+    layer.innerHTML = '<div class="mini" role="dialog" aria-label="Profilin">'+cardHTML(users[ME], true)+'</div>';
+    meBtn.setAttribute('aria-expanded','true');
+    bindMini();
+  }
+  function refreshMini(){
+    var m = layer.querySelector('.mini'); if (!m) return;
+    var keep = flyout; m.innerHTML = cardHTML(users[ME], true); bindMini(); if (keep) showFly(keep);
+  }
+  function bindMini(){
+    var m = layer.querySelector('.mini');
+    m.querySelector('#actStatus').onclick = function(){ flyout==='status' ? hideFly() : showFly('status'); };
+    m.querySelector('#actCS').onclick = function(){ flyout==='cs' ? hideFly() : showFly('cs'); };
+    m.querySelector('#actEdit').onclick = function(){ closeLayer(openEdit); };
+    m.querySelector('#actFull').onclick = function(){ closeLayer(function(){ openFull(ME); }); };
+  }
+  function hideFly(){ var f = layer.querySelector('.flyout'); if (f) f.remove(); flyout = null; layer.querySelectorAll('.act[aria-expanded]').forEach(function(b){ b.setAttribute('aria-expanded','false'); }); }
+  function showFly(kind){
+    hideFly(); flyout = kind;
+    var m = layer.querySelector('.mini'), u = users[ME], f = document.createElement('div'); f.className = 'flyout';
+    if (kind === 'status') {
+      f.setAttribute('role','menu');
+      f.innerHTML = Object.keys(STATUS).map(function(k){ var s = STATUS[k]; return '<button type="button" role="menuitem" class="act" data-s="'+k+'"><span class="sd" style="background:'+s.c+'"></span><span>'+s.n+(s.d?'<small>'+s.d+'</small>':'')+'</span>'+(u.status===k?'<span class="chev">✓</span>':'')+'</button>'; }).join('');
+      f.onclick = function(e){ var b = e.target.closest('[data-s]'); if (!b) return; users[ME].status = b.dataset.s; flyout = null; renderAll(); };
+      m.querySelector('#actStatus').setAttribute('aria-expanded','true');
+    } else {
+      var sel = u.cs ? u.cs.e : '🎨';
+      f.style.width = '260px';
+      f.innerHTML = '<div class="csform"><div class="lbl">Özel durum</div><div class="emo">'+['🎨','🎧','💻','🎮','☕','📝','😴','🔥'].map(function(e){ return '<button type="button" data-e="'+e+'" aria-pressed="'+(e===sel)+'">'+e+'</button>'; }).join('')+'</div>'+
+        '<input class="field" id="csText" maxlength="60" placeholder="Ne yapıyorsun?" value="'+esc(u.cs?u.cs.t:'')+'">'+
+        '<select class="field" id="csExp"><option>30 dakika sonra temizle</option><option>1 saat sonra temizle</option><option selected>Bugün sonunda temizle</option><option>Temizleme</option></select>'+
+        '<div class="row"><button type="button" class="btn" id="csClear">Temizle</button><button type="button" class="btn pri" id="csSave" style="margin-left:auto">Kaydet</button></div></div>';
+      f.querySelector('.emo').onclick = function(e){ var b = e.target.closest('[data-e]'); if (!b) return; sel = b.dataset.e; f.querySelectorAll('.emo button').forEach(function(x){ x.setAttribute('aria-pressed', x===b); }); };
+      f.querySelector('#csClear').onclick = function(){ users[ME].cs = null; flyout = null; renderAll(); };
+      function save(){ var t = f.querySelector('#csText').value.trim(); users[ME].cs = t ? {e:sel,t:t} : null; flyout = null; renderAll(); toast('Özel durum güncellendi'); }
+      f.querySelector('#csSave').onclick = save;
+      f.querySelector('#csText').onkeydown = function(e){ if (e.key==='Enter') save(); };
+      setTimeout(function(){ var i = f.querySelector('#csText'); i && i.focus(); }, 30);
+    }
+    m.appendChild(f);
+  }
+
+  // tam profil penceresi
+  function openFull(id){ open = 'full'; fullId = id; fullTab = 'hak'; renderFull(false); }
+  function renderFull(refresh){
+    var u = users[fullId], mine = fullId === ME;
+    var tabs = [['hak','Hakkında'],['gor','Görevler'],['etk','Etkinlik']];
+    var pane = '';
+    if (fullTab==='hak') {
+      pane = (u.bio?'<div><div class="lbl">Hakkında</div><p class="bio" style="margin-top:6px">'+esc(u.bio)+'</p></div>':'')+
+        '<div class="kv"><div><span class="lbl">ABN\'de</span><b>'+u.since+'\'ten beri</b></div><div><span class="lbl">Çalışma saatleri</span><b>'+(u.hours?esc(u.hours):'Belirtilmemiş')+'</b></div></div>'+
+        '<div><div class="lbl" style="margin-bottom:6px">Roller</div>'+rolesHTML(u)+'</div>'+
+        '<div><div class="lbl" style="margin-bottom:6px">Ortak projeler</div><div class="li"><span class="ic">🎮</span>Palemouth<span class="tag">3 görev</span></div></div>';
+    } else if (fullTab==='gor') {
+      pane = u.tasks.map(function(t){ return '<div class="li"><span class="ic">'+(t[1]==='Bitti'?'✓':'○')+'</span>'+esc(t[0])+'<span class="tag">'+t[1]+'</span></div>'; }).join('');
+    } else {
+      pane = u.act.map(function(a){ return '<div class="li"><span class="ic">'+a[0]+'</span><span style="min-width:0">'+esc(a[1])+'</span><span class="tag">'+a[2]+'</span></div>'; }).join('');
+    }
+    var html = '<div class="modal" role="dialog" aria-modal="true" aria-label="'+esc(u.name)+' profili" style="--acc:'+u.acc+'">'+
+      '<div class="bn" style="'+banner(u)+'"><button type="button" class="xbtn" id="xFull" aria-label="Kapat">✕</button></div>'+
+      '<div class="mtop"><div class="avwrap">'+avatar(u,96)+'</div><div class="btns">'+
+        (mine?'<button type="button" class="btn pri" id="fEdit">Profili düzenle</button>':'<button type="button" class="btn pri" id="fDm">Mesaj gönder</button><button type="button" class="btn" aria-label="Diğer">⋯</button>')+
+      '</div></div>'+
+      '<div class="mid"><div><div class="pname">'+esc(u.name)+'</div>'+handleLine(u)+'</div>'+(u.cs?'<div class="cstat" style="align-self:flex-start">'+esc(u.cs.e)+' '+esc(u.cs.t)+'</div>':'<div class="cstat" style="align-self:flex-start"><span class="sd" style="width:10px;height:10px;border-radius:50%;background:'+STATUS[u.status].c+'"></span>'+STATUS[u.status].n+'</div>')+'</div>'+
+      '<div class="tabs" role="tablist">'+tabs.map(function(t){ return '<button type="button" role="tab" class="tab" data-tab="'+t[0]+'" aria-selected="'+(t[0]===fullTab)+'">'+t[1]+'</button>'; }).join('')+'</div>'+
+      '<div class="tpane" role="tabpanel">'+pane+'</div></div>';
+    var sc = layer.querySelector('.scrim');
+    if (refresh && sc && !sc.classList.contains('out')) { sc.innerHTML = html; sc.querySelector('.modal').style.animation = 'none'; }
+    else { layer.innerHTML = '<div class="scrim">'+html+'</div>'; sc = layer.querySelector('.scrim'); }
+    sc.onclick = function(e){ if (e.target === sc) closeLayer(); };
+    sc.querySelector('#xFull').onclick = function(){ closeLayer(); };
+    sc.querySelector('.tabs').onclick = function(e){ var b = e.target.closest('[data-tab]'); if (!b) return; fullTab = b.dataset.tab; renderFull(true); };
+    var fe = sc.querySelector('#fEdit'); if (fe) fe.onclick = function(){ closeLayer(openEdit); };
+    var fd = sc.querySelector('#fDm'); if (fd) fd.onclick = function(){ closeLayer(function(){ toast(u.name+' ile DM açıldı'); }); };
+  }
+
+  // profil düzenleme (canlı önizleme)
+  var FIELDS = ['name','pronouns','bio','hours','avColor','avImg','bnColor','bnImg','acc'];
+  var BNC = ['#BC4D4B','#F0B7B8','#BBA9FF','#82D3EA','#7FE3C4','#F5D690','#FFB47C','#2B2B2B'];
+  function dirty(){ var u = users[ME]; return FIELDS.some(function(k){ return draft[k] !== u[k]; }); }
+  function openEdit(){
+    open = 'edit';
+    var u = users[ME]; draft = JSON.parse(JSON.stringify(u));
+    layer.innerHTML = '<div class="scrim"><div class="modal edit" role="dialog" aria-modal="true" aria-label="Profili düzenle">'+
+      '<div class="eh"><h3>Profili düzenle</h3><button type="button" class="xbtn" id="xEdit" aria-label="Kapat">✕</button></div>'+
+      '<div class="form">'+
+        '<div class="fg"><span class="lbl">Avatar</span><div class="sw" id="avSw"></div><div class="row"><label class="up">Görsel yükle<input type="file" id="avUp" accept="image/*"></label><button type="button" class="btn" id="avRm">Görseli kaldır</button></div></div>'+
+        '<div class="fg"><span class="lbl">Banner</span><div class="sw" id="bnSw"></div><div class="row"><label class="up">Banner görseli yükle<input type="file" id="bnUp" accept="image/*"></label><button type="button" class="btn" id="bnRm">Görseli kaldır</button></div></div>'+
+        '<div class="fg"><span class="lbl">Profil vurgu rengi</span><div class="sw" id="acSw"></div></div>'+
+        '<div class="fg"><label class="lbl" for="fName">Görünen ad</label><input class="field" id="fName" maxlength="32"></div>'+
+        '<div class="fg"><label class="lbl" for="fPro">Zamirler</label><input class="field" id="fPro" maxlength="20" placeholder="ör. o/ona"></div>'+
+        '<div class="fg"><label class="lbl" for="fBio">Hakkında</label><textarea class="field" id="fBio" rows="4" maxlength="300" style="resize:vertical"></textarea><span class="count" id="bioC"></span></div>'+
+        '<div class="fg"><label class="lbl" for="fHrs">Çalışma saatleri</label><input class="field" id="fHrs" maxlength="24" placeholder="ör. 14:00 – 02:00"></div>'+
+      '</div>'+
+      '<div class="prev"><span class="lbl">Önizleme · canlı</span><div id="pv"></div><span class="hint" style="text-align:center">Ekipteki herkes kartını böyle görecek.</span></div>'+
+      '<div id="barSlot"></div>'+
+    '</div></div>';
+    var sc = layer.querySelector('.scrim');
+    var $ = function(id){ return sc.querySelector('#'+id); };
+    $('fName').value = draft.name; $('fPro').value = draft.pronouns; $('fBio').value = draft.bio; $('fHrs').value = draft.hours;
+    function sw(id, list, key, cb){
+      $(id).innerHTML = list.map(function(c){ return '<button type="button" data-c="'+c+'" style="background:'+c+'" aria-label="Renk '+c+'" aria-pressed="'+(draft[key]===c)+'"></button>'; }).join('')+'<input type="color" aria-label="Özel renk" value="'+draft[key]+'">';
+      $(id).onclick = function(e){ var b = e.target.closest('[data-c]'); if (!b) return; draft[key] = b.dataset.c; if (cb) cb(); upd(); };
+      $(id).querySelector('input').oninput = function(e){ draft[key] = e.target.value; if (cb) cb(); upd(); };
+    }
+    function swSync(){ [['avSw','avColor'],['bnSw','bnColor'],['acSw','acc']].forEach(function(p){ $(p[0]).querySelectorAll('[data-c]').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.c===draft[p[1]]); }); }); }
+    sw('avSw', ['#BC4D4B','#7B5CD6','#3F7FA0','#3E8C6E','#A08A3E','#C2603A','#555555'], 'avColor', function(){ draft.avImg=''; });
+    sw('bnSw', BNC, 'bnColor', function(){ draft.bnImg=''; });
+    sw('acSw', ['#F0B7B8','#BBA9FF','#82D3EA','#7FE3C4','#F5D690','#FFB47C'], 'acc');
+    function file(inp, key){ $(inp).onchange = function(e){ var f = e.target.files[0]; if (!f) return; var r = new FileReader(); r.onload = function(){ draft[key] = r.result; upd(); }; r.readAsDataURL(f); e.target.value=''; }; }
+    file('avUp','avImg'); file('bnUp','bnImg');
+    $('avRm').onclick = function(){ draft.avImg=''; upd(); }; $('bnRm').onclick = function(){ draft.bnImg=''; upd(); };
+    [['fName','name'],['fPro','pronouns'],['fBio','bio'],['fHrs','hours']].forEach(function(p){ $(p[0]).oninput = function(e){ draft[p[1]] = p[1]==='name' ? (e.target.value || users[ME].name) : e.target.value; upd(); }; });
+    function upd(){
+      $('pv').innerHTML = cardHTML(draft, false);
+      $('bioC').textContent = (draft.bio||'').length + ' / 300';
+      swSync();
+      var slot = $('barSlot');
+      if (dirty()) {
+        if (!slot.firstChild) {
+          slot.innerHTML = '<div class="bar" role="status"><span>Kaydedilmemiş değişiklikler var</span><button type="button" class="reset" id="bReset">Sıfırla</button><button type="button" class="btn pri" id="bSave">Kaydet</button></div>';
+          $('bReset').onclick = function(){ draft = JSON.parse(JSON.stringify(users[ME])); $('fName').value = draft.name; $('fPro').value = draft.pronouns; $('fBio').value = draft.bio; $('fHrs').value = draft.hours; upd(); };
+          $('bSave').onclick = function(){ FIELDS.forEach(function(k){ users[ME][k] = draft[k]; }); renderAll(); upd(); toast('Profil kaydedildi · ekipte herkes görüyor'); flashUser(ME); };
+        }
+      } else slot.innerHTML = '';
+    }
+    upd();
+    function tryClose(){ if (dirty()) { var b = sc.querySelector('.bar'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); return; } closeLayer(); }
+    sc.onclick = function(e){ if (e.target === sc) tryClose(); };
+    $('xEdit').onclick = tryClose;
+    sc._tryClose = tryClose;
+    setTimeout(function(){ $('fName').focus(); }, 60);
+  }
+
+  function toast(t){ var d = document.createElement('div'); d.className = 'toast'; d.textContent = t; win.appendChild(d); setTimeout(function(){ d.remove(); }, 2300); }
+  function flashUser(id){ win.querySelectorAll('[data-u="'+id+'"]').forEach(function(el){ el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }); }
+
+  meBtn.addEventListener('click', function(){ if (open === 'mini') closeLayer(); else if (!open) openMini(); });
+  win.addEventListener('click', function(e){
+    if (!document.contains(e.target)) return;
+    var o = e.target.closest('[data-open]');
+    if (o && !layer.contains(o)) { var id = o.dataset.open; var go = function(){ openFull(id); }; open ? closeLayer(go) : go(); return; }
+    if (open === 'mini' && !e.target.closest('.mini') && !meBtn.contains(e.target)) closeLayer();
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Escape' || !open) return;
+    if (open === 'mini' && flyout) { hideFly(); return; }
+    if (open === 'edit') { layer.querySelector('.scrim')._tryClose(); return; }
+    closeLayer();
+  });
+
+  // başka bir kullanıcının değişikliği (Supabase Realtime'ı taklit ediyor)
+  var simStep = 0, SIM = [
+    {status:'busy',cs:{e:'🎧',t:'Kayıtta, rahatsız etmeyin'},bnColor:'#7B5CD6'},
+    {status:'idle',cs:{e:'☕',t:'Kahve molası'},bnColor:'#C2603A'},
+    {status:'online',cs:{e:'🎧',t:'Ambiyans kaydı'},bnColor:'#2B5E78'}
+  ];
+  document.getElementById('simBtn').onclick = function(){
+    var c = SIM[simStep++ % SIM.length]; Object.keys(c).forEach(function(k){ users.selin[k] = c[k]; });
+    renderAll(); flashUser('selin'); toast('Selin profilini güncelledi');
+  };
+
+  applyTheme(); renderAll();
+})();
+</script>
+</body>
+</html>

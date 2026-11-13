@@ -16,6 +16,7 @@ import { Sheet } from '@/components/ui/Sheet';
 import { Stagger } from '@/components/ui/Stagger';
 import { Txt } from '@/components/ui/Txt';
 import { NOTIFICATION_DOT } from '@/lib/labels';
+import { openPalette } from '@/lib/palette';
 import { openProfile } from '@/lib/profileModal';
 import { useNotifications } from '@/lib/queries';
 import { dayLabel } from '@/lib/time';
@@ -172,6 +173,15 @@ function PhoneTopBar() {
           Ekip paneli
         </Txt>
       </View>
+      <Press
+        onPress={openPalette}
+        accessibilityLabel="Ara"
+        bg="surface"
+        shadow
+        style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}
+      >
+        <Icon name="search" size={19} color={colors.text} strokeWidth={2} />
+      </Press>
       <Press
         onPress={() => setThemeOpen(true)}
         accessibilityLabel="Tema seç"
