@@ -9,6 +9,7 @@ import Animated, { css } from 'react-native-reanimated';
 
 import { useActions } from '@/components/sheets/ActionsProvider';
 import { Press } from '@/components/ui/Press';
+import { Portal } from '@/components/ui/Portal';
 import { useToast } from '@/components/ui/Toast';
 import { Txt } from '@/components/ui/Txt';
 import { TASK_ORDER, TASK_STATUS } from '@/lib/labels';
@@ -244,6 +245,7 @@ export function KanbanBoard({ tasks, land: landReq, phone }: { tasks: Task[]; la
         </View>
       </ScrollView>
       {drag && dragged && Platform.OS === 'web' && (
+        <Portal>
         <View
           pointerEvents="none"
           style={{
@@ -260,6 +262,7 @@ export function KanbanBoard({ tasks, land: landReq, phone }: { tasks: Task[]; la
         >
           <TaskCard task={dragged} variant="kanban" />
         </View>
+        </Portal>
       )}
     </View>
   );

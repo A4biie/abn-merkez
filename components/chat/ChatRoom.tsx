@@ -30,6 +30,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { Composer } from './Composer';
 import { MessageActions } from './MessageActions';
 import { MessageBubble } from './MessageBubble';
+import { MessageLinksProvider } from './MessageTools';
 import { roomSubtitle, roomTitle, RoomIcon } from './rooms';
 
 /** Arka arkaya gelen mesajlar bu süre içindeyse aynı balon grubunda gösterilir. */
@@ -71,6 +72,7 @@ export function ChatRoom({ roomId }: { roomId: string }) {
   const back = () => (router.canGoBack() ? router.back() : router.navigate('/sohbet'));
 
   return (
+    <MessageLinksProvider>
     <Animated.View style={[{ flex: 1 }, Platform.OS === 'web' ? motion.page() : null]}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -231,5 +233,6 @@ export function ChatRoom({ roomId }: { roomId: string }) {
         </Sheet>
       </KeyboardAvoidingView>
     </Animated.View>
+    </MessageLinksProvider>
   );
 }

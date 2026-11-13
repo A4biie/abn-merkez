@@ -11,6 +11,7 @@ import { Screen } from '@/components/layout/Screen';
 import { useIsWide } from '@/components/layout/useIsWide';
 import { PresenceAvatar } from '@/components/profile/ProfileCard';
 import { Press } from '@/components/ui/Press';
+import { Portal } from '@/components/ui/Portal';
 import { useToast } from '@/components/ui/Toast';
 import { Txt } from '@/components/ui/Txt';
 import {
@@ -91,17 +92,20 @@ export default function Buglar() {
     </Press>
   );
 
+  const headerButtons = (
+    <View style={{ flexDirection: 'row', gap: 8 }}>
+      {pill('⬆ Yeni build', () => setNewBuild(true))}
+      {pill('🐞 Bug bildir', () => openBugForm(), true)}
+    </View>
+  );
+
   return (
     <Screen
       title="Buglar"
       crumb={latest ? 'Son build ' + latest.version : 'Henüz build yok'}
       onRefresh={bugs.refetch}
-      action={
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          {pill('⬆ Yeni build', () => setNewBuild(true))}
-          {pill('🐞 Bug bildir', () => openBugForm(), true)}
-        </View>
-      }
+      wideAction={headerButtons}
+      action={headerButtons}
     >
       <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
         <View style={{ flexGrow: 2, flexBasis: 260, flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 14, backgroundColor: colors.surface, paddingVertical: 12, paddingHorizontal: 14 }}>
@@ -156,8 +160,16 @@ export default function Buglar() {
         </View>
       </ScrollView>
 
-      {selected && <Drawer bug={selected} closing={closing} onClose={close} full={!wide} />}
-      {newBuild && <BuildModal onClose={() => setNewBuild(false)} />}
+      {selected && (
+        <Portal>
+          <Drawer bug={selected} closing={closing} onClose={close} full={!wide} />
+        </Portal>
+      )}
+      {newBuild && (
+        <Portal>
+          <BuildModal onClose={() => setNewBuild(false)} />
+        </Portal>
+      )}
     </Screen>
   );
 }

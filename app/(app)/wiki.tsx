@@ -151,7 +151,7 @@ export default function Wiki() {
   );
 
   return (
-    <Screen title="Wiki" crumb="Ekip bilgisi" action={actions}>
+    <Screen title="Wiki" crumb="Ekip bilgisi" action={actions} wideAction={actions}>
       {wiki.loading && !pages.length ? (
         <Txt color="muted">Yükleniyor…</Txt>
       ) : !pages.length ? (

@@ -7,6 +7,7 @@ import { Box } from '@/components/ui/Box';
 import { Icon } from '@/components/ui/Icon';
 import { PendingBadge } from '@/components/ui/PendingBadge';
 import { Press } from '@/components/ui/Press';
+import { Portal } from '@/components/ui/Portal';
 import { openProfile } from '@/lib/profileModal';
 import { Txt } from '@/components/ui/Txt';
 import { previewText, splitMentions, type Message } from '@/lib/chat';
@@ -93,13 +94,18 @@ export function MessageBubble({
       >
         {canAct && (hover || menu) && (
           <HoverBar
+            side={mine ? 'right' : 'left'}
             onHeart={onToggleHeart}
             onReply={() => onReply?.()}
             onTask={conv.toTask}
             onMore={(x, y) => setMenu({ x, y })}
           />
         )}
-        {menu && <MessageMenu x={menu.x} y={menu.y} message={message} projectId={projectId} onClose={() => setMenu(null)} />}
+        {menu && (
+          <Portal>
+            <MessageMenu x={menu.x} y={menu.y} message={message} projectId={projectId} onClose={() => setMenu(null)} />
+          </Portal>
+        )}
         {!mine && showAuthor && !grouped && (
           <Press onPress={() => openProfile(author?.id)} pressScale={1}>
             <Txt size={12.5} weight={700} color="muted" style={[{ marginLeft: 4 }, author?.accent_color ? { color: author.accent_color } : null]}>

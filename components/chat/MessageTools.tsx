@@ -2,7 +2,7 @@
 // mesajın altındaki bağlantı çipleri ("☑ Görev: …", "💡 Fikre eklendi"). 0.11 bölüm 3, design/abn-09.html: .mbar .menu .link
 
 import { router } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
 import Animated, { css } from 'react-native-reanimated';
 
@@ -55,7 +55,20 @@ function BarBtn({ icon, label, onPress }: { icon: string; label: string; onPress
   );
 }
 
-export function HoverBar({ onHeart, onReply, onTask, onMore }: { onHeart: () => void; onReply: () => void; onTask: () => void; onMore: (x: number, y: number) => void }) {
+/** side: balonun hangi kenarına yaslanır (başkasının mesajı solda, seninki sağda); dar balonda dışarı taşmaz. */
+export function HoverBar({
+  side,
+  onHeart,
+  onReply,
+  onTask,
+  onMore,
+}: {
+  side: 'left' | 'right';
+  onHeart: () => void;
+  onReply: () => void;
+  onTask: () => void;
+  onMore: (x: number, y: number) => void;
+}) {
   const { colors } = useTheme();
   const bar = useRef<unknown>(null);
   const more = useCallback(() => {
@@ -67,7 +80,7 @@ export function HoverBar({ onHeart, onReply, onTask, onMore }: { onHeart: () => 
       ref={bar as never}
       style={{
         position: 'absolute',
-        right: 6,
+        [side]: 0,
         top: -14,
         zIndex: 5,
         flexDirection: 'row',
@@ -197,24 +210,37 @@ function MenuRow({ icon, label, kbd, onPress }: { icon: string; label: string; k
 }
 
 /** Mesajın altındaki bağlantı çipleri. Kaynak mesaj id'si görev / fikir kayıtlarında; herkes görür. */
-export function MessageLinks({ messageId, align }: { messageId: string; align: 'flex-start' | 'flex-end' }) {
-  const { colors } = useTheme();
-  const motion = useMotion();
+type Link = { id: string; label: string; go: () => void };
+const LinksContext = createContext<Map<string, Link[]>>(new Map());
+
+/** Sohbet odası başına bir kez: mesaj id'si → bağlantı çipleri. Balonlar ayrı ayrı listelere abone olmasın
+ *  (her görev / fikir / bug değişikliğinde bütün balonlar yeniden çiziliyordu). */
+export function MessageLinksProvider({ children }: { children: React.ReactNode }) {
   const tasks = useTasks();
   const ideas = useIdeas();
   const bugs = useBugs();
-  const linked = [
-    ...(bugs.data ?? [])
-      .filter((b) => b.source_message_id === messageId)
-      .map((b) => ({ id: 'b' + b.id, label: '🐞 ' + code(b) + ' açıldı', go: () => router.navigate({ pathname: '/buglar', params: { bug: b.id } }) })),
-    ...(tasks.data ?? [])
-      .filter((t) => t.source_message_id === messageId)
-      .map((t) => ({ id: 't' + t.id, label: '☑ Görev: ' + t.title, go: () => goTask(t.id) })),
-    ...(ideas.data ?? [])
-      .filter((i) => i.source_message_id === messageId)
-      .map((i) => ({ id: 'i' + i.id, label: '💡 Fikre eklendi', go: () => router.navigate('/fikirler') })),
-  ];
-  if (!linked.length) return null;
+  const map = useMemo(() => {
+    const m = new Map<string, Link[]>();
+    const add = (mid: string | null | undefined, l: Link) => {
+      if (!mid) return;
+      const a = m.get(mid);
+      if (a) a.push(l);
+      else m.set(mid, [l]);
+    };
+    for (const b of bugs.data ?? [])
+      add(b.source_message_id, { id: 'b' + b.id, label: '🐞 ' + code(b) + ' açıldı', go: () => router.navigate({ pathname: '/buglar', params: { bug: b.id } }) });
+    for (const t of tasks.data ?? []) add(t.source_message_id, { id: 't' + t.id, label: '☑ Görev: ' + t.title, go: () => goTask(t.id) });
+    for (const i of ideas.data ?? []) add(i.source_message_id, { id: 'i' + i.id, label: '💡 Fikre eklendi', go: () => router.navigate('/fikirler') });
+    return m;
+  }, [tasks.data, ideas.data, bugs.data]);
+  return <LinksContext.Provider value={map}>{children}</LinksContext.Provider>;
+}
+
+export function MessageLinks({ messageId, align }: { messageId: string; align: 'flex-start' | 'flex-end' }) {
+  const { colors } = useTheme();
+  const motion = useMotion();
+  const linked = useContext(LinksContext).get(messageId);
+  if (!linked?.length) return null;
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignSelf: align, maxWidth: 360 }}>
       {linked.map((l) => (

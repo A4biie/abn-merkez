@@ -8,6 +8,7 @@ import Animated, { css } from 'react-native-reanimated';
 
 import { Screen } from '@/components/layout/Screen';
 import { Press } from '@/components/ui/Press';
+import { Portal } from '@/components/ui/Portal';
 import { useToast } from '@/components/ui/Toast';
 import { Txt } from '@/components/ui/Txt';
 import { deleteFile, extOf, fileUrl, kindOf, sizeLabel, useFiles, type FileKind, type FileRow } from '@/lib/files';
@@ -53,8 +54,14 @@ export default function Dosyalar() {
   const list = all.filter((f) => (kind === 'hepsi' || kindOf(f) === kind) && (!s || fold(f.name + ' ' + f.source_label).includes(s)));
   const total = all.reduce((n, f) => n + (f.size ?? 0), 0);
 
+  const total_ = (
+    <Txt size={13} color="muted">
+      {all.length} dosya · {sizeLabel(total)}
+    </Txt>
+  );
   return (
     <Screen
+      wideAction={total_}
       title="Dosyalar"
       crumb="Sohbet, panolar, görevler, buglar ve wiki'den"
       action={
@@ -118,7 +125,11 @@ export default function Dosyalar() {
           ))}
         </View>
       )}
-      {open && <Preview f={open} onClose={() => setOpen(null)} />}
+      {open && (
+        <Portal>
+          <Preview f={open} onClose={() => setOpen(null)} />
+        </Portal>
+      )}
     </Screen>
   );
 }

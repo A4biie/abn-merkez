@@ -4,6 +4,16 @@ ABN Merkez'in sürümleri. Yeni özellik getiren sürüm 0.x.0, sadece düzeltme
 Uygulama yeni bir sürüme ilk açıldığında "Neler yeni" panelinde o sürümün maddeleri gösterilir
 (`npm run changelog` bu dosyadan `lib/changelog.ts`'i üretir).
 
+## 0.11.1 · 13 Kasım 2026
+
+### Düzeltmeler
+
+- Dosya önizlemesi, bug detay paneli, Yeni build penceresi, Kanban'da sürüklenen kart ve sohbet menüsü ince bir şeride sıkışıyordu; artık pencerenin üstünde açılıyor.
+- Bilgisayarda Wiki'nin Düzenle / Yeni sayfa, Buglar'ın Yeni build / Bug bildir butonları görünmüyordu.
+- Sohbette mesaj araç çubuğu dar mesajlarda dışarı taşıyordu.
+- Dosyalar'da yükleyen kişi "Biri" görünüyordu ve kendi dosyanı silemiyordun.
+- Sohbet daha hızlı: görev, fikir ya da bug değişince bütün mesajlar yeniden çizilmiyor.
+
 ## Launcher 1.15.0 · 13 Kasım 2026
 
 ### Yeni

@@ -4,6 +4,22 @@ export type Release = { version: string; date: string; sections: { title: string
 
 export const RELEASES: Release[] = [
   {
+    "version": "0.11.1",
+    "date": "13 Kasım 2026",
+    "sections": [
+      {
+        "title": "Düzeltmeler",
+        "items": [
+          "Dosya önizlemesi, bug detay paneli, Yeni build penceresi, Kanban'da sürüklenen kart ve sohbet menüsü ince bir şeride sıkışıyordu; artık pencerenin üstünde açılıyor.",
+          "Bilgisayarda Wiki'nin Düzenle / Yeni sayfa, Buglar'ın Yeni build / Bug bildir butonları görünmüyordu.",
+          "Sohbette mesaj araç çubuğu dar mesajlarda dışarı taşıyordu.",
+          "Dosyalar'da yükleyen kişi \"Biri\" görünüyordu ve kendi dosyanı silemiyordun.",
+          "Sohbet daha hızlı: görev, fikir ya da bug değişince bütün mesajlar yeniden çizilmiyor."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.11.0",
     "date": "13 Kasım 2026",
     "sections": [
